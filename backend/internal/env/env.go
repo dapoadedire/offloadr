@@ -13,7 +13,7 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
-func GetInt(key string, fallback int) int {
+func GetEnvInt(key string, fallback int) int {
 	val := os.Getenv(key)
 	if val == "" {
 		return fallback
@@ -38,7 +38,7 @@ func GetEnvDuration(key string, fallback time.Duration) time.Duration {
 
 }
 
-func GetBool(key string, fallback bool) bool {
+func GetEnvBool(key string, fallback bool) bool {
 	if value := os.Getenv(key); value != "" {
 		if b, err := strconv.ParseBool(value); err == nil {
 			return b

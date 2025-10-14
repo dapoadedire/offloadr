@@ -1,6 +1,8 @@
 # Available commands (run 'make help' to see this list)
 .PHONY: help run dev build clean deps tidy fmt vet lint security-check swagger \
-	docker-build docker-run docker-stop install-tools
+        db-start db-stop db-clean db-restart db-logs db-shell db-migrate-up db-migrate-down db-migrate-create db-migrate-status db-migrate-reset db-seed \
+        docker-build docker-run docker-stop install-tools \
+        services-start services-stop services-restart services-logs services-ps
 
 # Default target - show help
 help:
@@ -19,6 +21,26 @@ help:
 	@echo ""
 	@echo "  Documentation:"
 	@echo "    swagger          - Generate Swagger/OpenAPI documentation"
+	@echo ""
+	@echo "  Services & Infrastructure:"
+	@echo "    services-start   - Start all services (db)"
+	@echo "    services-stop    - Stop all services"
+	@echo "    services-restart - Restart all services"
+	@echo "    services-logs    - View logs from all services"
+	@echo "    services-ps      - Show status of all services"
+	@echo ""
+	@echo "  Database:"
+	@echo "    db-start         - Start PostgreSQL database using Docker"
+	@echo "    db-stop          - Stop PostgreSQL database"
+	@echo "    db-clean         - Stop and remove database containers and volumes"
+	@echo "    db-restart       - Restart PostgreSQL database"
+	@echo "    db-logs          - View database container logs"
+	@echo "    db-shell         - Connect to database shell (psql)"
+	@echo "    db-migrate-up    - Run pending database migrations"
+	@echo "    db-migrate-down  - Rollback last database migration"
+	@echo "    db-migrate-create - Create new migration file"
+	@echo "    db-migrate-status - Check migration status"
+	@echo "    db-migrate-reset - Reset database and reapply all migrations (CAUTION: Destroys all data)"
 	@echo ""
 	@echo "  Docker:"
 	@echo "    docker-build     - Build Docker image"
@@ -96,8 +118,129 @@ swagger:
 	@echo "Swagger docs generated in ./docs directory!"
 	@echo "View at: http://localhost:8080/v1/docs/index.html (when server is running)"
 
-# (Removed database and services targets that reference docker-compose, migrations, or seed commands
-# because those resources are not present in this repository.)
+# =============================================================================
+# SERVICES & INFRASTRUCTURE COMMANDS
+# =============================================================================
+
+# Start all services (database)
+services-start:
+	@echo "Starting all services..."
+	docker compose up -d
+	@echo "All services started!"
+	@echo ""
+	@echo "Services running:"
+	@echo "  - PostgreSQL: localhost:5432"
+	@echo ""
+	@echo "Use 'make services-ps' to check status"
+
+# Stop all services
+services-stop:
+	@echo "Stopping all services..."
+	docker compose stop
+	@echo "All services stopped!"
+
+# Restart all services
+services-restart:
+	@echo "Restarting all services..."
+	docker compose restart
+	@echo "All services restarted!"
+
+# View logs from all services
+services-logs:
+	@echo "Showing logs from all services (Ctrl+C to exit)..."
+	docker compose logs -f
+
+# Show status of all services
+services-ps:
+	@echo "Service Status:"
+	@docker compose ps
+
+# =============================================================================
+# DATABASE COMMANDS
+# =============================================================================
+
+# Start PostgreSQL database using Docker Compose in detached mode
+db-start:
+	@echo "Starting PostgreSQL database..."
+	docker compose up -d db
+	@echo "Database started! Use 'make db-logs' to view logs"
+
+# Stop PostgreSQL database container
+db-stop:
+	@echo "Stopping PostgreSQL database..."
+	docker compose stop db
+	@echo "Database stopped!"
+
+# Stop and remove database containers and volumes (useful for troubleshooting)
+db-clean:
+	@echo "Stopping and removing database containers and volumes..."
+	docker compose down -v
+	@echo "Database cleaned! All containers and volumes removed."
+
+# Restart database (stop then start)
+db-restart: db-stop db-start
+	@echo "Database restarted!"
+
+# View database container logs in real-time
+db-logs:
+	@echo "Showing database logs (Ctrl+C to exit)..."
+	docker compose logs -f db
+
+# Connect to PostgreSQL database shell
+db-shell:
+	@echo "Connecting to database shell..."
+	docker compose exec db psql -U offloadr -d offloadr
+
+# DB connection string using environment variables with defaults
+DB_HOST ?= $(or $(POSTGRES_HOST),localhost)
+DB_PORT ?= $(or $(POSTGRES_PORT),5432)
+DB_USER ?= $(or $(POSTGRES_USER),offloadr)
+DB_PASSWORD ?= $(or $(POSTGRES_PASSWORD),offloadr-db-password)
+DB_NAME ?= $(or $(POSTGRES_DB),offloadr)
+DB_CONN_STRING = "host=$(DB_HOST) user=$(DB_USER) password=$(DB_PASSWORD) dbname=$(DB_NAME) port=$(DB_PORT) sslmode=disable"
+
+# Run all pending database migrations
+db-migrate-up:
+	@echo "Running database migrations..."
+	goose -dir migrations postgres $(DB_CONN_STRING) up
+	@echo "Migrations completed!"
+
+# Rollback the last database migration
+db-migrate-down:
+	@echo "Rolling back last migration..."
+	goose -dir migrations postgres $(DB_CONN_STRING) down
+	@echo "Migration rolled back!"
+
+# Create a new database migration file
+db-migrate-create:
+	@read -p "Enter migration name: " name; \
+	goose -dir migrations create $$name sql && \
+	echo "Migration created: migrations/$$(date +%Y%m%d%H%M%S)_$$name.sql"
+
+# Check the status of database migrations
+db-migrate-status:
+	@echo "Checking migration status..."
+	goose -dir migrations postgres $(DB_CONN_STRING) status
+
+# Reset the database and reapply all migrations (CAUTION: Destroys all data)
+db-migrate-reset:
+	@echo "WARNING: This will delete all data in your database."
+	@read -p "Are you sure you want to continue? (y/N): " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		echo "Resetting database..."; \
+		goose -dir migrations postgres $(DB_CONN_STRING) reset; \
+		echo "Database reset complete. Running migrations..."; \
+		goose -dir migrations postgres $(DB_CONN_STRING) up; \
+		echo "All migrations applied successfully!"; \
+	else \
+		echo "Operation cancelled."; \
+	fi
+
+# Seed the database with fake data
+db-seed:
+	@echo "Seeding database with fake data..."
+	go run cmd/seed/main.go
+	@echo "Database seeded successfully!"
 
 # =============================================================================
 # DOCKER COMMANDS

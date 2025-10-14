@@ -1,0 +1,34 @@
+services:
+  db:
+    container_name: "offloadr-db"
+    image: postgres:18.0
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-offloadr}
+      POSTGRES_USER: ${POSTGRES_USER:-offloadr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-offloadr-db-password}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-offloadr} -d ${POSTGRES_DB:-offloadr}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  pg_data:
+    driver: local

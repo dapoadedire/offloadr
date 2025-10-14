@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dapoadedire/offloadr/backend/internal/env"
+	"github.com/dapoadedire/offloadr/backend/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -18,6 +19,7 @@ import (
 type application struct {
 	config config
 	logger *zap.SugaredLogger
+	store  store.Storage
 }
 
 type config struct {
@@ -28,7 +30,17 @@ type config struct {
 	writeTimeout time.Duration
 	idleTimeout  time.Duration
 	frontendURL  string
+	db           dbConfig
 }
+
+
+type dbConfig struct {
+	addr         string
+	maxOpenConns int
+	maxIdleConns int
+	maxIdleTime  time.Duration
+}
+
 
 func (app *application) mount() *chi.Mux {
 	version := env.GetEnv("API_VERSION", "/v1")
@@ -59,6 +71,7 @@ func (app *application) mount() *chi.Mux {
 
 	r.Route(version, func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
+		r.Post("/waitlist", app.createWaitlistHandler)
 	})
 
 	return r
