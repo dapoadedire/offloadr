@@ -13,6 +13,11 @@ type waitlistPayload struct {
 	Email      string `json:"email" validate:"required,email,max=100"`
 }
 
+type waitlistResponse struct {
+	TotalCount int64  `json:"total_count"`
+	Message    string `json:"message"`
+}
+
 func (app *application) createWaitlistHandler(w http.ResponseWriter, r *http.Request) {
 	// Placeholder implementation
 	var payload waitlistPayload
@@ -33,7 +38,9 @@ func (app *application) createWaitlistHandler(w http.ResponseWriter, r *http.Req
 	}
 	ctx := r.Context()
 
-	if err := app.store.Waitlist.Create(ctx, waitlist); err != nil {
+	// Create waitlist entry and get total count in a single atomic operation
+	totalCount, err := app.store.Waitlist.Create(ctx, waitlist)
+	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrDuplicateEmail):
 			app.conflictResponse(w, r, err)
@@ -43,9 +50,13 @@ func (app *application) createWaitlistHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusCreated, nil); err != nil {
+	response := waitlistResponse{
+		TotalCount: totalCount,
+		Message:    "Successfully joined the waitlist",
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, response); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
-
 }
