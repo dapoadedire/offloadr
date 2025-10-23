@@ -11,6 +11,7 @@ import {
   GraduationCap,
   Recycle,
 } from "lucide-react";
+import { ItemShowcase } from "../item-showcase";
 
 export const Hero = () => {
   return (
@@ -93,6 +94,9 @@ export const Hero = () => {
             <span>Fast Listings</span>
           </div>
         </motion.div>
+
+        {/* Item Showcase */}
+        <ItemShowcase />
 
         {/* Feature cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 w-full">
