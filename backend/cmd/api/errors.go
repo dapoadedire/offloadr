@@ -15,18 +15,18 @@ func (app *application) internalServerError(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnf("bad request error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	app.logger.Warnw("bad request error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 	writeJSONError(w, http.StatusBadRequest, err.Error())
 }
 
 func (app *application) conflictResponse(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Errorf("conflict error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	app.logger.Errorw("conflict error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
 	writeJSONError(w, http.StatusConflict, err.Error())
 }
 
 func (app *application) validationErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnf("validation error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	app.logger.Warnw("validation error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
 	validationErrors, ok := err.(validator.ValidationErrors)
 	if !ok {

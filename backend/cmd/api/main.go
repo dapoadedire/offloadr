@@ -24,13 +24,13 @@ func main() {
 	// Database
 	database, err := db.New(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxIdleConns, cfg.db.maxIdleTime, logger)
 	if err != nil {
-		logger.Fatal("failed to connect to database", "error", err)
+		logger.Fatalw("failed to connect to database", "error", err)
 	}
 	defer database.Close()
 
 	// Run database migrations
 	if err := db.MigrateFS(database, migrations.FS, "."); err != nil {
-		logger.Fatal("failed to run migrations", "error", err)
+		logger.Fatalw("failed to run migrations", "error", err)
 	}
 	logger.Info("database migrations completed successfully")
 	store := store.NewStorage(database)
@@ -43,16 +43,16 @@ func main() {
 
 	chi := app.mount()
 	if err := app.run(chi); err != nil {
-		logger.Fatal("server error", "error", err)
+		logger.Fatalw("server error", "error", err)
 	}
 }
 
 func loadConfig() config {
 
 	return config{
-		addr:    env.GetEnv("ADDR", ":8080"),
-		env:     env.GetEnv("GO_ENV", "development"),
-		version: env.GetEnv("VERSION", "v1"),
+		addr:         env.GetEnv("ADDR", ":8080"),
+		env:          env.GetEnv("GO_ENV", "development"),
+		version:      env.GetEnv("VERSION", "v1"),
 		readTimeout:  env.GetEnvDuration("READ_TIMEOUT", 5*time.Second),
 		writeTimeout: env.GetEnvDuration("WRITE_TIMEOUT", 10*time.Second),
 		idleTimeout:  env.GetEnvDuration("IDLE_TIMEOUT", 120*time.Second),
