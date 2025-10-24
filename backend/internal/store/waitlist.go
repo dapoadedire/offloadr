@@ -3,8 +3,9 @@ package store
 import (
 	"context"
 	"database/sql"
-	"strings"
+	"errors"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -18,6 +19,8 @@ type Waitlist struct {
 type WaitlistStore struct {
 	db *sql.DB
 }
+
+const uniqueViolationCode = "23505"
 
 func (s *WaitlistStore) Create(ctx context.Context, w *Waitlist) (int64, error) {
 	query := `
@@ -34,12 +37,13 @@ func (s *WaitlistStore) Create(ctx context.Context, w *Waitlist) (int64, error) 
 	var totalCount int64
 	err := s.db.QueryRowContext(ctx, query, w.FirstName, w.University, w.Email).Scan(&w.ID, &totalCount)
 	if err != nil {
-		switch {
-		case strings.Contains(err.Error(), "waitlist_email_key"):
-			return 0, ErrDuplicateEmail
-		default:
-			return 0, err
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == uniqueViolationCode {
+				return 0, ErrDuplicateEmail
+			}
 		}
+		return 0, err
 	}
 	return totalCount, nil
 }

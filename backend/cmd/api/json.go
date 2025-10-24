@@ -2,7 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
+
 	"github.com/go-playground/validator/v10"
 )
 
@@ -22,7 +25,15 @@ func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	return decoder.Decode(data)
+	if err := decoder.Decode(data); err != nil {
+		return err
+	}
+
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		return errors.New("body must contain a single JSON object")
+	}
+
+	return nil
 }
 
 func writeJSONError(w http.ResponseWriter, status int, message string) error {
