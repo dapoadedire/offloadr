@@ -60,7 +60,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${inter.variable} ${jetBrains_Mono.variable} font-sans antialiased`}
+        className={`${inter.variable} ${jetBrains_Mono.variable} font-sans antialiased min-h-screen flex flex-col`}
       >
         <QueryProvider>
           <Header />
