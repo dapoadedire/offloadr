@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/lib/query-provider";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -58,7 +60,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} ${jetBrains_Mono.variable} font-sans antialiased`}>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <Header />
+          {children}
+          <Footer />
+        </QueryProvider>
       </body>
     </html>
   );

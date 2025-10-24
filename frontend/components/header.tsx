@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { Menu, X } from "lucide-react";
+import { motion } from "motion/react";
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,14 +23,30 @@ export const Header = () => {
 
   return (
     <>
-      <header className="font-mono border-b border-border bg-background sticky top-0 z-40">
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="font-mono border-b border-border bg-background sticky top-0 z-40"
+      >
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 max-w-7xl mx-auto">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl sm:text-2xl font-bold text-primary">Offloadr</span>
-          </Link>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <Link href="/" className="flex items-center gap-2">
+              <span className="text-xl sm:text-2xl font-bold text-primary">Offloadr</span>
+            </Link>
+          </motion.div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex gap-8 items-center">
+          <motion.nav
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="hidden md:flex gap-8 items-center"
+          >
             <ul className="flex gap-6 items-center">
               <li>
                 <Link
@@ -51,7 +68,7 @@ export const Header = () => {
 
             <ul className="flex gap-3 items-center">
               <li>
-                <Button asChild variant="ghost" className="font-medium">
+                <Button asChild  variant="outline" className="font-medium">
                   <Link href="/login">Log in</Link>
                 </Button>
               </li>
@@ -61,18 +78,21 @@ export const Header = () => {
                 </Button>
               </li>
             </ul>
-          </nav>
+          </motion.nav>
 
           {/* Mobile Menu Button */}
-          <button
+          <motion.button
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             className="md:hidden text-foreground z-50"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
             <Menu className="h-6 w-6" />
-          </button>
+          </motion.button>
         </div>
-      </header>
+      </motion.header>
 
       {/* Mobile Menu - Full Screen Overlay */}
       {mobileMenuOpen && (

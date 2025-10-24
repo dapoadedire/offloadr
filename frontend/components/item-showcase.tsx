@@ -32,7 +32,7 @@ const items = [
   },
   {
     image: "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=400&h=400&fit=crop",
-    label: "Fridge",
+    label: "Chair",
     price: "₦45,000",
   },
   {
@@ -61,8 +61,8 @@ export const ItemShowcase = () => {
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{
-              duration: 0.5,
-              delay: index * 0.1,
+              duration: 0.4,
+              delay: 0.5 + index * 0.05,
               ease: "easeOut",
             }}
             whileHover={{ scale: 1.05, y: -5 }}
@@ -76,6 +76,9 @@ export const ItemShowcase = () => {
                 fill
                 className="object-cover group-hover:scale-110 transition-transform duration-300"
                 sizes="(max-width: 768px) 50vw, 25vw"
+                priority={index < 4}
+                placeholder="blur"
+                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzMzMzMzMyIvPjwvc3ZnPg=="
               />
               {/* Overlay gradient */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -99,7 +102,7 @@ export const ItemShowcase = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
         className="absolute -top-4 right-4 bg-secondary text-secondary-foreground px-4 py-2 rounded-full text-sm font-bold shadow-xl border-3 border-background"
       >
         ✨ Popular Items
