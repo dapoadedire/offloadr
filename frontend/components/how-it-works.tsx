@@ -37,10 +37,9 @@ export const HowItWorks = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4"
+          className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 font-mono"
         >
-          How It Works in{" "}
-          <span className="text-primary">3 Simple Steps</span>
+          How It Works in <span className="text-primary">3 Simple Steps</span>
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -66,7 +65,7 @@ export const HowItWorks = () => {
               className="relative"
             >
               {/* Step number */}
-              <div className="absolute -top-4 -left-4 w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xl font-bold z-10">
+              <div className="absolute -top-4 -left-4 w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xl font-bold z-10 font-mono">
                 {index + 1}
               </div>
 
@@ -75,7 +74,9 @@ export const HowItWorks = () => {
                 <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                   <Icon className="w-7 h-7 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
+                <h3 className="text-xl font-semibold mb-3 font-mono">
+                  {step.title}
+                </h3>
                 <p className="text-muted-foreground">{step.description}</p>
               </div>
 

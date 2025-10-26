@@ -36,7 +36,9 @@ export const Header = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-xl sm:text-2xl font-bold text-primary">Offloadr</span>
+              <span className="text-xl sm:text-2xl font-bold text-primary font-mono">
+                Offloadr
+              </span>
             </Link>
           </motion.div>
 
@@ -68,7 +70,7 @@ export const Header = () => {
 
             <ul className="flex gap-3 items-center">
               <li>
-                <Button asChild  variant="outline" className="font-medium">
+                <Button asChild variant="outline" className="font-medium">
                   <Link href="/login">Log in</Link>
                 </Button>
               </li>
@@ -105,7 +107,9 @@ export const Header = () => {
                 className="flex items-center gap-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <span className="text-xl font-bold text-primary">Offloadr</span>
+                <span className="text-xl font-bold text-primary font-mono">
+                  Offloadr
+                </span>
               </Link>
               <button
                 onClick={() => setMobileMenuOpen(false)}
@@ -135,7 +139,11 @@ export const Header = () => {
 
               {/* Auth Buttons */}
               <div className="pt-8 space-y-4">
-                <Button asChild variant="ghost" className="w-full font-medium text-lg h-12">
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="w-full font-medium text-lg h-12"
+                >
                   <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
                     Log in
                   </Link>

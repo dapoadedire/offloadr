@@ -24,10 +24,11 @@ export const Hero = () => {
           transition={{ duration: 0.5 }}
           className="inline-flex items-center gap-2 px-2 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm"
         >
-         
-          <span className="text-primary font-medium text-xs
+          <span
+            className="text-primary font-medium text-xs
           sm:text-sm  
-          ">
+          "
+          >
             Join 20+ students already selling on campus
           </span>
         </motion.div>
@@ -38,7 +39,7 @@ export const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-pretty leading-tight [word-spacing:-0.2em] text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter"
+            className="text-pretty leading-tight [word-spacing:-0.2em] text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter font-mono"
           >
             Sell your stuff before you{" "}
             <span className="text-primary">leave campus</span>
@@ -109,7 +110,9 @@ export const Hero = () => {
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
               <Package className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">List in Minutes</h3>
+            <h3 className="text-lg font-semibold mb-2 font-mono">
+              List in Minutes
+            </h3>
             <p className="text-muted-foreground text-sm">
               Take a photo, set a price, and you&apos;re live. No complicated
               forms or verification delays.
@@ -125,7 +128,9 @@ export const Hero = () => {
             <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
               <GraduationCap className="w-6 h-6 text-secondary" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Campus Only</h3>
+            <h3 className="text-lg font-semibold mb-2 font-mono">
+              Campus Only
+            </h3>
             <p className="text-muted-foreground text-sm">
               Buy and sell within your university community. Meet on campus,
               stay safe.
@@ -141,7 +146,9 @@ export const Hero = () => {
             <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
               <Recycle className="w-6 h-6 text-accent" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Sustainable</h3>
+            <h3 className="text-lg font-semibold mb-2 font-mono">
+              Sustainable
+            </h3>
             <p className="text-muted-foreground text-sm">
               Give your items a second life instead of throwing them away. Good
               for you, great for the planet.

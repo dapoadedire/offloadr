@@ -10,7 +10,9 @@ export const Footer = () => {
           {/* Brand Section */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-primary">Offloadr</span>
+              <span className="text-2xl font-bold text-primary font-mono">
+                Offloadr
+              </span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Sell your stuff before you leave campus. Simple, local, and safe.
@@ -139,13 +141,17 @@ export const Footer = () => {
         <div className="pt-8 border-t border-border">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             {/* Copyright */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground
+            <div
+              className="flex items-center gap-2 text-sm text-muted-foreground
             flex-wrap
-            ">
+            "
+            >
               <span>© {new Date().getFullYear()} Offloadr</span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                Made with <Heart className="h-3 w-3 fill-primary text-primary" /> for students
+                Made with{" "}
+                <Heart className="h-3 w-3 fill-primary text-primary" /> for
+                students
               </span>
             </div>
 

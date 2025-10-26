@@ -6,42 +6,50 @@ import Image from "next/image";
 
 const items = [
   {
-    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=400&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=400&fit=crop",
     label: "Laptop",
     price: "₦80,000",
   },
   {
-    image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&h=400&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&h=400&fit=crop",
     label: "Books",
     price: "₦5,000",
   },
   {
-    image: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=400&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=400&fit=crop",
     label: "Sneakers",
     price: "₦12,000",
   },
   {
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop",
     label: "Backpack",
     price: "₦8,000",
   },
   {
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
     label: "Headphones",
     price: "₦15,000",
   },
   {
-    image: "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=400&h=400&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=400&h=400&fit=crop",
     label: "Chair",
     price: "₦45,000",
   },
   {
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
     label: "Watch",
     price: "₦20,000",
   },
   {
-    image: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400&h=400&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400&h=400&fit=crop",
     label: "Bike",
     price: "₦35,000",
   },
@@ -85,10 +93,12 @@ export const ItemShowcase = () => {
 
               {/* Label and price */}
               <div className="absolute bottom-0 left-0 right-0 p-3">
-                <p className="text-white font-semibold text-sm mb-1">
+                <p className="text-white font-semibold text-sm mb-1 font-mono">
                   {item.label}
                 </p>
-                <p className="text-primary font-bold text-lg">{item.price}</p>
+                <p className="text-primary font-bold text-lg font-mono">
+                  {item.price}
+                </p>
               </div>
             </div>
 

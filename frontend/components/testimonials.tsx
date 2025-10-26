@@ -34,7 +34,7 @@ export const Testimonials = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4"
+          className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 font-mono"
         >
           What <span className="text-primary">Students</span> Are Saying
         </motion.h2>
@@ -45,7 +45,8 @@ export const Testimonials = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="text-lg text-muted-foreground max-w-2xl mx-auto"
         >
-          Join hundreds of students who&apos;ve successfully bought and sold on campus
+          Join hundreds of students who&apos;ve successfully bought and sold on
+          campus
         </motion.p>
       </div>
 

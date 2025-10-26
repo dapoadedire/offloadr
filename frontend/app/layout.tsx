@@ -1,19 +1,15 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { M_PLUS_Code_Latin } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/lib/query-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
 
-const jetBrains_Mono = JetBrains_Mono({
+
+const mPlusCodeLatin = M_PLUS_Code_Latin({
   subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
+  variable: "--font-mplus-code-latin",
   display: "swap",
 });
 
@@ -59,7 +55,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} ${jetBrains_Mono.variable} font-sans antialiased`}>
+      <body className={`${mPlusCodeLatin.variable} font-mono antialiased`}>
         <QueryProvider>
           <Header />
           {children}
