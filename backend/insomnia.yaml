@@ -412,6 +412,734 @@ collection:
         send: true
         store: true
       rebuildPath: true
+
+  # Users - Get Current User Items (Protected)
+  - url: "{{ _.BASE_URL }}/users/me/items?page=1&limit=20"
+    name: Get Current User Items
+    meta:
+      id: req_users_get_me_items
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Get current user's all listings"
+      sortKey: 4600
+    method: GET
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Users - Get Current User Sold Items (Protected)
+  - url: "{{ _.BASE_URL }}/users/me/items/sold?page=1&limit=20"
+    name: Get Current User Sold Items
+    meta:
+      id: req_users_get_me_sold_items
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Get current user's sold items"
+      sortKey: 4700
+    method: GET
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Users - Get User Items by ID
+  - url: "{{ _.BASE_URL }}/users/1/items?page=1&limit=20"
+    name: Get User Items by ID
+    meta:
+      id: req_users_get_user_items
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Get user's active listings (public)"
+      sortKey: 4800
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Schools - List All
+  - url: "{{ _.BASE_URL }}/schools"
+    name: List Schools
+    meta:
+      id: req_schools_list
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "List all active schools"
+      sortKey: 5000
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Schools - Get by ID
+  - url: "{{ _.BASE_URL }}/schools/1"
+    name: Get School by ID
+    meta:
+      id: req_schools_get_by_id
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Get school details by ID"
+      sortKey: 5100
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Schools - Get School Items
+  - url: "{{ _.BASE_URL }}/schools/1/items?page=1&limit=20"
+    name: Get School Items
+    meta:
+      id: req_schools_get_items
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Browse items by school"
+      sortKey: 5200
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Categories - List All
+  - url: "{{ _.BASE_URL }}/categories"
+    name: List Categories
+    meta:
+      id: req_categories_list
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "List all categories with subcategories"
+      sortKey: 5300
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Categories - Get by ID
+  - url: "{{ _.BASE_URL }}/categories/1"
+    name: Get Category by ID
+    meta:
+      id: req_categories_get_by_id
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Get category details with subcategories"
+      sortKey: 5400
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Categories - Get Category Items
+  - url: "{{ _.BASE_URL }}/categories/1/items?page=1&limit=20"
+    name: Get Category Items
+    meta:
+      id: req_categories_get_items
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Browse items by category"
+      sortKey: 5500
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Items - Browse All (with filters)
+  - url: "{{ _.BASE_URL }}/items?page=1&limit=20&sort=newest"
+    name: Browse Items
+    meta:
+      id: req_items_browse
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Browse all published items with pagination and filters"
+      sortKey: 6000
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Items - Search
+  - url: "{{ _.BASE_URL }}/items/search?search=laptop&min_price=5000&max_price=50000&condition=like_new"
+    name: Search Items
+    meta:
+      id: req_items_search
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Advanced search with filters"
+      sortKey: 6100
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Items - Get by ID
+  - url: "{{ _.BASE_URL }}/items/1"
+    name: Get Item by ID
+    meta:
+      id: req_items_get_by_id
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "View item details (increments view count)"
+      sortKey: 6200
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Items - Get Related Items
+  - url: "{{ _.BASE_URL }}/items/1/related"
+    name: Get Related Items
+    meta:
+      id: req_items_get_related
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Get related items (same category)"
+      sortKey: 6300
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Items - Get Seller Contact (Protected)
+  - url: "{{ _.BASE_URL }}/items/1/contact"
+    name: Get Seller Contact
+    meta:
+      id: req_items_get_contact
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Get seller contact info (protected)"
+      sortKey: 6500
+    method: GET
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Items - Create (Protected)
+  - url: "{{ _.BASE_URL }}/items"
+    name: Create Item
+    meta:
+      id: req_items_create
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Create new listing with photos (protected)"
+      sortKey: 6600
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"title": "MacBook Pro 2020",
+        	"description": "Slightly used MacBook Pro in excellent condition. 16GB RAM, 512GB SSD.",
+        	"price": 350000,
+        	"condition": "like_new",
+        	"category_id": 1,
+        	"location": "Moremi Hall",
+        	"negotiable": true,
+        	"status": "published",
+        	"photos": [
+        		{
+        			"url": "https://storage.example.com/items/macbook-front.jpg",
+        			"position": 0,
+        			"is_primary": true
+        		},
+        		{
+        			"url": "https://storage.example.com/items/macbook-side.jpg",
+        			"position": 1,
+        			"is_primary": false
+        		},
+        		{
+        			"url": "https://storage.example.com/items/macbook-keyboard.jpg",
+        			"position": 2,
+        			"is_primary": false
+        		}
+        	]
+        }
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Items - Update (Protected)
+  - url: "{{ _.BASE_URL }}/items/1"
+    name: Update Item
+    meta:
+      id: req_items_update
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Update own listing (protected)"
+      sortKey: 6700
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"title": "MacBook Pro 2020 - Updated Price",
+        	"price": 320000,
+        	"negotiable": true
+        }
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Items - Delete (Protected)
+  - url: "{{ _.BASE_URL }}/items/1"
+    name: Delete Item
+    meta:
+      id: req_items_delete
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Delete own listing (protected)"
+      sortKey: 6800
+    method: DELETE
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Items - Update Status (Protected)
+  - url: "{{ _.BASE_URL }}/items/1/status"
+    name: Update Item Status
+    meta:
+      id: req_items_update_status
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Change item status (protected)"
+      sortKey: 6900
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"status": "published"
+        }
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Items - Mark as Sold (Protected)
+  - url: "{{ _.BASE_URL }}/items/1/mark-sold"
+    name: Mark Item as Sold
+    meta:
+      id: req_items_mark_sold
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Mark item as sold (protected)"
+      sortKey: 6950
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"buyer_id": 2
+        }
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Items - Repost (Protected)
+  - url: "{{ _.BASE_URL }}/items/1/repost"
+    name: Repost Item
+    meta:
+      id: req_items_repost
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Repost sold item as new listing (protected)"
+      sortKey: 6960
+    method: POST
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Item Photos - Upload (Protected)
+  - url: "{{ _.BASE_URL }}/items/1/photos"
+    name: Upload Item Photo
+    meta:
+      id: req_item_photos_upload
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Upload photo for item (protected)"
+      sortKey: 7000
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"url": "https://example.com/images/macbook-pro.jpg",
+        	"position": 0
+        }
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Item Photos - Delete (Protected)
+  - url: "{{ _.BASE_URL }}/items/1/photos/1"
+    name: Delete Item Photo
+    meta:
+      id: req_item_photos_delete
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Delete photo from item (protected)"
+      sortKey: 7100
+    method: DELETE
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Item Photos - Set Primary (Protected)
+  - url: "{{ _.BASE_URL }}/items/1/photos/1/primary"
+    name: Set Photo as Primary
+    meta:
+      id: req_item_photos_set_primary
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Set photo as primary (protected)"
+      sortKey: 7200
+    method: PATCH
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Favorites - List (Protected)
+  - url: "{{ _.BASE_URL }}/favorites?page=1&limit=20"
+    name: List Favorites
+    meta:
+      id: req_favorites_list
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Get user's favorited items (protected)"
+      sortKey: 7300
+    method: GET
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Favorites - Add (Protected)
+  - url: "{{ _.BASE_URL }}/favorites"
+    name: Add to Favorites
+    meta:
+      id: req_favorites_add
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Add item to favorites (protected)"
+      sortKey: 7400
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"item_id": 1
+        }
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Favorites - Remove (Protected)
+  - url: "{{ _.BASE_URL }}/favorites/1"
+    name: Remove from Favorites
+    meta:
+      id: req_favorites_remove
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Remove item from favorites (protected)"
+      sortKey: 7500
+    method: DELETE
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Favorites - Check (Protected)
+  - url: "{{ _.BASE_URL }}/favorites/check/1"
+    name: Check if Favorited
+    meta:
+      id: req_favorites_check
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Check if item is favorited (protected)"
+      sortKey: 7550
+    method: GET
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:
