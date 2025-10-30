@@ -51,7 +51,7 @@ export default function MarketplacePage() {
 
     // School filter
     if (selectedSchool !== "all") {
-      filtered = filtered.filter((item) => item.school.id === selectedSchool);
+      filtered = filtered.filter((item) => item.school?.id === selectedSchool);
     }
 
     // Condition filter
@@ -400,7 +400,9 @@ function ItemCard({ item, index }: { item: Item; index: number }) {
           <CardFooter className="p-4 pt-0 flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
-              <span className="line-clamp-1">{item.school.name}</span>
+              <span className="line-clamp-1">
+                {item.school?.name || item.location}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <Eye className="h-3 w-3" />

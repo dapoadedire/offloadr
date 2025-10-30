@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -20,8 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getUserById, getItemsBySeller, reviews } from "@/lib/dummy-data";
 
-export default function ProfilePage({ params }: { params: { id: string } }) {
-  const user = getUserById(params.id);
+export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const user = getUserById(id);
   const isOwnProfile = false; // In real app, check if logged-in user matches
 
   if (!user) {

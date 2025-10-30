@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import { useRouter, notFound } from "next/navigation";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
@@ -63,9 +63,10 @@ const itemSchema = z.object({
 
 type ItemFormValues = z.infer<typeof itemSchema>;
 
-export default function EditItemPage({ params }: { params: { id: string } }) {
+export default function EditItemPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
-  const item = getItemById(params.id);
+  const item = getItemById(id);
 
   if (!item) {
     notFound();
@@ -151,7 +152,7 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
     setIsLoading(false);
 
     // Redirect to item page
-    router.push(`/items/${params.id}`);
+    router.push(`/items/${id}`);
   }
 
   async function handleDelete() {
@@ -160,7 +161,7 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    console.log("Item deleted:", params.id);
+    console.log("Item deleted:", id);
     toast.success("Item deleted successfully");
     setIsDeleting(false);
 

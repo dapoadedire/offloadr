@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -26,8 +26,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { getItemById, items, reviews } from "@/lib/dummy-data";
 
-export default function ItemDetailPage({ params }: { params: { id: string } }) {
-  const item = getItemById(params.id);
+export default function ItemDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const item = getItemById(id);
 
   if (!item) {
     notFound();
@@ -207,7 +208,9 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
               <Separator />
               <div className="flex justify-between">
                 <span className="text-muted-foreground">School</span>
-                <span className="font-medium">{item.school.name}</span>
+                <span className="font-medium">
+                  {item.school?.name || "N/A"}
+                </span>
               </div>
               <Separator />
               <div className="flex justify-between">

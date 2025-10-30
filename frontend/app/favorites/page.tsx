@@ -243,7 +243,7 @@ function FavoriteItemCard({ item, index, onRemove }: FavoriteItemCardProps) {
           <CardFooter className="p-4 pt-0 flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
-              <span className="line-clamp-1">{item.school.name}</span>
+              <span className="line-clamp-1">{item.school?.name || "N/A"}</span>
             </div>
             <div className="flex items-center gap-1">
               <Eye className="h-3 w-3" />
