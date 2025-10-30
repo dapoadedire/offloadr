@@ -60,7 +60,7 @@ export const Header = () => {
               </li>
               <li>
                 <Link
-                  href="/browse"
+                  href="/marketplace"
                   className="text-muted-foreground hover:text-foreground transition-colors font-medium"
                 >
                   Browse
@@ -130,7 +130,7 @@ export const Header = () => {
                 How it works
               </Link>
               <Link
-                href="/browse"
+                href="/marketplace"
                 className="text-2xl text-muted-foreground hover:text-primary transition-colors font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
