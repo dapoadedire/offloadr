@@ -566,3 +566,114 @@ func (app *application) getUserItemsHandler(w http.ResponseWriter, r *http.Reque
 		app.internalServerError(w, r, err)
 	}
 }
+
+// GET /v1/users/{id}/reviews - Get user's reviews (as seller)
+func (app *application) getUserReviewsHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	if idStr == "" {
+		app.badRequestResponse(w, r, fmt.Errorf("user ID is required"))
+		return
+	}
+
+	var userID int64
+	if _, err := fmt.Sscanf(idStr, "%d", &userID); err != nil {
+		app.badRequestResponse(w, r, fmt.Errorf("invalid user ID"))
+		return
+	}
+
+	ctx := r.Context()
+
+	// Verify user exists and is active
+	targetUser, err := app.store.Users.GetByID(ctx, userID)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, fmt.Errorf("user not found"))
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if !targetUser.IsActive {
+		app.notFoundResponse(w, r, fmt.Errorf("user not found"))
+		return
+	}
+
+	// Parse pagination
+	pq := store.PaginationQuery{
+		Limit: 20,
+		Page:  1,
+	}
+
+	if err := pq.Parse(r); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(pq); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Get seller reviews
+	reviews, total, err := app.store.Reviews.GetSellerReviews(ctx, userID, pq.Limit, pq.Offset)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	paginationMeta := store.CalculatePaginationMeta(pq.Page, pq.Limit, total)
+
+	if err := app.jsonResponse(w, http.StatusOK, map[string]interface{}{
+		"data":       reviews,
+		"pagination": paginationMeta,
+	}); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+// GET /v1/users/{id}/rating - Get user's average rating & stats
+func (app *application) getUserRatingHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	if idStr == "" {
+		app.badRequestResponse(w, r, fmt.Errorf("user ID is required"))
+		return
+	}
+
+	var userID int64
+	if _, err := fmt.Sscanf(idStr, "%d", &userID); err != nil {
+		app.badRequestResponse(w, r, fmt.Errorf("invalid user ID"))
+		return
+	}
+
+	ctx := r.Context()
+
+	// Verify user exists and is active
+	targetUser, err := app.store.Users.GetByID(ctx, userID)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, fmt.Errorf("user not found"))
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if !targetUser.IsActive {
+		app.notFoundResponse(w, r, fmt.Errorf("user not found"))
+		return
+	}
+
+	// Get seller rating
+	rating, err := app.store.Reviews.GetSellerRating(ctx, userID)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, rating); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}

@@ -1140,6 +1140,262 @@ collection:
         send: true
         store: true
       rebuildPath: true
+
+  # ===== REVIEWS =====
+
+  # Reviews - Create (Protected)
+  - url: "{{ _.BASE_URL }}/reviews"
+    name: Create Review
+    meta:
+      id: req_reviews_create
+      created: 1761827552451
+      modified: 1761827753244
+      isPrivate: false
+      description: "Create review for item/seller (protected)"
+      sortKey: 7600
+    method: POST
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "item_id": 1,
+          "rating": 5,
+          "comment": "Great seller! Item was exactly as described."
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Reviews - Get by ID
+  - url: "{{ _.BASE_URL }}/reviews/1"
+    name: Get Review Details
+    meta:
+      id: req_reviews_get
+      created: 1761827552452
+      modified: 1761827753245
+      isPrivate: false
+      description: "Get review details by ID (protected)"
+      sortKey: 7650
+    method: GET
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Reviews - Update (Protected)
+  - url: "{{ _.BASE_URL }}/reviews/1"
+    name: Update Review
+    meta:
+      id: req_reviews_update
+      created: 1761827552453
+      modified: 1761827753246
+      isPrivate: false
+      description: "Update own review (protected)"
+      sortKey: 7700
+    method: PATCH
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "rating": 4,
+          "comment": "Updated review - Good experience overall."
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Reviews - Delete (Protected)
+  - url: "{{ _.BASE_URL }}/reviews/1"
+    name: Delete Review
+    meta:
+      id: req_reviews_delete
+      created: 1761827552454
+      modified: 1761827753247
+      isPrivate: false
+      description: "Delete own review (protected)"
+      sortKey: 7750
+    method: DELETE
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Reviews - Get Item Reviews (Public)
+  - url: "{{ _.BASE_URL }}/items/1/reviews?page=1&limit=20"
+    name: Get Item Reviews
+    meta:
+      id: req_items_reviews_list
+      created: 1761827552455
+      modified: 1761827753248
+      isPrivate: false
+      description: "Get reviews for specific item with pagination"
+      sortKey: 7800
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Reviews - Get User Reviews (Public)
+  - url: "{{ _.BASE_URL }}/users/1/reviews?page=1&limit=20"
+    name: Get User Reviews
+    meta:
+      id: req_users_reviews_list
+      created: 1761827552456
+      modified: 1761827753249
+      isPrivate: false
+      description: "Get reviews for user as seller with pagination (public)"
+      sortKey: 7850
+    method: GET
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Reviews - Get User Rating (Public)
+  - url: "{{ _.BASE_URL }}/users/1/rating"
+    name: Get User Rating
+    meta:
+      id: req_users_rating_get
+      created: 1761827552457
+      modified: 1761827753250
+      isPrivate: false
+      description: "Get user's average rating and statistics (public)"
+      sortKey: 7900
+    method: GET
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # ===== REPORTS =====
+
+  # Reports - Create (Protected)
+  - url: "{{ _.BASE_URL }}/reports"
+    name: Create Report
+    meta:
+      id: req_reports_create
+      created: 1761827552458
+      modified: 1761827753251
+      isPrivate: false
+      description: "Report an item (protected)"
+      sortKey: 8000
+    method: POST
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    body:
+      mimeType: application/json
+      text: |
+        {
+          "item_id": 1,
+          "report_type": "scam",
+          "comment": "This item seems suspicious and potentially fraudulent."
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Reports - Get User Reports (Protected)
+  - url: "{{ _.BASE_URL }}/users/me/reports?page=1&limit=20"
+    name: Get My Reports
+    meta:
+      id: req_reports_user_list
+      created: 1761827552459
+      modified: 1761827753252
+      isPrivate: false
+      description: "Get current user's submitted reports with pagination (protected)"
+      sortKey: 8050
+    method: GET
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:

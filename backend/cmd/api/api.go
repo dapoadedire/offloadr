@@ -122,10 +122,13 @@ func (app *application) mount() *chi.Mux {
 			r.Delete("/me/permanent", app.deleteAccountPermanentlyHandler)
 			r.Get("/me/items", app.getCurrentUserItemsHandler)
 			r.Get("/me/items/sold", app.getCurrentUserSoldItemsHandler)
+			r.Get("/me/reports", app.getUserReportsHandler)
 
 			// Public user routes
 			r.Get("/{id}", app.getUserByIDHandler)
 			r.Get("/{id}/items", app.getUserItemsHandler)
+			r.Get("/{id}/reviews", app.getUserReviewsHandler)
+			r.Get("/{id}/rating", app.getUserRatingHandler)
 		})
 
 		// Public schools routes
@@ -149,6 +152,7 @@ func (app *application) mount() *chi.Mux {
 			r.Get("/search", app.searchItemsHandler)
 			r.Get("/{id}", app.getItemByIDHandler)
 			r.Get("/{id}/related", app.getRelatedItemsHandler)
+			r.Get("/{id}/reviews", app.getItemReviewsHandler)
 
 			// Protected routes
 			r.Group(func(r chi.Router) {
@@ -177,6 +181,23 @@ func (app *application) mount() *chi.Mux {
 			r.Post("/", app.addFavoriteHandler)
 			r.Delete("/{item_id}", app.removeFavoriteHandler)
 			r.Get("/check/{item_id}", app.checkFavoriteHandler)
+		})
+
+		// Reviews routes
+		r.Route("/reviews", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+
+			r.Post("/", app.createReviewHandler)
+			r.Get("/{id}", app.getReviewByIDHandler)
+			r.Patch("/{id}", app.updateReviewHandler)
+			r.Delete("/{id}", app.deleteReviewHandler)
+		})
+
+		// Reports routes (protected)
+		r.Route("/reports", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+
+			r.Post("/", app.createReportHandler)
 		})
 	})
 
