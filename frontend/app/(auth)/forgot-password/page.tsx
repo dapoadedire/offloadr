@@ -1,16 +1,15 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { motion } from "motion/react"
-import { toast } from "sonner"
-import { Loader2, Mail, ArrowLeft } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { motion } from "motion/react";
+import { toast } from "sonner";
+import { Loader2, Mail, ArrowLeft } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -19,37 +18,46 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address"),
-})
+});
 
-type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: "",
     },
-  })
+  });
 
   async function onSubmit(data: ForgotPasswordFormValues) {
-    setIsLoading(true)
+    setIsLoading(true);
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    console.log("Forgot password data:", data)
-    toast.success("If an account exists with this email, you will receive a password reset link.")
-    setEmailSent(true)
-    setIsLoading(false)
+    console.log("Forgot password data:", data);
+    toast.success(
+      "If an account exists with this email, you will receive a password reset link."
+    );
+    setEmailSent(true);
+    setIsLoading(false);
   }
 
   if (emailSent) {
@@ -73,20 +81,27 @@ export default function ForgotPasswordPage() {
                   <Mail className="h-12 w-12 text-primary" />
                 </div>
               </motion.div>
-              <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+              <CardTitle className="text-2xl font-bold">
+                Check your email
+              </CardTitle>
               <CardDescription>
-                If an account exists with this email, we&apos;ve sent you a link to reset your password.
+                If an account exists with this email, we&apos;ve sent you a link
+                to reset your password.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="rounded-lg bg-muted/50 p-4">
                 <p className="text-sm text-muted-foreground">
-                  The link will expire in 1 hour. If you don&apos;t see the email, check your spam folder.
+                  The link will expire in 1 hour. If you don&apos;t see the
+                  email, check your spam folder.
                 </p>
               </div>
             </CardContent>
             <CardFooter className="flex justify-center">
-              <Link href="/login" className="text-sm text-primary hover:underline inline-flex items-center">
+              <Link
+                href="/login"
+                className="text-sm text-primary hover:underline inline-flex items-center"
+              >
                 <ArrowLeft className="mr-1 h-4 w-4" />
                 Back to login
               </Link>
@@ -94,7 +109,7 @@ export default function ForgotPasswordPage() {
           </Card>
         </motion.div>
       </div>
-    )
+    );
   }
 
   return (
@@ -107,14 +122,19 @@ export default function ForgotPasswordPage() {
       >
         <Card>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-3xl font-bold text-center">Forgot password?</CardTitle>
+            <CardTitle className="text-3xl font-bold text-center">
+              Forgot password?
+            </CardTitle>
             <CardDescription className="text-center">
               Enter your email and we&apos;ll send you a reset link
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="email"
@@ -124,7 +144,12 @@ export default function ForgotPasswordPage() {
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input type="email" placeholder="john.doe@university.edu" className="pl-10" {...field} />
+                          <Input
+                            type="email"
+                            placeholder="john.doe@university.edu"
+                            className="pl-10"
+                            {...field}
+                          />
                         </div>
                       </FormControl>
                       <FormDescription>
@@ -149,7 +174,10 @@ export default function ForgotPasswordPage() {
             </Form>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <Link href="/login" className="text-sm text-primary hover:underline inline-flex items-center">
+            <Link
+              href="/login"
+              className="text-sm text-primary hover:underline inline-flex items-center"
+            >
               <ArrowLeft className="mr-1 h-4 w-4" />
               Back to login
             </Link>
@@ -157,5 +185,5 @@ export default function ForgotPasswordPage() {
         </Card>
       </motion.div>
     </div>
-  )
+  );
 }

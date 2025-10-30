@@ -62,22 +62,58 @@ export interface Review {
 
 // Dummy Schools
 export const schools: School[] = [
-  { id: "1", name: "Harvard University", domain: "harvard.edu", location: "Cambridge, MA" },
-  { id: "2", name: "MIT", domain: "mit.edu", location: "Cambridge, MA" },
-  { id: "3", name: "Stanford University", domain: "stanford.edu", location: "Stanford, CA" },
-  { id: "4", name: "UC Berkeley", domain: "berkeley.edu", location: "Berkeley, CA" },
-  { id: "5", name: "Yale University", domain: "yale.edu", location: "New Haven, CT" },
+  {
+    id: "1",
+    name: "Obafemi Awolowo University",
+    domain: "student.oauife.edu.ng",
+    location: "Ile-Ife, Nigeria",
+  },
 ];
 
 // Dummy Categories
 export const categories: Category[] = [
-  { id: "1", name: "Electronics", slug: "electronics", description: "Laptops, phones, tablets, and accessories" },
-  { id: "2", name: "Books", slug: "books", description: "Textbooks, novels, and study materials" },
-  { id: "3", name: "Furniture", slug: "furniture", description: "Desks, chairs, beds, and storage" },
-  { id: "4", name: "Clothing", slug: "clothing", description: "Clothes, shoes, and accessories" },
-  { id: "5", name: "Sports", slug: "sports", description: "Sports equipment and gear" },
-  { id: "6", name: "Kitchen", slug: "kitchen", description: "Appliances, cookware, and utensils" },
-  { id: "7", name: "Dorm Essentials", slug: "dorm-essentials", description: "Bedding, storage, and decor" },
+  {
+    id: "1",
+    name: "Electronics",
+    slug: "electronics",
+    description: "Laptops, phones, tablets, and accessories",
+  },
+  {
+    id: "2",
+    name: "Books",
+    slug: "books",
+    description: "Textbooks, novels, and study materials",
+  },
+  {
+    id: "3",
+    name: "Furniture",
+    slug: "furniture",
+    description: "Desks, chairs, beds, and storage",
+  },
+  {
+    id: "4",
+    name: "Clothing",
+    slug: "clothing",
+    description: "Clothes, shoes, and accessories",
+  },
+  {
+    id: "5",
+    name: "Sports",
+    slug: "sports",
+    description: "Sports equipment and gear",
+  },
+  {
+    id: "6",
+    name: "Kitchen",
+    slug: "kitchen",
+    description: "Appliances, cookware, and utensils",
+  },
+  {
+    id: "7",
+    name: "Dorm Essentials",
+    slug: "dorm-essentials",
+    description: "Bedding, storage, and decor",
+  },
   { id: "8", name: "Other", slug: "other", description: "Everything else" },
 ];
 
@@ -151,8 +187,9 @@ export const users: User[] = [
 export const items: Item[] = [
   {
     id: "1",
-    title: "MacBook Pro 14\" M3 Pro (2023)",
-    description: "Lightly used MacBook Pro in excellent condition. Selling because I'm graduating and switching to desktop setup. Comes with original charger and box. No scratches or dents. Battery health at 98%. Perfect for students!",
+    title: 'MacBook Pro 14" M3 Pro (2023)',
+    description:
+      "Lightly used MacBook Pro in excellent condition. Selling because I'm graduating and switching to desktop setup. Comes with original charger and box. No scratches or dents. Battery health at 98%. Perfect for students!",
     price: 1800,
     condition: "like-new",
     category: categories[0],
@@ -173,16 +210,15 @@ export const items: Item[] = [
   {
     id: "2",
     title: "Calculus Textbook (Stewart, 9th Ed)",
-    description: "Used calculus textbook for MATH 101. Minimal highlighting, no torn pages. Saved me a semester, hope it helps you too! Much cheaper than bookstore.",
+    description:
+      "Used calculus textbook for MATH 101. Minimal highlighting, no torn pages. Saved me a semester, hope it helps you too! Much cheaper than bookstore.",
     price: 45,
     condition: "good",
     category: categories[1],
     location: "Student Center",
     school: schools[1],
     seller: users[1],
-    photos: [
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800",
-    ],
+    photos: ["https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800"],
     status: "published",
     isNegotiable: true,
     viewsCount: 89,
@@ -193,7 +229,8 @@ export const items: Item[] = [
   {
     id: "3",
     title: "IKEA Desk - White with Drawers",
-    description: "Sturdy IKEA desk perfect for studying. White finish with 3 drawers for storage. Easy to assemble/disassemble. Selling because I'm moving to a furnished apartment. Pickup only.",
+    description:
+      "Sturdy IKEA desk perfect for studying. White finish with 3 drawers for storage. Easy to assemble/disassemble. Selling because I'm moving to a furnished apartment. Pickup only.",
     price: 60,
     condition: "good",
     category: categories[2],
@@ -213,7 +250,8 @@ export const items: Item[] = [
   {
     id: "4",
     title: "iPhone 14 Pro 256GB - Space Black",
-    description: "Mint condition iPhone 14 Pro. Always used with case and screen protector (both included). Battery health 100%. Upgrading to newer model. Comes with original box and accessories.",
+    description:
+      "Mint condition iPhone 14 Pro. Always used with case and screen protector (both included). Battery health 100%. Upgrading to newer model. Comes with original box and accessories.",
     price: 850,
     condition: "like-new",
     category: categories[0],
@@ -234,16 +272,15 @@ export const items: Item[] = [
   {
     id: "5",
     title: "North Face Jacket - Men's Large",
-    description: "Warm winter jacket, perfect for cold campus walks. Black North Face, size Large. Worn a few times, looks brand new. Moving to warmer climate.",
+    description:
+      "Warm winter jacket, perfect for cold campus walks. Black North Face, size Large. Worn a few times, looks brand new. Moving to warmer climate.",
     price: 120,
     condition: "like-new",
     category: categories[3],
     location: "Campus mailroom",
     school: schools[0],
     seller: users[0],
-    photos: [
-      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800",
-    ],
+    photos: ["https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800"],
     status: "published",
     isNegotiable: true,
     viewsCount: 145,
@@ -254,7 +291,8 @@ export const items: Item[] = [
   {
     id: "6",
     title: "Mini Fridge - 4.3 cu ft",
-    description: "Perfect dorm-sized mini fridge. Keeps drinks cold and has small freezer compartment. Works perfectly, selling because I'm graduating. Black color.",
+    description:
+      "Perfect dorm-sized mini fridge. Keeps drinks cold and has small freezer compartment. Works perfectly, selling because I'm graduating. Black color.",
     price: 75,
     condition: "good",
     category: categories[5],
@@ -274,7 +312,8 @@ export const items: Item[] = [
   {
     id: "7",
     title: "Gaming Setup: Monitor + Keyboard + Mouse",
-    description: "Complete gaming setup! 27\" 144Hz monitor, mechanical keyboard (Cherry MX), and gaming mouse. All in excellent condition. Great for gaming or productivity. Willing to sell separately if needed.",
+    description:
+      'Complete gaming setup! 27" 144Hz monitor, mechanical keyboard (Cherry MX), and gaming mouse. All in excellent condition. Great for gaming or productivity. Willing to sell separately if needed.',
     price: 350,
     condition: "good",
     category: categories[0],
@@ -295,7 +334,8 @@ export const items: Item[] = [
   {
     id: "8",
     title: "Yoga Mat + Blocks + Strap Set",
-    description: "Complete yoga set, barely used. Premium thick yoga mat (6mm), 2 cork blocks, and stretching strap. Perfect for home workouts or campus fitness classes.",
+    description:
+      "Complete yoga set, barely used. Premium thick yoga mat (6mm), 2 cork blocks, and stretching strap. Perfect for home workouts or campus fitness classes.",
     price: 35,
     condition: "like-new",
     category: categories[4],
@@ -322,7 +362,8 @@ export const reviews: Review[] = [
     sellerId: "1",
     buyerId: "2",
     rating: 5,
-    comment: "Great seller! MacBook was exactly as described. Quick meetup and very friendly.",
+    comment:
+      "Great seller! MacBook was exactly as described. Quick meetup and very friendly.",
     createdAt: "2025-01-16T10:00:00Z",
   },
   {
@@ -338,33 +379,33 @@ export const reviews: Review[] = [
 
 // Helper functions
 export const getItemById = (id: string): Item | undefined => {
-  return items.find(item => item.id === id);
+  return items.find((item) => item.id === id);
 };
 
 export const getItemsBySeller = (sellerId: string): Item[] => {
-  return items.filter(item => item.seller.id === sellerId);
+  return items.filter((item) => item.seller.id === sellerId);
 };
 
 export const getItemsByCategory = (categoryId: string): Item[] => {
-  return items.filter(item => item.category.id === categoryId);
+  return items.filter((item) => item.category.id === categoryId);
 };
 
 export const getItemsBySchool = (schoolId: string): Item[] => {
-  return items.filter(item => item.school.id === schoolId);
+  return items.filter((item) => item.school.id === schoolId);
 };
 
 export const getUserById = (id: string): User | undefined => {
-  return users.find(user => user.id === id);
+  return users.find((user) => user.id === id);
 };
 
 export const getCategoryBySlug = (slug: string): Category | undefined => {
-  return categories.find(category => category.slug === slug);
+  return categories.find((category) => category.slug === slug);
 };
 
 export const searchItems = (query: string): Item[] => {
   const lowercaseQuery = query.toLowerCase();
   return items.filter(
-    item =>
+    (item) =>
       item.title.toLowerCase().includes(lowercaseQuery) ||
       item.description.toLowerCase().includes(lowercaseQuery)
   );

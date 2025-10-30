@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter, notFound } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { motion } from "motion/react"
-import { toast } from "sonner"
-import { Loader2, Upload, X, ImagePlus, Trash2 } from "lucide-react"
+import { useState } from "react";
+import { useRouter, notFound } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { motion } from "motion/react";
+import { toast } from "sonner";
+import { Loader2, Upload, X, ImagePlus, Trash2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -18,18 +18,24 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -38,33 +44,36 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { getItemById, categories } from "@/lib/dummy-data"
+} from "@/components/ui/dialog";
+import { getItemById, categories } from "@/lib/dummy-data";
 
 const itemSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100),
-  description: z.string().min(20, "Description must be at least 20 characters").max(1000),
-  price: z.coerce.number().min(0, "Price must be greater than 0"),
+  description: z
+    .string()
+    .min(20, "Description must be at least 20 characters")
+    .max(1000),
+  price: z.number().min(0, "Price must be greater than 0"),
   categoryId: z.string().min(1, "Please select a category"),
   condition: z.enum(["new", "like-new", "good", "fair", "poor"]),
   location: z.string().min(1, "Location is required"),
-  isNegotiable: z.boolean().default(true),
-})
+  isNegotiable: z.boolean(),
+});
 
-type ItemFormValues = z.infer<typeof itemSchema>
+type ItemFormValues = z.infer<typeof itemSchema>;
 
 export default function EditItemPage({ params }: { params: { id: string } }) {
-  const router = useRouter()
-  const item = getItemById(params.id)
+  const router = useRouter();
+  const item = getItemById(params.id);
 
   if (!item) {
-    notFound()
+    notFound();
   }
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [uploadedImages, setUploadedImages] = useState<string[]>(item.photos)
-  const [isDragging, setIsDragging] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>(item.photos);
+  const [isDragging, setIsDragging] = useState(false);
 
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
@@ -77,85 +86,85 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
       location: item.location,
       isNegotiable: item.isNegotiable,
     },
-  })
+  });
 
   const handleImageUpload = (files: FileList | null) => {
-    if (!files) return
+    if (!files) return;
 
     Array.from(files).forEach((file) => {
       if (!file.type.startsWith("image/")) {
-        toast.error("Only image files are allowed")
-        return
+        toast.error("Only image files are allowed");
+        return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size must be less than 5MB")
-        return
+        toast.error("Image size must be less than 5MB");
+        return;
       }
 
       if (uploadedImages.length >= 8) {
-        toast.error("Maximum 8 images allowed")
-        return
+        toast.error("Maximum 8 images allowed");
+        return;
       }
 
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onloadend = () => {
-        setUploadedImages((prev) => [...prev, reader.result as string])
-      }
-      reader.readAsDataURL(file)
-    })
-  }
+        setUploadedImages((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
   const removeImage = (index: number) => {
-    setUploadedImages((prev) => prev.filter((_, i) => i !== index))
-  }
+    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
+    e.preventDefault();
+    setIsDragging(true);
+  };
 
   const handleDragLeave = () => {
-    setIsDragging(false)
-  }
+    setIsDragging(false);
+  };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    handleImageUpload(e.dataTransfer.files)
-  }
+    e.preventDefault();
+    setIsDragging(false);
+    handleImageUpload(e.dataTransfer.files);
+  };
 
   async function onSubmit(data: ItemFormValues) {
     if (uploadedImages.length === 0) {
-      toast.error("Please upload at least one image")
-      return
+      toast.error("Please upload at least one image");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    console.log("Updated item data:", { ...data, photos: uploadedImages })
-    toast.success("Item updated successfully!")
-    setIsLoading(false)
+    console.log("Updated item data:", { ...data, photos: uploadedImages });
+    toast.success("Item updated successfully!");
+    setIsLoading(false);
 
     // Redirect to item page
-    router.push(`/items/${item.id}`)
+    router.push(`/items/${params.id}`);
   }
 
   async function handleDelete() {
-    setIsDeleting(true)
+    setIsDeleting(true);
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    console.log("Item deleted:", item.id)
-    toast.success("Item deleted successfully")
-    setIsDeleting(false)
+    console.log("Item deleted:", params.id);
+    toast.success("Item deleted successfully");
+    setIsDeleting(false);
 
     // Redirect to marketplace
-    router.push("/marketplace")
+    router.push("/marketplace");
   }
 
   return (
@@ -168,9 +177,7 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold mb-2">Edit Item</h1>
-            <p className="text-muted-foreground">
-              Update your listing details
-            </p>
+            <p className="text-muted-foreground">Update your listing details</p>
           </div>
           <Dialog>
             <DialogTrigger asChild>
@@ -183,14 +190,19 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
               <DialogHeader>
                 <DialogTitle>Delete Item</DialogTitle>
                 <DialogDescription>
-                  Are you sure you want to delete this item? This action cannot be undone.
+                  Are you sure you want to delete this item? This action cannot
+                  be undone.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
                 <Button variant="outline" onClick={() => {}}>
                   Cancel
                 </Button>
-                <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
                   {isDeleting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -218,7 +230,9 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
               <CardContent>
                 <div
                   className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                    isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25"
+                    isDragging
+                      ? "border-primary bg-primary/5"
+                      : "border-muted-foreground/25"
                   }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -242,7 +256,9 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => document.getElementById("image-upload")?.click()}
+                    onClick={() =>
+                      document.getElementById("image-upload")?.click()
+                    }
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     Choose Files
@@ -259,7 +275,11 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
                         transition={{ duration: 0.3 }}
                         className="relative aspect-square rounded-lg overflow-hidden group"
                       >
-                        <img src={image} alt={`Upload ${index + 1}`} className="w-full h-full object-cover" />
+                        <img
+                          src={image}
+                          alt={`Upload ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
                         {index === 0 && (
                           <div className="absolute top-2 left-2">
                             <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
@@ -296,7 +316,10 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
                     <FormItem>
                       <FormLabel>Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="MacBook Pro 14 inch M3 Pro" {...field} />
+                        <Input
+                          placeholder="MacBook Pro 14 inch M3 Pro"
+                          {...field}
+                        />
                       </FormControl>
                       <FormDescription>
                         A clear, descriptive title helps buyers find your item
@@ -335,7 +358,16 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
                       <FormItem>
                         <FormLabel>Price ($)</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="100.00" step="0.01" {...field} />
+                          <Input
+                            type="number"
+                            placeholder="100.00"
+                            step="0.01"
+                            {...field}
+                            value={field.value}
+                            onChange={(e) =>
+                              field.onChange(parseFloat(e.target.value) || 0)
+                            }
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -348,7 +380,10 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select category" />
@@ -375,7 +410,10 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Condition</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select condition" />
@@ -457,5 +495,5 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
         </Form>
       </motion.div>
     </div>
-  )
+  );
 }
