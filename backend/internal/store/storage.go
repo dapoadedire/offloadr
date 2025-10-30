@@ -35,6 +35,48 @@ type Storage struct {
 	Schools interface {
 		GetByID(context.Context, int64) (*School, error)
 		GetByDomain(context.Context, string) (*School, error)
+		GetAll(context.Context) ([]*School, error)
+	}
+	Categories interface {
+		GetByID(context.Context, int64) (*Category, error)
+		GetAll(context.Context) ([]*Category, error)
+		GetSubCategories(context.Context, int64) ([]*Category, error)
+	}
+	Items interface {
+		Create(context.Context, *Item) error
+		GetByID(context.Context, int64) (*Item, error)
+		GetByIDWithDetails(context.Context, int64) (*ItemWithDetails, error)
+		GetAll(context.Context, ItemsFilterQuery) ([]*ItemWithDetails, int, error)
+		Update(context.Context, *Item) error
+		UpdateStatus(context.Context, int64, ItemStatus) error
+		MarkAsSold(context.Context, int64, *int64) error
+		IncrementViews(context.Context, int64) error
+		Delete(context.Context, int64) error
+		GetRelated(context.Context, int64, int64, int) ([]*ItemWithDetails, error)
+		GetItemPhotos(context.Context, int64) ([]*ItemPhoto, error)
+		CreatePhoto(context.Context, *ItemPhoto) error
+		DeletePhoto(context.Context, int64) error
+		GetPhotoByID(context.Context, int64) (*ItemPhoto, error)
+		SetPrimaryPhoto(context.Context, int64, int64) error
+	}
+	Favorites interface {
+		Add(context.Context, int64, int64) (*Favorite, error)
+		Remove(context.Context, int64, int64) error
+		GetUserFavorites(context.Context, int64, int, int) ([]*ItemWithDetails, int, error)
+		CheckFavorite(context.Context, int64, int64) (bool, error)
+	}
+	Reviews interface {
+		Create(context.Context, *Review) error
+		GetByID(context.Context, int64) (*ReviewWithDetails, error)
+		Update(context.Context, *Review) error
+		Delete(context.Context, int64) error
+		GetItemReviews(context.Context, int64, int, int) ([]*ReviewWithDetails, int, error)
+		GetSellerReviews(context.Context, int64, int, int) ([]*ReviewWithDetails, int, error)
+		GetSellerRating(context.Context, int64) (*SellerRating, error)
+	}
+	Reports interface {
+		Create(context.Context, *Report) error
+		GetUserReports(context.Context, int64, int, int) ([]*Report, int, error)
 	}
 	Users interface {
 		Create(context.Context, *User) error
@@ -63,6 +105,11 @@ func NewStorage(db *sql.DB) Storage {
 	return Storage{
 		Waitlist:        &WaitlistStore{db: db},
 		Schools:         &SchoolStore{db: db},
+		Categories:      &CategoryStore{db: db},
+		Items:           &ItemStore{db: db},
+		Favorites:       &FavoriteStore{db: db},
+		Reviews:         &ReviewStore{db: db},
+		Reports:         &ReportStore{db: db},
 		Users:           &UserStore{db: db},
 		PasswordResets:  &PasswordResetStore{db: db},
 		UserInvitations: &UserInvitationStore{db: db},

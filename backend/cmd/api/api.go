@@ -120,9 +120,63 @@ func (app *application) mount() *chi.Mux {
 			r.Patch("/me/password", app.changePasswordHandler)
 			r.Delete("/me", app.deactivateAccountHandler)
 			r.Delete("/me/permanent", app.deleteAccountPermanentlyHandler)
+			r.Get("/me/items", app.getCurrentUserItemsHandler)
+			r.Get("/me/items/sold", app.getCurrentUserSoldItemsHandler)
 
 			// Public user routes
 			r.Get("/{id}", app.getUserByIDHandler)
+			r.Get("/{id}/items", app.getUserItemsHandler)
+		})
+
+		// Public schools routes
+		r.Route("/schools", func(r chi.Router) {
+			r.Get("/", app.listSchoolsHandler)
+			r.Get("/{id}", app.getSchoolByIDHandler)
+			r.Get("/{school_id}/items", app.listSchoolItemsHandler)
+		})
+
+		// Public categories routes
+		r.Route("/categories", func(r chi.Router) {
+			r.Get("/", app.listCategoriesHandler)
+			r.Get("/{id}", app.getCategoryByIDHandler)
+			r.Get("/{category_id}/items", app.listCategoryItemsHandler)
+		})
+
+		// Items routes
+		r.Route("/items", func(r chi.Router) {
+			// Public/Browse routes
+			r.Get("/", app.listItemsHandler)
+			r.Get("/search", app.searchItemsHandler)
+			r.Get("/{id}", app.getItemByIDHandler)
+			r.Get("/{id}/related", app.getRelatedItemsHandler)
+
+			// Protected routes
+			r.Group(func(r chi.Router) {
+				r.Use(app.AuthTokenMiddleware)
+
+				r.Get("/{id}/contact", app.getItemContactHandler)
+				r.Post("/", app.createItemHandler)
+				r.Patch("/{id}", app.updateItemHandler)
+				r.Delete("/{id}", app.deleteItemHandler)
+				r.Patch("/{id}/status", app.updateItemStatusHandler)
+				r.Post("/{id}/mark-sold", app.markItemAsSoldHandler)
+				r.Post("/{id}/repost", app.repostItemHandler)
+
+				// Photo routes
+				r.Post("/{id}/photos", app.uploadItemPhotoHandler)
+				r.Delete("/{id}/photos/{photo_id}", app.deleteItemPhotoHandler)
+				r.Patch("/{id}/photos/{photo_id}/primary", app.setItemPhotoPrimaryHandler)
+			})
+		})
+
+		// Favorites routes (protected)
+		r.Route("/favorites", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+
+			r.Get("/", app.listFavoritesHandler)
+			r.Post("/", app.addFavoriteHandler)
+			r.Delete("/{item_id}", app.removeFavoriteHandler)
+			r.Get("/check/{item_id}", app.checkFavoriteHandler)
 		})
 	})
 

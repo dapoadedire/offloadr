@@ -417,3 +417,152 @@ func (app *application) deleteAccountPermanentlyHandler(w http.ResponseWriter, r
 		app.internalServerError(w, r, err)
 	}
 }
+
+// GET /v1/users/me/items - Get current user's all listings
+func (app *application) getCurrentUserItemsHandler(w http.ResponseWriter, r *http.Request) {
+	user := getUserFromContext(r)
+	if user == nil {
+		app.unauthorizedErrorResponse(w, r, fmt.Errorf("user not found in context"))
+		return
+	}
+
+	var filter store.ItemsFilterQuery
+	filter.Limit = 20
+	filter.Page = 1
+	filter.UserID = &user.ID
+
+	if err := filter.Parse(r); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Force user_id filter
+	filter.UserID = &user.ID
+
+	ctx := r.Context()
+
+	items, total, err := app.store.Items.GetAll(ctx, filter)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	pagination := store.CalculatePaginationMeta(filter.Page, filter.Limit, total)
+
+	response := store.PaginatedResponse{
+		Data:       items,
+		Pagination: pagination,
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, response); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+// GET /v1/users/me/items/sold - Get current user's sold items
+func (app *application) getCurrentUserSoldItemsHandler(w http.ResponseWriter, r *http.Request) {
+	user := getUserFromContext(r)
+	if user == nil {
+		app.unauthorizedErrorResponse(w, r, fmt.Errorf("user not found in context"))
+		return
+	}
+
+	var filter store.ItemsFilterQuery
+	filter.Limit = 20
+	filter.Page = 1
+	filter.UserID = &user.ID
+	soldStatus := store.ItemStatusSold
+	filter.Status = &soldStatus
+
+	if err := filter.Parse(r); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Force filters
+	filter.UserID = &user.ID
+	filter.Status = &soldStatus
+
+	ctx := r.Context()
+
+	items, total, err := app.store.Items.GetAll(ctx, filter)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	pagination := store.CalculatePaginationMeta(filter.Page, filter.Limit, total)
+
+	response := store.PaginatedResponse{
+		Data:       items,
+		Pagination: pagination,
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, response); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+// GET /v1/users/{id}/items - Get user's active listings (public)
+func (app *application) getUserItemsHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	if idStr == "" {
+		app.badRequestResponse(w, r, fmt.Errorf("user ID is required"))
+		return
+	}
+
+	var userID int64
+	if _, err := fmt.Sscanf(idStr, "%d", &userID); err != nil {
+		app.badRequestResponse(w, r, fmt.Errorf("invalid user ID"))
+		return
+	}
+
+	ctx := r.Context()
+
+	// Verify user exists and is active
+	targetUser, err := app.store.Users.GetByID(ctx, userID)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, fmt.Errorf("user not found"))
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if !targetUser.IsActive {
+		app.notFoundResponse(w, r, fmt.Errorf("user not found"))
+		return
+	}
+
+	var filter store.ItemsFilterQuery
+	filter.Limit = 20
+	filter.Page = 1
+	filter.UserID = &userID
+
+	if err := filter.Parse(r); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Force user_id filter to show only published items for public view
+	filter.UserID = &userID
+
+	items, total, err := app.store.Items.GetAll(ctx, filter)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	pagination := store.CalculatePaginationMeta(filter.Page, filter.Limit, total)
+
+	response := store.PaginatedResponse{
+		Data:       items,
+		Pagination: pagination,
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, response); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
