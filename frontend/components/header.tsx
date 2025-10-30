@@ -52,7 +52,7 @@ export const Header = () => {
             <ul className="flex gap-6 items-center">
               <li>
                 <Link
-                  href="#how-it-works"
+                  href="/#how-it-works"
                   className="text-muted-foreground hover:text-foreground transition-colors font-medium"
                 >
                   How it works
@@ -123,7 +123,7 @@ export const Header = () => {
             {/* Menu Content */}
             <nav className="flex-1 flex flex-col justify-center px-8 space-y-8">
               <Link
-                href="#how-it-works"
+                href="/#how-it-works"
                 className="text-2xl text-muted-foreground hover:text-primary transition-colors font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >

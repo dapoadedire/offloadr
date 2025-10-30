@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { M_PLUS_Code_Latin } from "next/font/google";
+import { IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/lib/query-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { Toaster } from "@/components/ui/toaster";
 
 
 
-const mPlusCodeLatin = M_PLUS_Code_Latin({
+const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  variable: "--font-mplus-code-latin",
+  variable: "--font-ibm-plex-mono",
   display: "swap",
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -55,11 +57,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${mPlusCodeLatin.variable} font-mono antialiased`}>
+      <body className={`${ibmPlexMono.variable} font-mono antialiased`}>
         <QueryProvider>
           <Header />
           {children}
           <Footer />
+          <Toaster />
         </QueryProvider>
       </body>
     </html>
