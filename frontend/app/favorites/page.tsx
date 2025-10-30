@@ -1,47 +1,48 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { motion, AnimatePresence } from "motion/react"
-import { toast } from "sonner"
-import { Heart, X, MapPin, Eye, Search } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { motion, AnimatePresence } from "motion/react";
+import { toast } from "sonner";
+import { Heart, X, MapPin, Eye, Search } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { items } from "@/lib/dummy-data"
+} from "@/components/ui/select";
+import { items } from "@/lib/dummy-data";
 
 export default function FavoritesPage() {
   // In real app, fetch favorited items from API based on user
-  const [favoriteItems, setFavoriteItems] = useState(items.slice(0, 6))
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterStatus, setFilterStatus] = useState<string>("all")
+  const [favoriteItems, setFavoriteItems] = useState(items.slice(0, 6));
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
 
   const filteredItems = favoriteItems.filter((item) => {
     const matchesSearch =
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+      item.description.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       filterStatus === "all" ||
       (filterStatus === "available" && item.status === "published") ||
-      (filterStatus === "sold" && item.status === "sold")
+      (filterStatus === "sold" && item.status === "sold");
 
-    return matchesSearch && matchesStatus
-  })
+    return matchesSearch && matchesStatus;
+  });
 
   const removeFavorite = (itemId: string) => {
-    setFavoriteItems((prev) => prev.filter((item) => item.id !== itemId))
-    toast.success("Removed from favorites")
-  }
+    setFavoriteItems((prev) => prev.filter((item) => item.id !== itemId));
+    toast.success("Removed from favorites");
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -99,14 +100,15 @@ export default function FavoritesPage() {
                 <div className="rounded-full bg-muted w-20 h-20 flex items-center justify-center mx-auto mb-6">
                   <Heart className="h-10 w-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-2xl font-semibold mb-2">No favorites yet</h3>
+                <h3 className="text-2xl font-semibold mb-2">
+                  No favorites yet
+                </h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Start browsing the marketplace and save items you&apos;re interested in. They&apos;ll appear here for easy access.
+                  Start browsing the marketplace and save items you&apos;re
+                  interested in. They&apos;ll appear here for easy access.
                 </p>
                 <Link href="/marketplace">
-                  <Button size="lg">
-                    Browse Marketplace
-                  </Button>
+                  <Button size="lg">Browse Marketplace</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -129,7 +131,8 @@ export default function FavoritesPage() {
           <>
             {/* Results Count */}
             <div className="mb-4 text-sm text-muted-foreground">
-              {filteredItems.length} {filteredItems.length === 1 ? "item" : "items"}
+              {filteredItems.length}{" "}
+              {filteredItems.length === 1 ? "item" : "items"}
             </div>
 
             {/* Items Grid */}
@@ -152,34 +155,34 @@ export default function FavoritesPage() {
         )}
       </motion.div>
     </div>
-  )
+  );
 }
 
 interface FavoriteItemCardProps {
   item: {
-    id: string
-    title: string
-    description: string
-    price: number
-    photos: string[]
-    condition: string
-    status: string
-    viewsCount: number
-    school: { name: string }
-  }
-  index: number
-  onRemove: (id: string) => void
+    id: string;
+    title: string;
+    description: string;
+    price: number;
+    photos: string[];
+    condition: string;
+    status: string;
+    viewsCount: number;
+    school: { name: string };
+  };
+  index: number;
+  onRemove: (id: string) => void;
 }
 
 function FavoriteItemCard({ item, index, onRemove }: FavoriteItemCardProps) {
-  const [isRemoving, setIsRemoving] = useState(false)
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const handleRemove = () => {
-    setIsRemoving(true)
+    setIsRemoving(true);
     setTimeout(() => {
-      onRemove(item.id)
-    }, 300)
-  }
+      onRemove(item.id);
+    }, 300);
+  };
 
   return (
     <motion.div
@@ -196,18 +199,19 @@ function FavoriteItemCard({ item, index, onRemove }: FavoriteItemCardProps) {
       <Link href={`/items/${item.id}`}>
         <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
           <div className="relative aspect-square overflow-hidden bg-muted">
-            <img
+            <Image
               src={item.photos[0]}
               alt={item.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
             <Button
               size="icon"
               variant="secondary"
               className="absolute top-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
-                e.preventDefault()
-                handleRemove()
+                e.preventDefault();
+                handleRemove();
               }}
             >
               <X className="h-4 w-4" />
@@ -249,5 +253,5 @@ function FavoriteItemCard({ item, index, onRemove }: FavoriteItemCardProps) {
         </Card>
       </Link>
     </motion.div>
-  )
+  );
 }

@@ -1,44 +1,53 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { motion } from "motion/react"
-import { toast } from "sonner"
-import { Plus, Package, Eye, Heart, Edit, Trash2, MoreVertical } from "lucide-react"
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "motion/react";
+import { toast } from "sonner";
+import {
+  Plus,
+  Package,
+  Eye,
+  Heart,
+  Edit,
+  Trash2,
+  MoreVertical,
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { items, users } from "@/lib/dummy-data"
+} from "@/components/ui/dropdown-menu";
+import { items, users } from "@/lib/dummy-data";
 
 export default function MyListingsPage() {
   // In real app, get current user from auth context
-  const currentUser = users[0]
-  const myItems = items.filter(item => item.seller.id === currentUser.id)
+  const currentUser = users[0];
+  const myItems = items.filter((item) => item.seller.id === currentUser.id);
 
-  const publishedItems = myItems.filter(item => item.status === "published")
-  const draftItems = myItems.filter(item => item.status === "draft")
-  const soldItems = myItems.filter(item => item.status === "sold")
-  const archivedItems = myItems.filter(item => item.status === "archived")
+  const publishedItems = myItems.filter((item) => item.status === "published");
+  const draftItems = myItems.filter((item) => item.status === "draft");
+  const soldItems = myItems.filter((item) => item.status === "sold");
+  const archivedItems = myItems.filter((item) => item.status === "archived");
 
   const handleMarkAsSold = () => {
-    toast.success("Item marked as sold")
-  }
+    toast.success("Item marked as sold");
+  };
 
   const handleDelete = () => {
-    toast.success("Item deleted")
-  }
+    toast.success("Item deleted");
+  };
 
   const handleArchive = () => {
-    toast.success("Item archived")
-  }
+    toast.success("Item archived");
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -72,9 +81,7 @@ export default function MyListingsPage() {
             <TabsTrigger value="drafts">
               Drafts ({draftItems.length})
             </TabsTrigger>
-            <TabsTrigger value="sold">
-              Sold ({soldItems.length})
-            </TabsTrigger>
+            <TabsTrigger value="sold">Sold ({soldItems.length})</TabsTrigger>
             <TabsTrigger value="archived">
               Archived ({archivedItems.length})
             </TabsTrigger>
@@ -86,7 +93,9 @@ export default function MyListingsPage() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">No active listings</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    No active listings
+                  </h3>
                   <p className="text-muted-foreground mb-4">
                     Post an item to start selling
                   </p>
@@ -177,7 +186,9 @@ export default function MyListingsPage() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">No archived items</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    No archived items
+                  </h3>
                   <p className="text-muted-foreground">
                     Archived items will appear here
                   </p>
@@ -201,29 +212,35 @@ export default function MyListingsPage() {
         </Tabs>
       </motion.div>
     </div>
-  )
+  );
 }
 
 interface ItemCardProps {
   item: {
-    id: string
-    title: string
-    description: string
-    price: number
-    photos: string[]
-    status: string
-    viewsCount: number
-    favoritesCount: number
-    createdAt: string
-  }
-  index: number
-  isSold?: boolean
-  onMarkAsSold: () => void
-  onArchive: () => void
-  onDelete: () => void
+    id: string;
+    title: string;
+    description: string;
+    price: number;
+    photos: string[];
+    status: string;
+    viewsCount: number;
+    favoritesCount: number;
+    createdAt: string;
+  };
+  index: number;
+  isSold?: boolean;
+  onMarkAsSold: () => void;
+  onArchive: () => void;
+  onDelete: () => void;
 }
 
-function ItemCard({ item, index, onMarkAsSold, onArchive, onDelete }: ItemCardProps) {
+function ItemCard({
+  item,
+  index,
+  onMarkAsSold,
+  onArchive,
+  onDelete,
+}: ItemCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -232,10 +249,11 @@ function ItemCard({ item, index, onMarkAsSold, onArchive, onDelete }: ItemCardPr
     >
       <Card className="overflow-hidden group">
         <div className="relative aspect-square overflow-hidden bg-muted">
-          <img
+          <Image
             src={item.photos[0]}
             alt={item.title}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
           <div className="absolute top-2 left-2">
             <Badge
@@ -243,8 +261,13 @@ function ItemCard({ item, index, onMarkAsSold, onArchive, onDelete }: ItemCardPr
                 item.status === "published"
                   ? "default"
                   : item.status === "sold"
-                  ? "success"
+                  ? "default"
                   : "secondary"
+              }
+              className={
+                item.status === "sold"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : ""
               }
             >
               {item.status}
@@ -259,14 +282,20 @@ function ItemCard({ item, index, onMarkAsSold, onArchive, onDelete }: ItemCardPr
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/items/${item.id}`} className="w-full cursor-pointer">
+                  <Link
+                    href={`/items/${item.id}`}
+                    className="w-full cursor-pointer"
+                  >
                     <Eye className="mr-2 h-4 w-4" />
                     View
                   </Link>
                 </DropdownMenuItem>
                 {item.status !== "sold" && (
                   <DropdownMenuItem asChild>
-                    <Link href={`/items/${item.id}/edit`} className="w-full cursor-pointer">
+                    <Link
+                      href={`/items/${item.id}/edit`}
+                      className="w-full cursor-pointer"
+                    >
                       <Edit className="mr-2 h-4 w-4" />
                       Edit
                     </Link>
@@ -323,5 +352,5 @@ function ItemCard({ item, index, onMarkAsSold, onArchive, onDelete }: ItemCardPr
         </CardFooter>
       </Card>
     </motion.div>
-  )
+  );
 }

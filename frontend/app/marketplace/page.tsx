@@ -1,113 +1,129 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import Link from "next/link"
-import { motion, AnimatePresence } from "motion/react"
-import { Search, Filter, X, Heart, MapPin, Eye } from "lucide-react"
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { motion, AnimatePresence } from "motion/react";
+import { Search, Filter, X, Heart, MapPin, Eye } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
-import { items, categories, schools, type Item } from "@/lib/dummy-data"
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { items, categories, schools, type Item } from "@/lib/dummy-data";
 
 export default function MarketplacePage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string>("all")
-  const [selectedSchool, setSelectedSchool] = useState<string>("all")
-  const [selectedCondition, setSelectedCondition] = useState<string>("all")
-  const [priceRange, setPriceRange] = useState<string>("all")
-  const [sortBy, setSortBy] = useState<string>("newest")
-  const [showFilters, setShowFilters] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedSchool, setSelectedSchool] = useState<string>("all");
+  const [selectedCondition, setSelectedCondition] = useState<string>("all");
+  const [priceRange, setPriceRange] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [showFilters, setShowFilters] = useState(false);
 
   const filteredAndSortedItems = useMemo(() => {
-    let filtered = [...items]
+    let filtered = [...items];
 
     // Search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        item =>
+        (item) =>
           item.title.toLowerCase().includes(query) ||
           item.description.toLowerCase().includes(query)
-      )
+      );
     }
 
     // Category filter
     if (selectedCategory !== "all") {
-      filtered = filtered.filter(item => item.category.id === selectedCategory)
+      filtered = filtered.filter(
+        (item) => item.category.id === selectedCategory
+      );
     }
 
     // School filter
     if (selectedSchool !== "all") {
-      filtered = filtered.filter(item => item.school.id === selectedSchool)
+      filtered = filtered.filter((item) => item.school.id === selectedSchool);
     }
 
     // Condition filter
     if (selectedCondition !== "all") {
-      filtered = filtered.filter(item => item.condition === selectedCondition)
+      filtered = filtered.filter(
+        (item) => item.condition === selectedCondition
+      );
     }
 
     // Price range filter
     if (priceRange !== "all") {
-      filtered = filtered.filter(item => {
+      filtered = filtered.filter((item) => {
         switch (priceRange) {
           case "under-50":
-            return item.price < 50
+            return item.price < 50;
           case "50-100":
-            return item.price >= 50 && item.price <= 100
+            return item.price >= 50 && item.price <= 100;
           case "100-500":
-            return item.price >= 100 && item.price <= 500
+            return item.price >= 100 && item.price <= 500;
           case "over-500":
-            return item.price > 500
+            return item.price > 500;
           default:
-            return true
+            return true;
         }
-      })
+      });
     }
 
     // Sort
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "newest":
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         case "oldest":
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          return (
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
         case "price-low":
-          return a.price - b.price
+          return a.price - b.price;
         case "price-high":
-          return b.price - a.price
+          return b.price - a.price;
         case "popular":
-          return b.viewsCount - a.viewsCount
+          return b.viewsCount - a.viewsCount;
         default:
-          return 0
+          return 0;
       }
-    })
+    });
 
-    return filtered
-  }, [searchQuery, selectedCategory, selectedSchool, selectedCondition, priceRange, sortBy])
+    return filtered;
+  }, [
+    searchQuery,
+    selectedCategory,
+    selectedSchool,
+    selectedCondition,
+    priceRange,
+    sortBy,
+  ]);
 
   const activeFiltersCount = [
     selectedCategory !== "all",
     selectedSchool !== "all",
     selectedCondition !== "all",
     priceRange !== "all",
-  ].filter(Boolean).length
+  ].filter(Boolean).length;
 
   function clearAllFilters() {
-    setSelectedCategory("all")
-    setSelectedSchool("all")
-    setSelectedCondition("all")
-    setPriceRange("all")
-    setSearchQuery("")
+    setSelectedCategory("all");
+    setSelectedSchool("all");
+    setSelectedCondition("all");
+    setPriceRange("all");
+    setSearchQuery("");
   }
 
   return (
@@ -158,7 +174,10 @@ export default function MarketplacePage() {
             <Filter className="mr-2 h-4 w-4" />
             Filters
             {activeFiltersCount > 0 && (
-              <Badge variant="destructive" className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center">
+              <Badge
+                variant="destructive"
+                className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center"
+              >
                 {activeFiltersCount}
               </Badge>
             )}
@@ -181,7 +200,10 @@ export default function MarketplacePage() {
                     {/* Category Filter */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Category</label>
-                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <Select
+                        value={selectedCategory}
+                        onValueChange={setSelectedCategory}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="All Categories" />
                         </SelectTrigger>
@@ -199,7 +221,10 @@ export default function MarketplacePage() {
                     {/* School Filter */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium">School</label>
-                      <Select value={selectedSchool} onValueChange={setSelectedSchool}>
+                      <Select
+                        value={selectedSchool}
+                        onValueChange={setSelectedSchool}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="All Schools" />
                         </SelectTrigger>
@@ -217,7 +242,10 @@ export default function MarketplacePage() {
                     {/* Condition Filter */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Condition</label>
-                      <Select value={selectedCondition} onValueChange={setSelectedCondition}>
+                      <Select
+                        value={selectedCondition}
+                        onValueChange={setSelectedCondition}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="All Conditions" />
                         </SelectTrigger>
@@ -273,7 +301,8 @@ export default function MarketplacePage() {
 
       {/* Results Count */}
       <div className="mb-4 text-sm text-muted-foreground">
-        {filteredAndSortedItems.length} {filteredAndSortedItems.length === 1 ? "item" : "items"} found
+        {filteredAndSortedItems.length}{" "}
+        {filteredAndSortedItems.length === 1 ? "item" : "items"} found
       </div>
 
       {/* Items Grid */}
@@ -307,11 +336,11 @@ export default function MarketplacePage() {
         </motion.div>
       )}
     </div>
-  )
+  );
 }
 
 function ItemCard({ item, index }: { item: Item; index: number }) {
-  const [isFavorited, setIsFavorited] = useState(false)
+  const [isFavorited, setIsFavorited] = useState(false);
 
   return (
     <motion.div
@@ -323,22 +352,25 @@ function ItemCard({ item, index }: { item: Item; index: number }) {
       <Link href={`/items/${item.id}`}>
         <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
           <div className="relative aspect-square overflow-hidden bg-muted">
-            <img
+            <Image
               src={item.photos[0]}
               alt={item.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
             <Button
               size="icon"
               variant="secondary"
               className="absolute top-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
-                e.preventDefault()
-                setIsFavorited(!isFavorited)
+                e.preventDefault();
+                setIsFavorited(!isFavorited);
               }}
             >
               <Heart
-                className={`h-4 w-4 ${isFavorited ? "fill-red-500 text-red-500" : ""}`}
+                className={`h-4 w-4 ${
+                  isFavorited ? "fill-red-500 text-red-500" : ""
+                }`}
               />
             </Button>
             <div className="absolute bottom-2 left-2 flex gap-2">
@@ -378,5 +410,5 @@ function ItemCard({ item, index }: { item: Item; index: number }) {
         </Card>
       </Link>
     </motion.div>
-  )
+  );
 }

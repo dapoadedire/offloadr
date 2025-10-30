@@ -1,27 +1,35 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { motion } from "motion/react"
-import { Calendar, MapPin, Star, Edit, Package, MessageCircle } from "lucide-react"
+import Link from "next/link";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { motion } from "motion/react";
+import {
+  Calendar,
+  MapPin,
+  Star,
+  Edit,
+  Package,
+  MessageCircle,
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getUserById, getItemsBySeller, reviews } from "@/lib/dummy-data"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getUserById, getItemsBySeller, reviews } from "@/lib/dummy-data";
 
 export default function ProfilePage({ params }: { params: { id: string } }) {
-  const user = getUserById(params.id)
-  const isOwnProfile = false // In real app, check if logged-in user matches
+  const user = getUserById(params.id);
+  const isOwnProfile = false; // In real app, check if logged-in user matches
 
   if (!user) {
-    notFound()
+    notFound();
   }
 
-  const userItems = getItemsBySeller(user.id)
-  const userReviews = reviews.filter(r => r.sellerId === user.id)
+  const userItems = getItemsBySeller(user.id);
+  const userReviews = reviews.filter((r) => r.sellerId === user.id);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -38,7 +46,8 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
               <Avatar className="h-24 w-24">
                 <AvatarImage src={user.avatarUrl} />
                 <AvatarFallback className="text-2xl">
-                  {user.firstName[0]}{user.lastName[0]}
+                  {user.firstName[0]}
+                  {user.lastName[0]}
                 </AvatarFallback>
               </Avatar>
 
@@ -49,7 +58,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                     {user.firstName} {user.lastName}
                   </h1>
                   {user.emailVerified && (
-                    <Badge variant="success" className="w-fit mx-auto sm:mx-0">
+                    <Badge variant="default" className="w-fit mx-auto sm:mx-0 bg-green-600 hover:bg-green-700">
                       Verified
                     </Badge>
                   )}
@@ -60,7 +69,9 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                 <div className="flex flex-wrap justify-center sm:justify-start gap-6 mb-4">
                   <div className="flex items-center gap-2">
                     <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                    <span className="font-semibold">{user.averageRating.toFixed(1)}</span>
+                    <span className="font-semibold">
+                      {user.averageRating.toFixed(1)}
+                    </span>
                     <span className="text-muted-foreground text-sm">
                       ({user.reviewCount} reviews)
                     </span>
@@ -80,7 +91,9 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    <span>Joined {new Date(user.joinedAt).toLocaleDateString()}</span>
+                    <span>
+                      Joined {new Date(user.joinedAt).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -108,8 +121,12 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
         {/* Tabs */}
         <Tabs defaultValue="listings" className="w-full">
           <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="listings">Listings ({userItems.length})</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({userReviews.length})</TabsTrigger>
+            <TabsTrigger value="listings">
+              Listings ({userItems.length})
+            </TabsTrigger>
+            <TabsTrigger value="reviews">
+              Reviews ({userReviews.length})
+            </TabsTrigger>
           </TabsList>
 
           {/* Listings Tab */}
@@ -118,7 +135,9 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">No listings yet</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    No listings yet
+                  </h3>
                   <p className="text-muted-foreground">
                     {isOwnProfile
                       ? "Start selling by posting your first item"
@@ -143,10 +162,11 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                     <Link href={`/items/${item.id}`}>
                       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
                         <div className="relative aspect-square overflow-hidden bg-muted">
-                          <img
+                          <Image
                             src={item.photos[0]}
                             alt={item.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className="absolute bottom-2 left-2">
                             <Badge variant="secondary" className="text-xs">
@@ -201,7 +221,9 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                               <Star
                                 key={i}
                                 className={`h-5 w-5 ${
-                                  i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted"
+                                  i < review.rating
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-muted"
                                 }`}
                               />
                             ))}
@@ -211,7 +233,9 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                           </span>
                         </div>
                         {review.comment && (
-                          <p className="text-muted-foreground">{review.comment}</p>
+                          <p className="text-muted-foreground">
+                            {review.comment}
+                          </p>
                         )}
                       </CardContent>
                     </Card>
@@ -223,5 +247,5 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
         </Tabs>
       </motion.div>
     </div>
-  )
+  );
 }

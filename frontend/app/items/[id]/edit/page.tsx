@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, notFound } from "next/navigation";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -275,10 +276,11 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
                         transition={{ duration: 0.3 }}
                         className="relative aspect-square rounded-lg overflow-hidden group"
                       >
-                        <img
+                        <Image
                           src={image}
                           alt={`Upload ${index + 1}`}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                         {index === 0 && (
                           <div className="absolute top-2 left-2">

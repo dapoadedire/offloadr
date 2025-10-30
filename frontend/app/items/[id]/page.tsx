@@ -1,10 +1,11 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { motion } from "motion/react"
-import { toast } from "sonner"
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { motion } from "motion/react";
+import { toast } from "sonner";
 import {
   Heart,
   Share2,
@@ -15,56 +16,64 @@ import {
   ChevronRight,
   Star,
   User,
-} from "lucide-react"
-import { FaWhatsapp, FaSnapchat } from "react-icons/fa"
+} from "lucide-react";
+import { FaWhatsapp, FaSnapchat } from "react-icons/fa";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
-import { getItemById, items, reviews } from "@/lib/dummy-data"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { getItemById, items, reviews } from "@/lib/dummy-data";
 
 export default function ItemDetailPage({ params }: { params: { id: string } }) {
-  const item = getItemById(params.id)
+  const item = getItemById(params.id);
 
   if (!item) {
-    notFound()
+    notFound();
   }
 
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [isFavorited, setIsFavorited] = useState(false)
-  const [showContact, setShowContact] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [showContact, setShowContact] = useState(false);
 
-  const itemReviews = reviews.filter(r => r.sellerId === item.seller.id).slice(0, 3)
-  const relatedItems = items.filter(i => i.category.id === item.category.id && i.id !== item.id).slice(0, 4)
+  const itemReviews = reviews
+    .filter((r) => r.sellerId === item.seller.id)
+    .slice(0, 3);
+  const relatedItems = items
+    .filter((i) => i.category.id === item.category.id && i.id !== item.id)
+    .slice(0, 4);
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % item.photos.length)
-  }
+    setCurrentImageIndex((prev) => (prev + 1) % item.photos.length);
+  };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + item.photos.length) % item.photos.length)
-  }
+    setCurrentImageIndex(
+      (prev) => (prev - 1 + item.photos.length) % item.photos.length
+    );
+  };
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href)
-    toast.success("Link copied to clipboard!")
-  }
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Link copied to clipboard!");
+  };
 
   const handleFavorite = () => {
-    setIsFavorited(!isFavorited)
-    toast.success(isFavorited ? "Removed from favorites" : "Added to favorites")
-  }
+    setIsFavorited(!isFavorited);
+    toast.success(
+      isFavorited ? "Removed from favorites" : "Added to favorites"
+    );
+  };
 
   const handleContactSeller = () => {
-    setShowContact(true)
-    toast.success("Seller contact information revealed")
-  }
+    setShowContact(true);
+    toast.success("Seller contact information revealed");
+  };
 
   const handleReport = () => {
-    toast.success("Item reported. We'll review it shortly.")
-  }
+    toast.success("Item reported. We'll review it shortly.");
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -74,7 +83,10 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
           Marketplace
         </Link>
         {" / "}
-        <Link href={`/marketplace?category=${item.category.id}`} className="hover:text-primary">
+        <Link
+          href={`/marketplace?category=${item.category.id}`}
+          className="hover:text-primary"
+        >
           {item.category.name}
         </Link>
         {" / "}
@@ -121,7 +133,9 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
                       <button
                         key={index}
                         className={`w-2 h-2 rounded-full transition-all ${
-                          index === currentImageIndex ? "bg-white w-8" : "bg-white/50"
+                          index === currentImageIndex
+                            ? "bg-white w-8"
+                            : "bg-white/50"
                         }`}
                         onClick={() => setCurrentImageIndex(index)}
                       />
@@ -138,11 +152,18 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`aspect-square rounded-md overflow-hidden border-2 transition-all ${
-                      index === currentImageIndex ? "border-primary" : "border-transparent"
+                    className={`relative aspect-square rounded-md overflow-hidden border-2 transition-all ${
+                      index === currentImageIndex
+                        ? "border-primary"
+                        : "border-transparent"
                     }`}
                   >
-                    <img src={photo} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                    <Image
+                      src={photo}
+                      alt={`Thumbnail ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
                   </button>
                 ))}
               </div>
@@ -155,7 +176,9 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
               <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground whitespace-pre-line">{item.description}</p>
+              <p className="text-muted-foreground whitespace-pre-line">
+                {item.description}
+              </p>
             </CardContent>
           </Card>
 
@@ -172,7 +195,9 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
               <Separator />
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Condition</span>
-                <Badge variant="secondary">{item.condition.replace("-", " ")}</Badge>
+                <Badge variant="secondary">
+                  {item.condition.replace("-", " ")}
+                </Badge>
               </div>
               <Separator />
               <div className="flex justify-between">
@@ -222,7 +247,9 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
                             <Star
                               key={i}
                               className={`h-4 w-4 ${
-                                i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted"
+                                i < review.rating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-muted"
                               }`}
                             />
                           ))}
@@ -233,7 +260,9 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
                       </div>
                     </div>
                     {review.comment && (
-                      <p className="text-sm text-muted-foreground">{review.comment}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {review.comment}
+                      </p>
                     )}
                     <Separator />
                   </div>
@@ -258,12 +287,18 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
                   ${item.price.toFixed(2)}
                 </div>
                 {item.isNegotiable && (
-                  <p className="text-sm text-muted-foreground">Price is negotiable</p>
+                  <p className="text-sm text-muted-foreground">
+                    Price is negotiable
+                  </p>
                 )}
               </div>
 
               <div className="flex gap-2">
-                <Button className="flex-1" size="lg" onClick={handleContactSeller}>
+                <Button
+                  className="flex-1"
+                  size="lg"
+                  onClick={handleContactSeller}
+                >
                   <MessageCircle className="mr-2 h-4 w-4" />
                   Contact Seller
                 </Button>
@@ -272,11 +307,19 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
                   variant="outline"
                   onClick={handleFavorite}
                 >
-                  <Heart className={`h-5 w-5 ${isFavorited ? "fill-red-500 text-red-500" : ""}`} />
+                  <Heart
+                    className={`h-5 w-5 ${
+                      isFavorited ? "fill-red-500 text-red-500" : ""
+                    }`}
+                  />
                 </Button>
               </div>
 
-              <Button variant="outline" className="w-full" onClick={handleShare}>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleShare}
+              >
                 <Share2 className="mr-2 h-4 w-4" />
                 Share
               </Button>
@@ -287,11 +330,16 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-3 p-4 bg-muted/50 rounded-lg"
                 >
-                  <p className="text-sm font-medium mb-2">Contact Information:</p>
+                  <p className="text-sm font-medium mb-2">
+                    Contact Information:
+                  </p>
                   {item.seller.phone && (
                     <div className="flex items-center gap-2 text-sm">
                       <Phone className="h-4 w-4 text-muted-foreground" />
-                      <a href={`tel:${item.seller.phone}`} className="hover:text-primary">
+                      <a
+                        href={`tel:${item.seller.phone}`}
+                        className="hover:text-primary"
+                      >
                         {item.seller.phone}
                       </a>
                     </div>
@@ -300,7 +348,10 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
                     <div className="flex items-center gap-2 text-sm">
                       <FaWhatsapp className="h-4 w-4 text-green-500" />
                       <a
-                        href={`https://wa.me/${item.seller.whatsapp.replace(/[^0-9]/g, "")}`}
+                        href={`https://wa.me/${item.seller.whatsapp.replace(
+                          /[^0-9]/g,
+                          ""
+                        )}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:text-primary"
@@ -331,14 +382,17 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={item.seller.avatarUrl} />
                     <AvatarFallback>
-                      {item.seller.firstName[0]}{item.seller.lastName[0]}
+                      {item.seller.firstName[0]}
+                      {item.seller.lastName[0]}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <p className="font-semibold group-hover:text-primary transition-colors">
                       {item.seller.firstName} {item.seller.lastName}
                     </p>
-                    <p className="text-sm text-muted-foreground">@{item.seller.username}</p>
+                    <p className="text-sm text-muted-foreground">
+                      @{item.seller.username}
+                    </p>
                   </div>
                 </div>
               </Link>
@@ -351,7 +405,8 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <span className="font-medium">
-                      {item.seller.averageRating.toFixed(1)} ({item.seller.reviewCount})
+                      {item.seller.averageRating.toFixed(1)} (
+                      {item.seller.reviewCount})
                     </span>
                   </div>
                 </div>
@@ -377,7 +432,12 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
           </Card>
 
           {/* Report */}
-          <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={handleReport}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-muted-foreground"
+            onClick={handleReport}
+          >
             <Flag className="mr-2 h-4 w-4" />
             Report this listing
           </Button>
@@ -393,10 +453,11 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
               <Link key={relatedItem.id} href={`/items/${relatedItem.id}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
                   <div className="relative aspect-square overflow-hidden bg-muted">
-                    <img
+                    <Image
                       src={relatedItem.photos[0]}
                       alt={relatedItem.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
                   <CardContent className="p-4">
@@ -414,5 +475,5 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
         </div>
       )}
     </div>
-  )
+  );
 }
