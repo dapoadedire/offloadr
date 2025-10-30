@@ -69,3 +69,24 @@ func formatValidationError(fieldError validator.FieldError) string {
 		return fmt.Sprintf("%s is invalid", fieldName)
 	}
 }
+
+func (app *application) unauthorizedErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnw("unauthorized error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	writeJSONError(w, http.StatusUnauthorized, "unauthorized")
+}
+
+func (app *application) forbiddenResponse(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnw("forbidden error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	writeJSONError(w, http.StatusForbidden, "you do not have permission to perform this action")
+}
+
+func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnw("not found error", "method", r.Method, "path", r.URL.Path, "error", err.Error())
+	writeJSONError(w, http.StatusNotFound, "resource not found")
+}
+
+func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request, retryAfter string) {
+	app.logger.Warnw("rate limit exceeded", "method", r.Method, "path", r.URL.Path)
+	w.Header().Set("Retry-After", retryAfter)
+	writeJSONError(w, http.StatusTooManyRequests, "rate limit exceeded")
+}

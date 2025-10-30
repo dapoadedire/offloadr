@@ -14,13 +14,9 @@ CREATE TABLE IF NOT EXISTS schools (
 CREATE INDEX IF NOT EXISTS idx_schools_domain ON schools(domain);
 CREATE INDEX IF NOT EXISTS idx_schools_is_active ON schools(is_active);
 
--- Insert some initial schools (examples)
+-- Insert initial school
 INSERT INTO schools (name, domain, location) VALUES
-    ('Harvard University', 'harvard.edu', 'Cambridge, MA'),
-    ('Stanford University', 'stanford.edu', 'Stanford, CA'),
-    ('Massachusetts Institute of Technology', 'mit.edu', 'Cambridge, MA'),
-    ('Yale University', 'yale.edu', 'New Haven, CT'),
-    ('Princeton University', 'princeton.edu', 'Princeton, NJ')
+    ('Obafemi Awolowo University', 'oauife.edu.ng', 'Ile-Ife, Osun State, Nigeria')
 ON CONFLICT (domain) DO NOTHING;
 -- +goose StatementEnd
 

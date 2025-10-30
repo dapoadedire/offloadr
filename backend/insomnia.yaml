@@ -1,0 +1,432 @@
+type: collection.insomnia.rest/5.0
+name: Offloadr
+meta:
+  id: wrk_2009809ac4704dfda2492828c3685778
+  created: 1760458171432
+  modified: 1760458171432
+  description: ""
+collection:
+  # Health Check
+  - url: "{{ _.BASE_URL }}/health"
+    name: Health Check
+    meta:
+      id: req_health_check
+      created: 1760458181332
+      modified: 1761827567214
+      isPrivate: false
+      description: "Check API health status"
+      sortKey: 1000
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Waitlist
+  - url: "{{ _.BASE_URL }}/waitlist"
+    name: Join Waitlist
+    meta:
+      id: req_waitlist_create
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Add email to waitlist"
+      sortKey: 2000
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"email": "student@oauife.edu.ng"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Auth - Register
+  - url: "{{ _.BASE_URL }}/auth/register"
+    name: Register User
+    meta:
+      id: req_auth_register
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Register a new user account"
+      sortKey: 3000
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"username": "dapoadedire",
+        	"firstname": "Dapo",
+        	"lastname": "Adedire",
+        	"email": "afadedire@student.oauife.edu.ng",
+        	"password": "SecurePass123!",
+        	"school_id": 1
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Auth - Verify Email
+  - url: "{{ _.BASE_URL }}/auth/verify-email/{{ _.VERIFICATION_TOKEN }}"
+    name: Verify Email
+    meta:
+      id: req_auth_verify_email
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Verify user email with token"
+      sortKey: 3100
+    method: PUT
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Auth - Resend Verification
+  - url: "{{ _.BASE_URL }}/auth/resend-verification"
+    name: Resend Verification Email
+    meta:
+      id: req_auth_resend_verification
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Resend email verification"
+      sortKey: 3200
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"email": "afadedire@student.oauife.edu.ng"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Auth - Login
+  - url: "{{ _.BASE_URL }}/auth/login"
+    name: Login
+    meta:
+      id: req_auth_login
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Login with email/username and password"
+      sortKey: 3300
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"email": "afadedire@student.oauife.edu.ng",
+        	"password": "SecurePass123!"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Auth - Forgot Password
+  - url: "{{ _.BASE_URL }}/auth/forgot-password"
+    name: Forgot Password
+    meta:
+      id: req_auth_forgot_password
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Request password reset email"
+      sortKey: 3400
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"email": "afadedire@student.oauife.edu.ng"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Auth - Reset Password
+  - url: "{{ _.BASE_URL }}/auth/reset-password"
+    name: Reset Password
+    meta:
+      id: req_auth_reset_password
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Reset password with token"
+      sortKey: 3500
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"token": "{{ _.RESET_TOKEN }}",
+        	"new_password": "NewSecurePass123!",
+        	"confirm_password": "NewSecurePass123!"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Users - Get Current User (Protected)
+  - url: "{{ _.BASE_URL }}/users/me"
+    name: Get Current User
+    meta:
+      id: req_users_get_me
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Get current authenticated user profile"
+      sortKey: 4000
+    method: GET
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Users - Update Current User (Protected)
+  - url: "{{ _.BASE_URL }}/users/me"
+    name: Update Current User
+    meta:
+      id: req_users_update_me
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Update current user profile"
+      sortKey: 4100
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"firstname": "Adedapo",
+        	"bio": "Computer Science student at OAU"
+        }
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Users - Change Password (Protected)
+  - url: "{{ _.BASE_URL }}/users/me/password"
+    name: Change Password
+    meta:
+      id: req_users_change_password
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Change current user password"
+      sortKey: 4200
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+        	"current_password": "SecurePass123!",
+        	"new_password": "NewSecurePass456!",
+        	"confirm_password": "NewSecurePass456!"
+        }
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Users - Deactivate Account (Protected)
+  - url: "{{ _.BASE_URL }}/users/me"
+    name: Deactivate Account
+    meta:
+      id: req_users_deactivate
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Deactivate user account (soft delete)"
+      sortKey: 4300
+    method: DELETE
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Users - Delete Account Permanently (Protected)
+  - url: "{{ _.BASE_URL }}/users/me/permanent"
+    name: Delete Account Permanently
+    meta:
+      id: req_users_delete_permanent
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Permanently delete user account"
+      sortKey: 4400
+    method: DELETE
+    headers:
+      - name: Authorization
+        value: Bearer {{ _.AUTH_TOKEN }}
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+
+  # Users - Get User by ID
+  - url: "{{ _.BASE_URL }}/users/1"
+    name: Get User by ID
+    meta:
+      id: req_users_get_by_id
+      created: 1761827552450
+      modified: 1761827753243
+      isPrivate: false
+      description: "Get public user profile by ID"
+      sortKey: 4500
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_eba558a53e51472eefa7b6da5764e8362ea1ebf7
+    created: 1760458171436
+    modified: 1760458171436
+environments:
+  name: Base Environment
+  meta:
+    id: env_eba558a53e51472eefa7b6da5764e8362ea1ebf7
+    created: 1760458171435
+    modified: 1760458225068
+    isPrivate: false
+  data:
+    BASE_URL: http://localhost:8080/v1
+    AUTH_TOKEN: ""
+    VERIFICATION_TOKEN: ""
+    RESET_TOKEN: ""

@@ -8,7 +8,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/dapoadedire/offloadr/backend/internal/auth"
 	"github.com/dapoadedire/offloadr/backend/internal/env"
+	"github.com/dapoadedire/offloadr/backend/internal/mailer"
+	"github.com/dapoadedire/offloadr/backend/internal/ratelimiter"
 	"github.com/dapoadedire/offloadr/backend/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,9 +20,12 @@ import (
 )
 
 type application struct {
-	config config
-	logger *zap.SugaredLogger
-	store  store.Storage
+	config        config
+	logger        *zap.SugaredLogger
+	store         store.Storage
+	authenticator auth.Authenticator
+	mailer        *mailer.Client
+	rateLimiter   ratelimiter.Limiter
 }
 
 type config struct {
@@ -31,14 +37,32 @@ type config struct {
 	idleTimeout  time.Duration
 	frontendURL  string
 	db           dbConfig
+	auth         authConfig
+	mailer       mailerConfig
+	rateLimiter  ratelimiter.Config
 }
-
 
 type dbConfig struct {
 	addr         string
 	maxOpenConns int
 	maxIdleConns int
 	maxIdleTime  time.Duration
+}
+
+type authConfig struct {
+	token tokenConfig
+}
+
+type tokenConfig struct {
+	secretKey string
+	audience  string
+	issuer    string
+	expiry    time.Duration
+}
+
+type mailerConfig struct {
+	apiKey    string
+	fromEmail string
 }
 
 
@@ -69,9 +93,37 @@ func (app *application) mount() *chi.Mux {
 		w.Write([]byte("Welcome to Offloadr API! Visit /docs for more information."))
 	})
 
+	// Serve Insomnia collection for easy API testing
+	r.Get("/insomnia.yaml", app.serveInsomniaCollection)
+
 	r.Route(version, func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
 		r.Post("/waitlist", app.createWaitlistHandler)
+
+		// Public authentication routes
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/register", app.registerUserHandler)
+			r.Put("/verify-email/{token}", app.verifyEmailHandler)
+			r.Post("/resend-verification", app.resendVerificationHandler)
+			r.Post("/login", app.loginHandler)
+			r.Post("/forgot-password", app.forgotPasswordHandler)
+			r.Post("/reset-password", app.resetPasswordHandler)
+		})
+
+		// Protected user routes
+		r.Route("/users", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+
+			// Current user routes
+			r.Get("/me", app.getCurrentUserHandler)
+			r.Patch("/me", app.updateUserHandler)
+			r.Patch("/me/password", app.changePasswordHandler)
+			r.Delete("/me", app.deactivateAccountHandler)
+			r.Delete("/me/permanent", app.deleteAccountPermanentlyHandler)
+
+			// Public user routes
+			r.Get("/{id}", app.getUserByIDHandler)
+		})
 	})
 
 	return r

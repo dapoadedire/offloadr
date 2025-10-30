@@ -122,16 +122,22 @@ swagger:
 # SERVICES & INFRASTRUCTURE COMMANDS
 # =============================================================================
 
-# Start all services (database)
+# Start all services (database, redis, redis-commander)
 services-start:
 	@echo "Starting all services..."
 	docker compose up -d
-	@echo "All services started!"
 	@echo ""
-	@echo "Services running:"
-	@echo "  - PostgreSQL: localhost:5432"
+	@echo "✅ All services started successfully!"
 	@echo ""
-	@echo "Use 'make services-ps' to check status"
+	@echo "📦 Services running:"
+	@echo "  - PostgreSQL:      localhost:5432"
+	@echo "  - Redis:           localhost:6379 (password: redis)"
+	@echo "  - Redis Commander: http://localhost:8081"
+	@echo ""
+	@echo "💡 Quick commands:"
+	@echo "  - Check status:    make services-ps"
+	@echo "  - View logs:       make services-logs"
+	@echo "  - Stop services:   make services-stop"
 
 # Stop all services
 services-stop:

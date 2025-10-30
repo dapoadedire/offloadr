@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-offloadr}
       POSTGRES_USER: ${POSTGRES_USER:-offloadr}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-offloadr-db-password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     volumes:
       - pg_data:/var/lib/postgresql/data
@@ -25,10 +25,53 @@ services:
     networks:
       - app-network
 
+  redis:
+    container_name: "redis-cache"
+    image: redis:7-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --loglevel warning
+      --requirepass ${REDIS_PASSWORD:-redis}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - app-network
+
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis-cache:6379:0:${REDIS_PASSWORD:-redis}
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
 
 volumes:
   pg_data:
+    driver: local
+  redis_data:
     driver: local
