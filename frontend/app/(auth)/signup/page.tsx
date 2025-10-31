@@ -1,14 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { motion } from "motion/react"
-import { toast } from "sonner"
-import { Loader2, User, Mail, Lock, School } from "lucide-react"
+import { Loader2, User, Mail, Lock, School as SchoolIcon, Eye, EyeOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -29,16 +27,17 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { schools } from "@/lib/dummy-data"
+import { useRegister } from "@/hooks/useAuth"
+import { schoolsApi, School } from "@/lib/api/schools"
 
 const signupSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters").max(20),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  username: z.string().min(3, "Username must be at least 3 characters").max(50),
+  firstname: z.string().min(2, "First name must be at least 2 characters").max(100),
+  lastname: z.string().min(2, "Last name must be at least 2 characters").max(100),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters").max(72),
   confirmPassword: z.string(),
-  schoolId: z.string().min(1, "Please select a school"),
+  school_id: z.string().min(1, "Please select a school"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -47,34 +46,48 @@ const signupSchema = z.object({
 type SignupFormValues = z.infer<typeof signupSchema>
 
 export default function SignupPage() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const [schools, setSchools] = useState<School[]>([])
+  const [loadingSchools, setLoadingSchools] = useState(true)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const { mutate: register, isPending } = useRegister()
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
       username: "",
-      firstName: "",
-      lastName: "",
+      firstname: "",
+      lastname: "",
       email: "",
       password: "",
       confirmPassword: "",
-      schoolId: "",
+      school_id: "",
     },
   })
 
-  async function onSubmit(data: SignupFormValues) {
-    setIsLoading(true)
+  // Fetch schools on mount
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const data = await schoolsApi.list()
+        setSchools(data)
+      } catch (error) {
+        console.error('Failed to fetch schools:', error)
+      } finally {
+        setLoadingSchools(false)
+      }
+    }
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    fetchSchools()
+  }, [])
 
-    console.log("Signup data:", data)
-    toast.success("Account created! Please check your email to verify your account.")
-    setIsLoading(false)
-
-    // Redirect to verify email page
-    router.push("/verify-email")
+  function onSubmit(data: SignupFormValues) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { confirmPassword, ...payload } = data
+    register({
+      ...payload,
+      school_id: parseInt(payload.school_id),
+    })
   }
 
   return (
@@ -115,7 +128,7 @@ export default function SignupPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="firstName"
+                    name="firstname"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>First Name</FormLabel>
@@ -129,7 +142,7 @@ export default function SignupPage() {
 
                   <FormField
                     control={form.control}
-                    name="lastName"
+                    name="lastname"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Last Name</FormLabel>
@@ -144,22 +157,22 @@ export default function SignupPage() {
 
                 <FormField
                   control={form.control}
-                  name="schoolId"
+                  name="school_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>School</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loadingSchools}>
                         <FormControl>
                           <div className="relative">
-                            <School className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground z-10" />
+                            <SchoolIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground z-10" />
                             <SelectTrigger className="pl-10">
-                              <SelectValue placeholder="Select your school" />
+                              <SelectValue placeholder={loadingSchools ? "Loading schools..." : "Select your school"} />
                             </SelectTrigger>
                           </div>
                         </FormControl>
                         <SelectContent>
                           {schools.map((school) => (
-                            <SelectItem key={school.id} value={school.id}>
+                            <SelectItem key={school.id} value={school.id.toString()}>
                               {school.name}
                             </SelectItem>
                           ))}
@@ -199,7 +212,23 @@ export default function SignupPage() {
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input type="password" placeholder="••••••••" className="pl-10" {...field} />
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className="pl-10 pr-10"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </button>
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -216,7 +245,23 @@ export default function SignupPage() {
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input type="password" placeholder="••••••••" className="pl-10" {...field} />
+                          <Input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className="pl-10 pr-10"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </button>
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -224,8 +269,8 @@ export default function SignupPage() {
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" className="w-full" disabled={isPending}>
+                  {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Creating account...

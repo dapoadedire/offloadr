@@ -2,13 +2,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { motion } from "motion/react"
-import { toast } from "sonner"
-import { Loader2, Mail, Lock } from "lucide-react"
+import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -21,6 +19,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useLogin } from "@/hooks/useAuth"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -30,8 +29,8 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const { mutate: login, isPending } = useLogin()
+  const [showPassword, setShowPassword] = useState(false)
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -41,18 +40,8 @@ export default function LoginPage() {
     },
   })
 
-  async function onSubmit(data: LoginFormValues) {
-    setIsLoading(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    console.log("Login data:", data)
-    toast.success("Welcome back!")
-    setIsLoading(false)
-
-    // Redirect to marketplace
-    router.push("/marketplace")
+  function onSubmit(data: LoginFormValues) {
+    login(data)
   }
 
   return (
@@ -99,7 +88,23 @@ export default function LoginPage() {
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input type="password" placeholder="••••••••" className="pl-10" {...field} />
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className="pl-10 pr-10"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </button>
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -116,8 +121,8 @@ export default function LoginPage() {
                   </Link>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" className="w-full" disabled={isPending}>
+                  {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Logging in...

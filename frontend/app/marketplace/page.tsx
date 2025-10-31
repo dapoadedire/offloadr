@@ -127,7 +127,7 @@ export default function MarketplacePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 font-mono">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Marketplace</h1>
@@ -191,7 +191,7 @@ export default function MarketplacePage() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
               <Card>

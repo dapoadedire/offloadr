@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono } from "next/font/google";
+import { Nunito_Sans } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/lib/query-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "sonner";
+import { AuthSessionHandler } from "@/components/auth-session-handler";
 
 
 
-const ibmPlexMono = IBM_Plex_Mono({
+const ibmPlexMono = Nunito_Sans({
   subsets: ["latin"],
   variable: "--font-ibm-plex-mono",
   display: "swap",
@@ -59,6 +60,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${ibmPlexMono.variable} font-mono antialiased`}>
         <QueryProvider>
+          <AuthSessionHandler />
           <Header />
           {children}
           <Footer />

@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "motion/react";
-import { toast } from "sonner";
 import { Loader2, Mail, ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +27,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useForgotPassword } from "@/hooks/useAuth";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -36,8 +36,8 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const { mutate: forgotPassword, isPending } = useForgotPassword();
 
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -46,18 +46,12 @@ export default function ForgotPasswordPage() {
     },
   });
 
-  async function onSubmit(data: ForgotPasswordFormValues) {
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    console.log("Forgot password data:", data);
-    toast.success(
-      "If an account exists with this email, you will receive a password reset link."
-    );
-    setEmailSent(true);
-    setIsLoading(false);
+  function onSubmit(data: ForgotPasswordFormValues) {
+    forgotPassword(data, {
+      onSuccess: () => {
+        setEmailSent(true);
+      },
+    });
   }
 
   if (emailSent) {
@@ -160,8 +154,8 @@ export default function ForgotPasswordPage() {
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" className="w-full" disabled={isPending}>
+                  {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Sending...

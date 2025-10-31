@@ -3,11 +3,34 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User, LogOut, Heart, Package } from "lucide-react";
 import { motion } from "motion/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import { useAuthStore } from "@/store/authStore";
+import { useLogout } from "@/hooks/useAuth";
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated } = useAuthStore();
+  const logout = useLogout();
+
+  const handleLogout = () => {
+    logout();
+    setMobileMenuOpen(false);
+  };
+
+  const getUserInitials = () => {
+    if (!user) return "U";
+    return `${user.firstname[0]}${user.lastname[0]}`.toUpperCase();
+  };
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -68,18 +91,70 @@ export const Header = () => {
               </li>
             </ul>
 
-            <ul className="flex gap-3 items-center">
-              <li>
-                <Button asChild variant="outline" className="font-medium">
-                  <Link href="/login">Log in</Link>
-                </Button>
-              </li>
-              <li>
-                <Button asChild className="font-medium">
-                  <Link href="/signup">Sign up</Link>
-                </Button>
-              </li>
-            </ul>
+            {isAuthenticated && user ? (
+              <ul className="flex gap-3 items-center">
+                <li>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                        <Avatar className="h-9 w-9">
+                          <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">
+                            {user.firstname} {user.lastname}
+                          </p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/my-listings" className="cursor-pointer">
+                          <Package className="mr-2 h-4 w-4" />
+                          My Listings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/favorites" className="cursor-pointer">
+                          <Heart className="mr-2 h-4 w-4" />
+                          Favorites
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/profile/${user.id}`} className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </li>
+              </ul>
+            ) : (
+              <ul className="flex gap-3 items-center">
+                <li>
+                  <Button asChild variant="outline" className="font-medium">
+                    <Link href="/login">Log in</Link>
+                  </Button>
+                </li>
+                <li>
+                  <Button asChild className="font-medium">
+                    <Link href="/signup">Sign up</Link>
+                  </Button>
+                </li>
+              </ul>
+            )}
           </motion.nav>
 
           {/* Mobile Menu Button */}
@@ -139,20 +214,69 @@ export const Header = () => {
 
               {/* Auth Buttons */}
               <div className="pt-8 space-y-4">
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="w-full font-medium text-lg h-12"
-                >
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    Log in
-                  </Link>
-                </Button>
-                <Button asChild className="w-full font-medium text-lg h-12">
-                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                    Sign up
-                  </Link>
-                </Button>
+                {isAuthenticated && user ? (
+                  <>
+                    <div className="pb-4 border-b border-border">
+                      <p className="text-sm font-medium">{user.firstname} {user.lastname}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className="w-full font-medium text-lg h-12 justify-start"
+                    >
+                      <Link href="/my-listings" onClick={() => setMobileMenuOpen(false)}>
+                        <Package className="mr-2 h-5 w-5" />
+                        My Listings
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className="w-full font-medium text-lg h-12 justify-start"
+                    >
+                      <Link href="/favorites" onClick={() => setMobileMenuOpen(false)}>
+                        <Heart className="mr-2 h-5 w-5" />
+                        Favorites
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className="w-full font-medium text-lg h-12 justify-start"
+                    >
+                      <Link href={`/profile/${user.id}`} onClick={() => setMobileMenuOpen(false)}>
+                        <User className="mr-2 h-5 w-5" />
+                        Profile
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full font-medium text-lg h-12 justify-start text-destructive hover:text-destructive"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="mr-2 h-5 w-5" />
+                      Log out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className="w-full font-medium text-lg h-12"
+                    >
+                      <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                        Log in
+                      </Link>
+                    </Button>
+                    <Button asChild className="w-full font-medium text-lg h-12">
+                      <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                        Sign up
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>

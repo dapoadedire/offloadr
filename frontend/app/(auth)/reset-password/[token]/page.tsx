@@ -1,13 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { motion } from "motion/react"
-import { toast } from "sonner"
-import { Loader2, Lock, CheckCircle2 } from "lucide-react"
+import { Loader2, Lock, CheckCircle2, Eye, EyeOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -20,46 +19,49 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useResetPassword } from "@/hooks/useAuth"
 
 const resetPasswordSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
+  new_password: z.string().min(8, "Password must be at least 8 characters").max(72),
+  confirm_password: z.string(),
+}).refine((data) => data.new_password === data.confirm_password, {
   message: "Passwords don't match",
-  path: ["confirmPassword"],
+  path: ["confirm_password"],
 })
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>
 
 export default function ResetPasswordPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const token = searchParams.get("token")
-  const [isLoading, setIsLoading] = useState(false)
+  const params = useParams()
+  const token = params.token as string
   const [success, setSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const { mutate: resetPassword, isPending } = useResetPassword()
 
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      password: "",
-      confirmPassword: "",
+      new_password: "",
+      confirm_password: "",
     },
   })
 
-  async function onSubmit(data: ResetPasswordFormValues) {
+  function onSubmit(data: ResetPasswordFormValues) {
     if (!token) {
-      toast.error("Invalid reset token")
       return
     }
 
-    setIsLoading(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    console.log("Reset password data:", { ...data, token })
-    setSuccess(true)
-    setIsLoading(false)
+    resetPassword({
+      token,
+      new_password: data.new_password,
+      confirm_password: data.confirm_password,
+    }, {
+      onSuccess: () => {
+        setSuccess(true)
+      },
+    })
   }
 
   if (success) {
@@ -153,14 +155,30 @@ export default function ResetPasswordPage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="password"
+                  name="new_password"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>New Password</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input type="password" placeholder="••••••••" className="pl-10" {...field} />
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className="pl-10 pr-10"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </button>
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -170,14 +188,30 @@ export default function ResetPasswordPage() {
 
                 <FormField
                   control={form.control}
-                  name="confirmPassword"
+                  name="confirm_password"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Confirm New Password</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input type="password" placeholder="••••••••" className="pl-10" {...field} />
+                          <Input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className="pl-10 pr-10"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </button>
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -185,8 +219,8 @@ export default function ResetPasswordPage() {
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" className="w-full" disabled={isPending}>
+                  {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Resetting password...

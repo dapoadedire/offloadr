@@ -3,30 +3,43 @@
 import { useState } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
-import { toast } from "sonner"
 import { Mail, CheckCircle2, RefreshCw } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { useResendVerification } from "@/hooks/useAuth"
+
+const resendSchema = z.object({
+  email: z.string().email("Invalid email address"),
+})
+
+type ResendFormValues = z.infer<typeof resendSchema>
 
 export default function VerifyEmailPage() {
-  const [isResending, setIsResending] = useState(false)
-  const [resentCount, setResentCount] = useState(0)
+  const [showForm, setShowForm] = useState(false)
+  const { mutate: resendVerification, isPending } = useResendVerification()
 
-  async function handleResendEmail() {
-    if (resentCount >= 3) {
-      toast.error("Maximum resend attempts reached. Please try again later.")
-      return
-    }
+  const form = useForm<ResendFormValues>({
+    resolver: zodResolver(resendSchema),
+    defaultValues: {
+      email: "",
+    },
+  })
 
-    setIsResending(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    setResentCount(resentCount + 1)
-    toast.success("Verification email sent! Check your inbox.")
-    setIsResending(false)
+  function handleResendEmail(data: ResendFormValues) {
+    resendVerification(data)
   }
 
   return (
@@ -69,34 +82,68 @@ export default function VerifyEmailPage() {
               </div>
             </div>
 
-            <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Didn&apos;t receive the email?
-              </p>
-              <Button
-                variant="outline"
-                onClick={handleResendEmail}
-                disabled={isResending || resentCount >= 3}
-                className="w-full"
-              >
-                {isResending ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Resend verification email
-                  </>
-                )}
-              </Button>
-              {resentCount > 0 && resentCount < 3 && (
-                <p className="text-xs text-muted-foreground">
-                  {3 - resentCount} {3 - resentCount === 1 ? "attempt" : "attempts"} remaining
+            {!showForm ? (
+              <div className="text-center space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Didn&apos;t receive the email?
                 </p>
-              )}
-            </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowForm(true)}
+                  className="w-full"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Resend verification email
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground text-center">
+                  Enter your email to resend the verification link
+                </p>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleResendEmail)} className="space-y-3">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="john.doe@university.edu"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowForm(false)}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isPending} className="flex-1">
+                        {isPending ? (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          "Send"
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex justify-center">
             <Link href="/login" className="text-sm text-primary hover:underline">
