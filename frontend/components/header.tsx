@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { Menu, X, User, LogOut, Heart, Package } from "lucide-react";
-import { motion } from "motion/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,32 +45,18 @@ export const Header = () => {
 
   return (
     <>
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="font-mono border-b border-border bg-background sticky top-0 z-40"
-      >
+      <header className="font-mono border-b border-border bg-background sticky top-0 z-40">
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
+          <div>
             <Link href="/" className="flex items-center gap-2">
               <span className="text-xl sm:text-2xl font-bold text-primary font-mono">
                 Offloadr
               </span>
             </Link>
-          </motion.div>
+          </div>
 
           {/* Desktop Navigation */}
-          <motion.nav
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="hidden md:flex gap-8 items-center"
-          >
+          <nav className="hidden md:flex gap-8 items-center">
             <ul className="flex gap-6 items-center">
               <li>
                 <Link
@@ -156,21 +141,18 @@ export const Header = () => {
                 </li>
               </ul>
             )}
-          </motion.nav>
+          </nav>
 
           {/* Mobile Menu Button */}
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+          <button
             className="md:hidden text-foreground z-50"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
             <Menu className="h-6 w-6" />
-          </motion.button>
+          </button>
         </div>
-      </motion.header>
+      </header>
 
       {/* Mobile Menu - Full Screen Overlay */}
       {mobileMenuOpen && (
