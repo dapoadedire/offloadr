@@ -40,7 +40,7 @@ import {
   useUserReviews,
   useCurrentUser,
 } from "@/hooks/useUser";
-import { Item, Review } from "@/lib/types";
+import { ItemWithDetails, Review } from "@/lib/types";
 import { EditProfileDialog } from "@/components/dialogs/edit-profile-dialog";
 import { ChangePasswordDialog } from "@/components/dialogs/change-password-dialog";
 import {
@@ -309,7 +309,7 @@ export default function ProfilePage({
               </Card>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {userItems.map((item: Item, index: number) => (
+                {userItems.map((item: ItemWithDetails, index: number) => (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: 20 }}

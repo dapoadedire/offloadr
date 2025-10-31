@@ -383,7 +383,12 @@ func (s *ItemStore) GetAll(ctx context.Context, filter ItemsFilterQuery) ([]*Ite
 	defer cancel()
 
 	// Build WHERE clause
-	whereClauses := []string{"i.status = 'published'"}
+	// Only filter by 'published' status for public browsing (when UserID is not set and Status is not explicitly set)
+	// When UserID is set (user viewing their own items), show all statuses unless Status is explicitly filtered
+	whereClauses := []string{}
+	if filter.UserID == nil && filter.Status == nil {
+		whereClauses = append(whereClauses, "i.status = 'published'")
+	}
 	args := []interface{}{}
 	argPos := 1
 
@@ -436,8 +441,8 @@ func (s *ItemStore) GetAll(ctx context.Context, filter ItemsFilterQuery) ([]*Ite
 	}
 
 	if filter.Status != nil {
-		// Override the default published status filter
-		whereClauses[0] = fmt.Sprintf("i.status = $%d", argPos)
+		// Add explicit status filter (overrides the default 'published' filter if present)
+		whereClauses = append(whereClauses, fmt.Sprintf("i.status = $%d", argPos))
 		args = append(args, *filter.Status)
 		argPos++
 	}

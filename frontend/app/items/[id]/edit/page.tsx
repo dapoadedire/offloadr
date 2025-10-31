@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import { useRouter, notFound } from "next/navigation";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "motion/react";
 import { toast } from "sonner";
-import { Loader2, Upload, X, ImagePlus, Trash2 } from "lucide-react";
+import { Loader2, Upload, X, ImagePlus, Trash2, GripVertical } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -46,7 +46,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getItemById, categories } from "@/lib/dummy-data";
+import { Badge } from "@/components/ui/badge";
+import { useItem, useUpdateItem, useDeleteItem } from "@/hooks/useItems";
+import { useCategories } from "@/hooks/useCategories";
+import { useUploadThing } from "@/lib/uploadthing";
+import { ItemCondition } from "@/lib/types";
 
 const itemSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100),
@@ -55,119 +59,206 @@ const itemSchema = z.object({
     .min(20, "Description must be at least 20 characters")
     .max(1000),
   price: z.number().min(0, "Price must be greater than 0"),
-  categoryId: z.string().min(1, "Please select a category"),
-  condition: z.enum(["new", "like-new", "good", "fair", "poor"]),
+  category_id: z.number().min(1, "Please select a category"),
+  condition: z.enum(["new", "like_new", "good", "fair", "poor"]),
   location: z.string().min(1, "Location is required"),
-  isNegotiable: z.boolean(),
+  negotiable: z.boolean(),
 });
 
 type ItemFormValues = z.infer<typeof itemSchema>;
 
 export default function EditItemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const itemId = parseInt(id);
   const router = useRouter();
-  const item = getItemById(id);
 
-  if (!item) {
-    notFound();
-  }
+  // Fetch item data
+  const { data: item, isLoading: itemLoading, error: itemError } = useItem(itemId);
+  const { data: categories, isLoading: categoriesLoading } = useCategories();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<string[]>(item.photos);
-  const [isDragging, setIsDragging] = useState(false);
+  // Mutations
+  const updateItemMutation = useUpdateItem(itemId);
+  const deleteItemMutation = useDeleteItem();
 
-  const form = useForm<ItemFormValues>({
-    resolver: zodResolver(itemSchema),
-    defaultValues: {
-      title: item.title,
-      description: item.description,
-      price: item.price,
-      categoryId: item.category.id,
-      condition: item.condition,
-      location: item.location,
-      isNegotiable: item.isNegotiable,
+  // Image upload state
+  const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  const { startUpload } = useUploadThing("imageUploader", {
+    onClientUploadComplete: (res) => {
+      const urls = res.map((file) => file.url);
+      setUploadedUrls((prev) => [...prev, ...urls]);
+      setIsUploading(false);
+      toast.dismiss();
+      toast.success("Images uploaded successfully!");
+    },
+    onUploadError: (error: Error) => {
+      console.error("Upload error:", error);
+      setIsUploading(false);
+      toast.dismiss();
+      toast.error(`Upload failed: ${error.message}`);
     },
   });
 
-  const handleImageUpload = (files: FileList | null) => {
-    if (!files) return;
+  const form = useForm<ItemFormValues>({
+    resolver: zodResolver(itemSchema),
+  });
+
+  // Initialize form and images when item loads
+  useEffect(() => {
+    if (item) {
+      form.reset({
+        title: item.title,
+        description: item.description,
+        price: item.price,
+        category_id: item.category_id,
+        condition: item.condition,
+        location: item.location,
+        negotiable: item.negotiable,
+      });
+
+      // Sort photos by position and extract URLs
+      const sortedPhotos = [...item.photos].sort((a, b) => a.position - b.position);
+      setUploadedUrls(sortedPhotos.map((p) => p.url));
+    }
+  }, [item, form]);
+
+  if (itemLoading || categoriesLoading) {
+    return (
+      <div className="container mx-auto px-4 py-16 flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (itemError || !item) {
+    return notFound();
+  }
+
+  const handleFileSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const validFiles: File[] = [];
 
     Array.from(files).forEach((file) => {
       if (!file.type.startsWith("image/")) {
-        toast.error("Only image files are allowed");
+        toast.error(`${file.name} is not an image file`);
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size must be less than 5MB");
+      if (file.size > 4 * 1024 * 1024) {
+        toast.error(`${file.name} is larger than 4MB`);
         return;
       }
 
-      if (uploadedImages.length >= 8) {
-        toast.error("Maximum 8 images allowed");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUploadedImages((prev) => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
+      validFiles.push(file);
     });
+
+    if (validFiles.length === 0) return;
+
+    if (uploadedUrls.length + validFiles.length > 4) {
+      toast.error("Maximum 4 images allowed");
+      return;
+    }
+
+    // Auto-upload immediately
+    setIsUploading(true);
+    toast.loading("Uploading images...");
+
+    try {
+      await startUpload(validFiles);
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.dismiss();
+      toast.error("Upload failed");
+      setIsUploading(false);
+    }
   };
 
   const removeImage = (index: number) => {
-    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+    setUploadedUrls((prev) => prev.filter((_, i) => i !== index));
+    toast.success("Image removed");
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleFileDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    setIsDraggingFile(true);
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
+  const handleFileDragLeave = () => {
+    setIsDraggingFile(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
-    handleImageUpload(e.dataTransfer.files);
+    setIsDraggingFile(false);
+    handleFileSelect(e.dataTransfer.files);
+  };
+
+  // Image reordering handlers
+  const handleImageDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleImageDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newUrls = [...uploadedUrls];
+    const draggedUrl = newUrls[draggedIndex];
+    newUrls.splice(draggedIndex, 1);
+    newUrls.splice(index, 0, draggedUrl);
+
+    setUploadedUrls(newUrls);
+    setDraggedIndex(index);
+  };
+
+  const handleImageDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   async function onSubmit(data: ItemFormValues) {
-    if (uploadedImages.length === 0) {
+    if (uploadedUrls.length === 0) {
       toast.error("Please upload at least one image");
       return;
     }
 
-    setIsLoading(true);
+    // Prepare photos array with proper position and primary flag
+    const photos = uploadedUrls.map((url, index) => ({
+      url,
+      position: index,
+      is_primary: index === 0, // First image is always primary
+    }));
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const payload = {
+      ...data,
+      photos,
+    };
 
-    console.log("Updated item data:", { ...data, photos: uploadedImages });
-    toast.success("Item updated successfully!");
-    setIsLoading(false);
-
-    // Redirect to item page
-    router.push(`/items/${id}`);
+    try {
+      await updateItemMutation.mutateAsync(payload);
+      router.push(`/items/${itemId}`);
+    } catch (error) {
+      // Error handling is done in the hook
+      console.error("Update error:", error);
+    }
   }
 
   async function handleDelete() {
-    setIsDeleting(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    console.log("Item deleted:", id);
-    toast.success("Item deleted successfully");
-    setIsDeleting(false);
-
-    // Redirect to marketplace
-    router.push("/marketplace");
+    try {
+      await deleteItemMutation.mutateAsync(itemId);
+      router.push("/my-listings");
+    } catch (error) {
+      // Error handling is done in the hook
+      console.error("Delete error:", error);
+    }
   }
+
+  const conditionDisplayName = (condition: ItemCondition) => {
+    return condition.replace("_", " ");
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -203,9 +294,9 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                 <Button
                   variant="destructive"
                   onClick={handleDelete}
-                  disabled={isDeleting}
+                  disabled={deleteItemMutation.isPending}
                 >
-                  {isDeleting ? (
+                  {deleteItemMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Deleting...
@@ -226,26 +317,26 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
               <CardHeader>
                 <CardTitle>Photos</CardTitle>
                 <CardDescription>
-                  Upload up to 8 photos. First photo will be the cover image.
+                  Upload up to 4 photos. Drag to reorder - first photo will be the cover image.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div
                   className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                    isDragging
+                    isDraggingFile
                       ? "border-primary bg-primary/5"
                       : "border-muted-foreground/25"
                   }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
+                  onDragOver={handleFileDragOver}
+                  onDragLeave={handleFileDragLeave}
+                  onDrop={handleFileDrop}
                 >
                   <ImagePlus className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground mb-2">
                     Drag and drop images here, or click to browse
                   </p>
                   <p className="text-xs text-muted-foreground mb-4">
-                    PNG, JPG up to 5MB (max 8 images)
+                    PNG, JPG up to 4MB (max 4 images)
                   </p>
                   <Input
                     type="file"
@@ -253,7 +344,8 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                     multiple
                     className="hidden"
                     id="image-upload"
-                    onChange={(e) => handleImageUpload(e.target.files)}
+                    onChange={(e) => handleFileSelect(e.target.files)}
+                    disabled={isUploading || uploadedUrls.length >= 4}
                   />
                   <Button
                     type="button"
@@ -261,40 +353,60 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                     onClick={() =>
                       document.getElementById("image-upload")?.click()
                     }
+                    disabled={isUploading || uploadedUrls.length >= 4}
                   >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Choose Files
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Choose Files
+                      </>
+                    )}
                   </Button>
                 </div>
 
-                {uploadedImages.length > 0 && (
+                {uploadedUrls.length > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-                    {uploadedImages.map((image, index) => (
+                    {uploadedUrls.map((url, index) => (
                       <motion.div
-                        key={index}
+                        key={url}
                         initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        animate={{ opacity: draggedIndex === index ? 0.5 : 1, scale: 1 }}
                         transition={{ duration: 0.3 }}
-                        className="relative aspect-square rounded-lg overflow-hidden group"
+                        className="relative aspect-square rounded-lg overflow-hidden group cursor-move"
+                        draggable
+                        onDragStart={() => handleImageDragStart(index)}
+                        onDragOver={(e) => handleImageDragOver(e, index)}
+                        onDragEnd={handleImageDragEnd}
                       >
                         <Image
-                          src={image}
+                          src={url}
                           alt={`Upload ${index + 1}`}
                           fill
                           className="object-cover"
                         />
-                        {index === 0 && (
-                          <div className="absolute top-2 left-2">
-                            <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-                              Cover
-                            </span>
-                          </div>
-                        )}
+                        <div className="absolute top-2 left-2 flex gap-2">
+                          <Badge variant="secondary" className="text-xs">
+                            #{index + 1}
+                          </Badge>
+                          {index === 0 && (
+                            <Badge variant="default" className="text-xs">
+                              Primary
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <GripVertical className="h-5 w-5 text-white drop-shadow-lg" />
+                        </div>
                         <Button
                           type="button"
                           size="icon"
                           variant="destructive"
-                          className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute bottom-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => removeImage(index)}
                         >
                           <X className="h-4 w-4" />
@@ -346,7 +458,7 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                         />
                       </FormControl>
                       <FormDescription>
-                        {field.value.length}/1000 characters
+                        {field.value?.length || 0}/1000 characters
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -366,7 +478,7 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                             placeholder="100.00"
                             step="0.01"
                             {...field}
-                            value={field.value}
+                            value={field.value || ""}
                             onChange={(e) =>
                               field.onChange(parseFloat(e.target.value) || 0)
                             }
@@ -379,13 +491,13 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
 
                   <FormField
                     control={form.control}
-                    name="categoryId"
+                    name="category_id"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          value={field.value?.toString()}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -393,8 +505,8 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category.id} value={category.id}>
+                            {categories?.map((category) => (
+                              <SelectItem key={category.id} value={category.id.toString()}>
                                 {category.name}
                               </SelectItem>
                             ))}
@@ -415,7 +527,7 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                         <FormLabel>Condition</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -424,7 +536,7 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="new">New</SelectItem>
-                            <SelectItem value="like-new">Like New</SelectItem>
+                            <SelectItem value="like_new">Like New</SelectItem>
                             <SelectItem value="good">Good</SelectItem>
                             <SelectItem value="fair">Fair</SelectItem>
                             <SelectItem value="poor">Poor</SelectItem>
@@ -452,7 +564,7 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
 
                 <FormField
                   control={form.control}
-                  name="isNegotiable"
+                  name="negotiable"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
@@ -479,12 +591,16 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={() => router.push(`/items/${item.id}`)}
+                onClick={() => router.push(`/items/${itemId}`)}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1" disabled={isLoading}>
-                {isLoading ? (
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={updateItemMutation.isPending || isUploading}
+              >
+                {updateItemMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Updating...

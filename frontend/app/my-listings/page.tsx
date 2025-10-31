@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
-import { toast } from "sonner";
+import { useMemo } from "react";
 import {
   Plus,
   Package,
@@ -12,6 +12,9 @@ import {
   Edit,
   Trash2,
   MoreVertical,
+  Loader2,
+  Archive,
+  CheckCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,29 +28,50 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { items, users } from "@/lib/dummy-data";
+import { useCurrentUserItems } from "@/hooks/useUser";
+import { useDeleteItem, useMarkAsSold, useUpdateItemStatus } from "@/hooks/useItems";
+import { ItemWithDetails } from "@/lib/types";
 
 export default function MyListingsPage() {
-  // In real app, get current user from auth context
-  const currentUser = users[0];
-  const myItems = items.filter((item) => item.seller.id === currentUser.id);
+  const { data: itemsData, isLoading } = useCurrentUserItems();
+  const { mutate: deleteItem, isPending: isDeleting } = useDeleteItem();
+  const { mutate: markAsSold, isPending: isMarkingAsSold } = useMarkAsSold();
+  const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateItemStatus();
 
-  const publishedItems = myItems.filter((item) => item.status === "published");
-  const draftItems = myItems.filter((item) => item.status === "draft");
-  const soldItems = myItems.filter((item) => item.status === "sold");
-  const archivedItems = myItems.filter((item) => item.status === "archived");
+  // Filter items by status
+  const { publishedItems, draftItems, soldItems, archivedItems } = useMemo(() => {
+    const myItems = itemsData?.data || [];
+    return {
+      publishedItems: myItems.filter((item) => item.status === "published"),
+      draftItems: myItems.filter((item) => item.status === "draft"),
+      soldItems: myItems.filter((item) => item.status === "sold"),
+      archivedItems: myItems.filter((item) => item.status === "archived"),
+    };
+  }, [itemsData?.data]);
 
-  const handleMarkAsSold = () => {
-    toast.success("Item marked as sold");
+  const handleMarkAsSold = (itemId: number) => {
+    markAsSold({ itemId });
   };
 
-  const handleDelete = () => {
-    toast.success("Item deleted");
+  const handleArchive = (itemId: number) => {
+    updateStatus({ itemId, payload: { status: "archived" } });
   };
 
-  const handleArchive = () => {
-    toast.success("Item archived");
+  const handleDelete = (itemId: number) => {
+    if (confirm("Are you sure you want to delete this item? This action cannot be undone.")) {
+      deleteItem(itemId);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const isPending = isDeleting || isMarkingAsSold || isUpdatingStatus;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -117,6 +141,7 @@ export default function MyListingsPage() {
                     onMarkAsSold={handleMarkAsSold}
                     onArchive={handleArchive}
                     onDelete={handleDelete}
+                    disabled={isPending}
                   />
                 ))}
               </div>
@@ -145,6 +170,7 @@ export default function MyListingsPage() {
                     onMarkAsSold={handleMarkAsSold}
                     onArchive={handleArchive}
                     onDelete={handleDelete}
+                    disabled={isPending}
                   />
                 ))}
               </div>
@@ -173,6 +199,7 @@ export default function MyListingsPage() {
                     onMarkAsSold={handleMarkAsSold}
                     onArchive={handleArchive}
                     onDelete={handleDelete}
+                    disabled={isPending}
                     isSold
                   />
                 ))}
@@ -204,6 +231,7 @@ export default function MyListingsPage() {
                     onMarkAsSold={handleMarkAsSold}
                     onArchive={handleArchive}
                     onDelete={handleDelete}
+                    disabled={isPending}
                   />
                 ))}
               </div>
@@ -216,22 +244,13 @@ export default function MyListingsPage() {
 }
 
 interface ItemCardProps {
-  item: {
-    id: string;
-    title: string;
-    description: string;
-    price: number;
-    photos: string[];
-    status: string;
-    viewsCount: number;
-    favoritesCount: number;
-    createdAt: string;
-  };
+  item: ItemWithDetails;
   index: number;
   isSold?: boolean;
-  onMarkAsSold: () => void;
-  onArchive: () => void;
-  onDelete: () => void;
+  disabled?: boolean;
+  onMarkAsSold: (itemId: number) => void;
+  onArchive: (itemId: number) => void;
+  onDelete: (itemId: number) => void;
 }
 
 function ItemCard({
@@ -240,7 +259,10 @@ function ItemCard({
   onMarkAsSold,
   onArchive,
   onDelete,
+  disabled = false,
 }: ItemCardProps) {
+  const primaryPhoto = item.photos?.find((p) => p.is_primary) || item.photos?.[0];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -249,12 +271,18 @@ function ItemCard({
     >
       <Card className="overflow-hidden group">
         <div className="relative aspect-square overflow-hidden bg-muted">
-          <Image
-            src={item.photos[0]}
-            alt={item.title}
-            fill
-            className="object-cover"
-          />
+          {primaryPhoto ? (
+            <Image
+              src={primaryPhoto.url}
+              alt={item.title}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <Package className="h-12 w-12 text-muted-foreground" />
+            </div>
+          )}
           <div className="absolute top-2 left-2">
             <Badge
               variant={
@@ -276,7 +304,12 @@ function ItemCard({
           <div className="absolute top-2 right-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="secondary" className="h-8 w-8">
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="h-8 w-8"
+                  disabled={disabled}
+                >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -304,10 +337,18 @@ function ItemCard({
                 {item.status === "published" && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={onMarkAsSold}>
+                    <DropdownMenuItem
+                      onClick={() => onMarkAsSold(item.id)}
+                      disabled={disabled}
+                    >
+                      <CheckCircle className="mr-2 h-4 w-4" />
                       Mark as Sold
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={onArchive}>
+                    <DropdownMenuItem
+                      onClick={() => onArchive(item.id)}
+                      disabled={disabled}
+                    >
+                      <Archive className="mr-2 h-4 w-4" />
                       Archive
                     </DropdownMenuItem>
                   </>
@@ -315,7 +356,8 @@ function ItemCard({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
-                  onClick={onDelete}
+                  onClick={() => onDelete(item.id)}
+                  disabled={disabled}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
@@ -341,14 +383,16 @@ function ItemCard({
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
               <Eye className="h-3 w-3" />
-              <span>{item.viewsCount}</span>
+              <span>{item.views_count}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <Heart className="h-3 w-3" />
-              <span>{item.favoritesCount}</span>
-            </div>
+            {item.status === "published" && (
+              <div className="flex items-center gap-1">
+                <Heart className="h-3 w-3" />
+                <span>0</span>
+              </div>
+            )}
           </div>
-          <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+          <span>{new Date(item.created_at).toLocaleDateString()}</span>
         </CardFooter>
       </Card>
     </motion.div>

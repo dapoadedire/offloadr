@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
-import { Search, Filter, X, Heart, MapPin, Eye } from "lucide-react";
+import { Search, Filter, X, Heart, MapPin, Eye, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { items, categories, schools, type Item } from "@/lib/dummy-data";
+import { useItems } from "@/hooks/useItems";
+import { useCategories } from "@/hooks/useCategories";
+import { useSchools } from "@/hooks/useSchools";
+import { ItemWithDetails, ItemCondition } from "@/lib/types";
 
 export default function MarketplacePage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,79 +32,62 @@ export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState<string>("newest");
   const [showFilters, setShowFilters] = useState(false);
 
-  const filteredAndSortedItems = useMemo(() => {
-    let filtered = [...items];
+  // Build filter query for API
+  const [filterQuery, setFilterQuery] = useState({});
 
-    // Search filter
+  useEffect(() => {
+    const query: any = {
+      page: 1,
+      limit: 50,
+    };
+
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.title.toLowerCase().includes(query) ||
-          item.description.toLowerCase().includes(query)
-      );
+      query.search = searchQuery;
     }
 
-    // Category filter
     if (selectedCategory !== "all") {
-      filtered = filtered.filter(
-        (item) => item.category.id === selectedCategory
-      );
+      query.category_id = parseInt(selectedCategory);
     }
 
-    // School filter
     if (selectedSchool !== "all") {
-      filtered = filtered.filter((item) => item.school?.id === selectedSchool);
+      query.school_id = parseInt(selectedSchool);
     }
 
-    // Condition filter
     if (selectedCondition !== "all") {
-      filtered = filtered.filter(
-        (item) => item.condition === selectedCondition
-      );
+      query.condition = selectedCondition;
     }
 
     // Price range filter
     if (priceRange !== "all") {
-      filtered = filtered.filter((item) => {
-        switch (priceRange) {
-          case "under-50":
-            return item.price < 50;
-          case "50-100":
-            return item.price >= 50 && item.price <= 100;
-          case "100-500":
-            return item.price >= 100 && item.price <= 500;
-          case "over-500":
-            return item.price > 500;
-          default:
-            return true;
-        }
-      });
+      switch (priceRange) {
+        case "under-50":
+          query.max_price = 50;
+          break;
+        case "50-100":
+          query.min_price = 50;
+          query.max_price = 100;
+          break;
+        case "100-500":
+          query.min_price = 100;
+          query.max_price = 500;
+          break;
+        case "over-500":
+          query.min_price = 500;
+          break;
+      }
     }
 
-    // Sort
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-        case "oldest":
-          return (
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          );
-        case "price-low":
-          return a.price - b.price;
-        case "price-high":
-          return b.price - a.price;
-        case "popular":
-          return b.viewsCount - a.viewsCount;
-        default:
-          return 0;
-      }
-    });
+    // Sort mapping
+    const sortMapping: Record<string, string> = {
+      newest: "newest",
+      oldest: "oldest",
+      "price-low": "price_asc",
+      "price-high": "price_desc",
+      popular: "most_viewed",
+    };
+    query.sort = sortMapping[sortBy] || "newest";
 
-    return filtered;
+    setFilterQuery(query);
   }, [
     searchQuery,
     selectedCategory,
@@ -110,6 +96,14 @@ export default function MarketplacePage() {
     priceRange,
     sortBy,
   ]);
+
+  // Fetch data
+  const { data: itemsData, isLoading: itemsLoading, error: itemsError } = useItems(filterQuery);
+  const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { data: schools, isLoading: schoolsLoading } = useSchools();
+
+  const items = itemsData?.data || [];
+  const totalItems = itemsData?.pagination?.total || 0;
 
   const activeFiltersCount = [
     selectedCategory !== "all",
@@ -126,13 +120,21 @@ export default function MarketplacePage() {
     setSearchQuery("");
   }
 
+  const conditionDisplayName = (condition: string) => {
+    return condition.replace("_", " ");
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 font-mono">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Marketplace</h1>
         <p className="text-muted-foreground">
-          Browse {items.length} items from students across campuses
+          {itemsLoading ? (
+            "Loading items..."
+          ) : (
+            `Browse ${totalItems} ${totalItems === 1 ? "item" : "items"} from students across campuses`
+          )}
         </p>
       </div>
 
@@ -203,14 +205,15 @@ export default function MarketplacePage() {
                       <Select
                         value={selectedCategory}
                         onValueChange={setSelectedCategory}
+                        disabled={categoriesLoading}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="All Categories" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Categories</SelectItem>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
+                          {categories?.map((category) => (
+                            <SelectItem key={category.id} value={category.id.toString()}>
                               {category.name}
                             </SelectItem>
                           ))}
@@ -224,14 +227,15 @@ export default function MarketplacePage() {
                       <Select
                         value={selectedSchool}
                         onValueChange={setSelectedSchool}
+                        disabled={schoolsLoading}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="All Schools" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Schools</SelectItem>
-                          {schools.map((school) => (
-                            <SelectItem key={school.id} value={school.id}>
+                          {schools?.map((school) => (
+                            <SelectItem key={school.id} value={school.id.toString()}>
                               {school.name}
                             </SelectItem>
                           ))}
@@ -252,7 +256,7 @@ export default function MarketplacePage() {
                         <SelectContent>
                           <SelectItem value="all">All Conditions</SelectItem>
                           <SelectItem value="new">New</SelectItem>
-                          <SelectItem value="like-new">Like New</SelectItem>
+                          <SelectItem value="like_new">Like New</SelectItem>
                           <SelectItem value="good">Good</SelectItem>
                           <SelectItem value="fair">Fair</SelectItem>
                           <SelectItem value="poor">Poor</SelectItem>
@@ -301,12 +305,35 @@ export default function MarketplacePage() {
 
       {/* Results Count */}
       <div className="mb-4 text-sm text-muted-foreground">
-        {filteredAndSortedItems.length}{" "}
-        {filteredAndSortedItems.length === 1 ? "item" : "items"} found
+        {items.length} {items.length === 1 ? "item" : "items"} found
       </div>
 
-      {/* Items Grid */}
-      {filteredAndSortedItems.length === 0 ? (
+      {/* Loading State */}
+      {itemsLoading && (
+        <div className="flex justify-center items-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+
+      {/* Error State */}
+      {itemsError && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-16"
+        >
+          <div className="rounded-full bg-destructive/10 w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <X className="h-8 w-8 text-destructive" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">Error loading items</h3>
+          <p className="text-muted-foreground mb-4">
+            {itemsError instanceof Error ? itemsError.message : "Something went wrong"}
+          </p>
+        </motion.div>
+      )}
+
+      {/* Empty State */}
+      {!itemsLoading && !itemsError && items.length === 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -325,12 +352,15 @@ export default function MarketplacePage() {
             </Button>
           )}
         </motion.div>
-      ) : (
+      )}
+
+      {/* Items Grid */}
+      {!itemsLoading && !itemsError && items.length > 0 && (
         <motion.div
           layout
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
-          {filteredAndSortedItems.map((item, index) => (
+          {items.map((item, index) => (
             <ItemCard key={item.id} item={item} index={index} />
           ))}
         </motion.div>
@@ -339,8 +369,16 @@ export default function MarketplacePage() {
   );
 }
 
-function ItemCard({ item, index }: { item: Item; index: number }) {
+function ItemCard({ item, index }: { item: ItemWithDetails; index: number }) {
   const [isFavorited, setIsFavorited] = useState(false);
+
+  // Get primary photo or first photo
+  const primaryPhoto = item.photos.find((p) => p.is_primary) || item.photos[0];
+  const photoUrl = primaryPhoto?.url || "/placeholder-image.jpg";
+
+  const conditionDisplayName = (condition: ItemCondition) => {
+    return condition.replace("_", " ");
+  };
 
   return (
     <motion.div
@@ -353,7 +391,7 @@ function ItemCard({ item, index }: { item: Item; index: number }) {
         <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
           <div className="relative aspect-square overflow-hidden bg-muted">
             <Image
-              src={item.photos[0]}
+              src={photoUrl}
               alt={item.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -374,10 +412,10 @@ function ItemCard({ item, index }: { item: Item; index: number }) {
               />
             </Button>
             <div className="absolute bottom-2 left-2 flex gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {item.condition.replace("-", " ")}
+              <Badge variant="secondary" className="text-xs capitalize">
+                {conditionDisplayName(item.condition)}
               </Badge>
-              {item.isNegotiable && (
+              {item.negotiable && (
                 <Badge variant="outline" className="text-xs bg-background/80">
                   Negotiable
                 </Badge>
@@ -406,7 +444,7 @@ function ItemCard({ item, index }: { item: Item; index: number }) {
             </div>
             <div className="flex items-center gap-1">
               <Eye className="h-3 w-3" />
-              <span>{item.viewsCount}</span>
+              <span>{item.views_count}</span>
             </div>
           </CardFooter>
         </Card>

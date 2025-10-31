@@ -88,8 +88,8 @@ export const ourFileRouter = {
   // Item images upload route (for marketplace items)
   itemImageUploader: f({
     image: {
-      maxFileSize: "4MB",
-      maxFileCount: 5, // Allow up to 5 images per item
+      maxFileSize: "1MB",
+      maxFileCount: 4, // Allow up to 4 images per item
     },
   })
     .middleware(async ({ req }) => {

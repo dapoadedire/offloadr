@@ -88,12 +88,10 @@ export interface Review {
 
 // Pagination
 export interface PaginationMeta {
-  current_page: number;
-  page_size: number;
+  page: number;
+  limit: number;
+  total: number;
   total_pages: number;
-  total_items: number;
-  has_next: boolean;
-  has_previous: boolean;
 }
 
 export interface PaginatedResponse<T> {

@@ -11,7 +11,7 @@ import {
   PaginatedResponse,
   Review,
 } from '../types/user';
-import { Item } from '../types/item';
+import { ItemWithDetails } from '../types/item';
 
 export const usersApi = {
   // Current User endpoints
@@ -51,14 +51,14 @@ export const usersApi = {
   },
 
   getCurrentUserItems: async (page = 1, limit = 20) => {
-    const response = await apiClient.get<ApiResponse<PaginatedResponse<Item>>>(
+    const response = await apiClient.get<ApiResponse<PaginatedResponse<ItemWithDetails>>>(
       `/users/me/items?page=${page}&limit=${limit}`
     );
     return extractData(response.data);
   },
 
   getCurrentUserSoldItems: async (page = 1, limit = 20) => {
-    const response = await apiClient.get<ApiResponse<PaginatedResponse<Item>>>(
+    const response = await apiClient.get<ApiResponse<PaginatedResponse<ItemWithDetails>>>(
       `/users/me/items/sold?page=${page}&limit=${limit}`
     );
     return extractData(response.data);
@@ -71,7 +71,7 @@ export const usersApi = {
   },
 
   getUserItems: async (id: number, page = 1, limit = 20) => {
-    const response = await apiClient.get<ApiResponse<PaginatedResponse<Item>>>(
+    const response = await apiClient.get<ApiResponse<PaginatedResponse<ItemWithDetails>>>(
       `/users/${id}/items?page=${page}&limit=${limit}`
     );
     return extractData(response.data);

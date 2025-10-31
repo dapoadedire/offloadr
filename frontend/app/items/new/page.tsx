@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "motion/react";
 import { toast } from "sonner";
-import { Loader2, Upload, X, ImagePlus } from "lucide-react";
+import { Loader2, X, ImagePlus, GripVertical } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -37,28 +37,66 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { categories } from "@/lib/dummy-data";
+import { useCategories } from "@/hooks/useCategories";
+import { useCreateItem } from "@/hooks/useItems";
+import { useUploadThing } from "@/lib/uploadthing";
+import { ItemCondition } from "@/lib/types";
 
 const itemSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters").max(100),
+  title: z.string().min(3, "Title must be at least 3 characters").max(255),
   description: z
     .string()
-    .min(20, "Description must be at least 20 characters")
-    .max(1000),
-  price: z.number().min(0, "Price must be greater than 0"),
-  categoryId: z.string().min(1, "Please select a category"),
-  condition: z.enum(["new", "like-new", "good", "fair", "poor"]),
-  location: z.string().min(1, "Location is required"),
-  isNegotiable: z.boolean(),
+    .min(10, "Description must be at least 10 characters")
+    .max(5000),
+  price: z.number().min(0, "Price must be greater than or equal to 0"),
+  category_id: z.number().min(1, "Please select a category"),
+  condition: z.enum(["new", "like_new", "good", "fair", "poor"]),
+  location: z.string().min(2, "Location is required").max(255),
+  negotiable: z.boolean(),
 });
 
 type ItemFormValues = z.infer<typeof itemSchema>;
 
 export default function NewItemPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { mutate: createItem, isPending: isCreating } = useCreateItem();
+  const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  const { startUpload } = useUploadThing("itemImageUploader", {
+    headers: () => {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("auth_token")
+          : null;
+      return {
+        "x-uploadthing-authorization": token || "",
+      };
+    },
+    onUploadProgress: (progress) => {
+      setUploadProgress(progress);
+    },
+    onClientUploadComplete: (res) => {
+      if (res) {
+        const urls = res.map((file) => file.url);
+        setUploadedUrls((prev) => [...prev, ...urls]);
+        toast.dismiss();
+        toast.success(`${res.length} image(s) uploaded successfully!`);
+      }
+      setIsUploading(false);
+      setUploadProgress(0);
+    },
+    onUploadError: (error: Error) => {
+      toast.dismiss();
+      toast.error(`Upload failed: ${error.message}`);
+      setIsUploading(false);
+      setUploadProgress(0);
+    },
+  });
 
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
@@ -66,42 +104,58 @@ export default function NewItemPage() {
       title: "",
       description: "",
       price: 0,
-      categoryId: "",
+      category_id: 0,
       condition: "good",
       location: "",
-      isNegotiable: true,
+      negotiable: true,
     },
   });
 
-  const handleImageUpload = (files: FileList | null) => {
-    if (!files) return;
+  const handleFileSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
+    const fileArray = Array.from(files);
+
+    // Validate files
+    const validFiles: File[] = [];
+    for (const file of fileArray) {
       if (!file.type.startsWith("image/")) {
-        toast.error("Only image files are allowed");
-        return;
+        toast.error(`${file.name} is not an image file`);
+        continue;
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size must be less than 5MB");
-        return;
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error(`${file.name} is larger than 1MB`);
+        continue;
       }
 
-      if (uploadedImages.length >= 8) {
-        toast.error("Maximum 8 images allowed");
-        return;
+      if (uploadedUrls.length + validFiles.length >= 4) {
+        toast.error("Maximum 4 images allowed");
+        break;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUploadedImages((prev) => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
+    // Auto-upload immediately
+    setIsUploading(true);
+    toast.loading("Uploading images...");
+
+    try {
+      await startUpload(validFiles);
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.dismiss();
+      toast.error("Upload failed");
+      setIsUploading(false);
+    }
   };
 
   const removeImage = (index: number) => {
-    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+    setUploadedUrls((prev) => prev.filter((_, i) => i !== index));
+    toast.success("Image removed");
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -116,38 +170,58 @@ export default function NewItemPage() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    handleImageUpload(e.dataTransfer.files);
+    handleFileSelect(e.dataTransfer.files);
   };
 
-  async function onSubmit(data: ItemFormValues) {
-    if (uploadedImages.length === 0) {
-      toast.error("Please upload at least one image");
+  // Image reordering handlers
+  const handleImageDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleImageDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newUrls = [...uploadedUrls];
+    const draggedUrl = newUrls[draggedIndex];
+    newUrls.splice(draggedIndex, 1);
+    newUrls.splice(index, 0, draggedUrl);
+
+    setUploadedUrls(newUrls);
+    setDraggedIndex(index);
+  };
+
+  const handleImageDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  async function onSubmit(data: ItemFormValues, status: "draft" | "published") {
+    if (uploadedUrls.length === 0 && status === "published") {
+      toast.error("Please upload at least one image before publishing");
       return;
     }
 
-    setIsLoading(true);
+    // Prepare photos array with proper position based on current order
+    const photos = uploadedUrls.map((url, index) => ({
+      url,
+      position: index,
+      is_primary: index === 0, // First image is always primary
+    }));
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    console.log("Item data:", { ...data, photos: uploadedImages });
-    toast.success("Item posted successfully!");
-    setIsLoading(false);
-
-    // Redirect to marketplace or item page
-    router.push("/marketplace");
+    createItem({
+      title: data.title,
+      description: data.description,
+      price: data.price,
+      condition: data.condition as ItemCondition,
+      category_id: data.category_id,
+      negotiable: data.negotiable,
+      location: data.location,
+      status,
+      photos,
+    });
   }
 
-  async function onSaveDraft(data: ItemFormValues) {
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    console.log("Draft saved:", { ...data, photos: uploadedImages });
-    toast.success("Draft saved!");
-    setIsLoading(false);
-  }
+  const isLoading = isCreating || categoriesLoading;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -156,95 +230,136 @@ export default function NewItemPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Post an Item</h1>
-          <p className="text-muted-foreground">
-            List your item for sale on the campus marketplace
-          </p>
-        </div>
+        <h1 className="text-4xl font-bold mb-2">Post an Item</h1>
+        <p className="text-muted-foreground mb-8">
+          Fill in the details below to list your item on the marketplace
+        </p>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Image Upload */}
+          <form className="space-y-8">
+            {/* Photos Section */}
             <Card>
               <CardHeader>
                 <CardTitle>Photos</CardTitle>
                 <CardDescription>
-                  Upload up to 8 photos. First photo will be the cover image.
+                  Upload up to 4 photos (max 1MB each). Drag to reorder - first
+                  image is the primary photo.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div
-                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                    isDragging
-                      ? "border-primary bg-primary/5"
-                      : "border-muted-foreground/25"
-                  }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <ImagePlus className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Drag and drop images here, or click to browse
-                  </p>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    PNG, JPG up to 5MB (max 8 images)
-                  </p>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    id="image-upload"
-                    onChange={(e) => handleImageUpload(e.target.files)}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() =>
-                      document.getElementById("image-upload")?.click()
-                    }
+              <CardContent className="space-y-4">
+                {/* Image Upload Dropzone */}
+                {uploadedUrls.length < 4 && (
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                      isDragging
+                        ? "border-primary bg-primary/5"
+                        : "border-muted-foreground/25"
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                   >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Choose Files
-                  </Button>
-                </div>
+                    <ImagePlus className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {isUploading
+                        ? `Uploading... ${uploadProgress}%`
+                        : "Drag and drop images here, or click to select files"}
+                    </p>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => handleFileSelect(e.target.files)}
+                      className="hidden"
+                      id="file-input"
+                      disabled={isUploading || uploadedUrls.length >= 4}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        document.getElementById("file-input")?.click()
+                      }
+                      disabled={isUploading || uploadedUrls.length >= 4}
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Uploading {uploadProgress}%
+                        </>
+                      ) : (
+                        "Select Files"
+                      )}
+                    </Button>
+                  </div>
+                )}
 
-                {uploadedImages.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-                    {uploadedImages.map((image, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                        className="relative aspect-square rounded-lg overflow-hidden group"
-                      >
-                        <Image
-                          src={image}
-                          alt={`Upload ${index + 1}`}
-                          fill
-                          className="object-cover"
-                        />
-                        {index === 0 && (
-                          <div className="absolute top-2 left-2">
-                            <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-                              Cover
-                            </span>
-                          </div>
-                        )}
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="destructive"
-                          className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => removeImage(index)}
+                {/* Upload Progress */}
+                {isUploading && (
+                  <div className="w-full space-y-2">
+                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-primary h-full transition-all duration-300 ease-out"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Uploaded Images Grid - Draggable */}
+                {uploadedUrls.length > 0 && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Drag images to reorder. First image is the primary photo.
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {uploadedUrls.map((url, index) => (
+                        <div
+                          key={url}
+                          draggable={!isUploading}
+                          onDragStart={() => handleImageDragStart(index)}
+                          onDragOver={(e) => handleImageDragOver(e, index)}
+                          onDragEnd={handleImageDragEnd}
+                          className={`relative aspect-square rounded-lg overflow-hidden bg-muted group cursor-move ${
+                            draggedIndex === index ? "opacity-50" : ""
+                          }`}
                         >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </motion.div>
-                    ))}
+                          <Image
+                            src={url}
+                            alt={`Upload ${index + 1}`}
+                            fill
+                            className="object-cover"
+                          />
+                          {/* Primary Badge */}
+                          {index === 0 && (
+                            <div className="absolute top-2 left-2">
+                              <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
+                                Primary
+                              </span>
+                            </div>
+                          )}
+                          {/* Drag Handle */}
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="bg-background/80 p-1 rounded">
+                              <GripVertical className="h-4 w-4" />
+                            </div>
+                          </div>
+                          {/* Remove Button */}
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute bottom-2 right-2 bg-destructive text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            disabled={isUploading}
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                          {/* Position Number */}
+                          <div className="absolute bottom-2 left-2 bg-background/80 text-xs px-2 py-1 rounded">
+                            #{index + 1}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -254,6 +369,9 @@ export default function NewItemPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Item Details</CardTitle>
+                <CardDescription>
+                  Provide accurate information about your item
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -263,14 +381,8 @@ export default function NewItemPage() {
                     <FormItem>
                       <FormLabel>Title</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="MacBook Pro 14 inch M3 Pro"
-                          {...field}
-                        />
+                        <Input placeholder="e.g., iPhone 13 Pro" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        A clear, descriptive title helps buyers find your item
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -284,20 +396,20 @@ export default function NewItemPage() {
                       <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Describe your item in detail. Include condition, features, reason for selling, etc."
-                          className="min-h-[120px]"
+                          placeholder="Describe your item in detail..."
+                          className="min-h-[150px]"
                           {...field}
                         />
                       </FormControl>
                       <FormDescription>
-                        {field.value.length}/1000 characters
+                        Include condition, features, and any important details
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="price"
@@ -307,10 +419,9 @@ export default function NewItemPage() {
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="100.00"
                             step="0.01"
+                            placeholder="0.00"
                             {...field}
-                            value={field.value}
                             onChange={(e) =>
                               field.onChange(parseFloat(e.target.value) || 0)
                             }
@@ -323,22 +434,27 @@ export default function NewItemPage() {
 
                   <FormField
                     control={form.control}
-                    name="categoryId"
+                    name="category_id"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          onValueChange={(value) =>
+                            field.onChange(parseInt(value))
+                          }
+                          value={field.value ? field.value.toString() : ""}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
+                              <SelectValue placeholder="Select a category" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category.id} value={category.id}>
+                            {categories?.map((category) => (
+                              <SelectItem
+                                key={category.id}
+                                value={category.id.toString()}
+                              >
                                 {category.name}
                               </SelectItem>
                             ))}
@@ -350,7 +466,7 @@ export default function NewItemPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="condition"
@@ -368,7 +484,7 @@ export default function NewItemPage() {
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="new">New</SelectItem>
-                            <SelectItem value="like-new">Like New</SelectItem>
+                            <SelectItem value="like_new">Like New</SelectItem>
                             <SelectItem value="good">Good</SelectItem>
                             <SelectItem value="fair">Fair</SelectItem>
                             <SelectItem value="poor">Poor</SelectItem>
@@ -386,7 +502,10 @@ export default function NewItemPage() {
                       <FormItem>
                         <FormLabel>Location</FormLabel>
                         <FormControl>
-                          <Input placeholder="Dorm 5, Room 301" {...field} />
+                          <Input
+                            placeholder="e.g., Campus North, Room 204"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -396,7 +515,7 @@ export default function NewItemPage() {
 
                 <FormField
                   control={form.control}
-                  name="isNegotiable"
+                  name="negotiable"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
@@ -408,7 +527,7 @@ export default function NewItemPage() {
                       <div className="space-y-1 leading-none">
                         <FormLabel>Price is negotiable</FormLabel>
                         <FormDescription>
-                          Allow buyers to make offers
+                          Buyers can make offers on your item
                         </FormDescription>
                       </div>
                     </FormItem>
@@ -417,26 +536,38 @@ export default function NewItemPage() {
               </CardContent>
             </Card>
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-end">
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1"
-                onClick={form.handleSubmit(onSaveDraft)}
-                disabled={isLoading}
+                onClick={() => router.back()}
+                disabled={isLoading || isUploading}
               >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={form.handleSubmit((data) => onSubmit(data, "draft"))}
+                disabled={isLoading || isUploading}
+              >
+                {isCreating && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Save as Draft
               </Button>
-              <Button type="submit" className="flex-1" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Posting...
-                  </>
-                ) : (
-                  "Publish Item"
+              <Button
+                type="button"
+                onClick={form.handleSubmit((data) =>
+                  onSubmit(data, "published")
                 )}
+                disabled={isLoading || isUploading}
+              >
+                {isCreating && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Publish Item
               </Button>
             </div>
           </form>
