@@ -53,7 +53,8 @@ export default function ItemDetailPage({
     isFetching: isFetchingContact,
   } = useItemContact(itemId);
 
-  const { data: isFavorited, isLoading: checkingFavorite } = useCheckFavorite(itemId);
+  const { data: isFavorited, isLoading: checkingFavorite } =
+    useCheckFavorite(itemId);
   const { toggle, isPending: togglingFavorite } = useToggleFavorite();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -75,13 +76,13 @@ export default function ItemDetailPage({
   const sellerReviews = sellerReviewsData?.data?.slice(0, 3) || [];
 
   const nextImage = () => {
-    if (item.photos.length > 0) {
+    if (item.photos && item.photos.length > 0) {
       setCurrentImageIndex((prev) => (prev + 1) % item.photos.length);
     }
   };
 
   const prevImage = () => {
-    if (item.photos.length > 0) {
+    if (item.photos && item.photos.length > 0) {
       setCurrentImageIndex(
         (prev) => (prev - 1 + item.photos.length) % item.photos.length
       );
@@ -109,7 +110,9 @@ export default function ItemDetailPage({
   };
 
   // Sort photos by position
-  const sortedPhotos = [...item.photos].sort((a, b) => a.position - b.position);
+  const sortedPhotos = item.photos
+    ? [...item.photos].sort((a, b) => a.position - b.position)
+    : [];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -527,8 +530,8 @@ export default function ItemDetailPage({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedItems.map((relatedItem) => {
               const relatedPrimaryPhoto =
-                relatedItem.photos.find((p) => p.is_primary) ||
-                relatedItem.photos[0];
+                relatedItem.photos?.find((p) => p.is_primary) ||
+                relatedItem.photos?.[0];
               return (
                 <Link key={relatedItem.id} href={`/items/${relatedItem.id}`}>
                   <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">

@@ -39,15 +39,26 @@ export const useUserProfile = (id: number) => {
     queryKey: userKeys.byId(id),
     queryFn: () => usersApi.getUserById(id),
     staleTime: 5 * 60 * 1000,
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 404 errors
+      if ((error as ApiClientError)?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 };
 
 // Get user rating
-export const useUserRating = (id: number) => {
+export const useUserRating = (id: number, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: userKeys.rating(id),
     queryFn: () => usersApi.getUserRating(id),
     staleTime: 5 * 60 * 1000,
+    enabled: options?.enabled ?? true,
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 404 errors
+      if ((error as ApiClientError)?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 };
 
@@ -194,17 +205,39 @@ export const useCurrentUserItems = (page = 1, limit = 20) => {
 };
 
 // Get user items (public)
-export const useUserItems = (id: number, page = 1, limit = 20) => {
+export const useUserItems = (
+  id: number,
+  page = 1,
+  limit = 20,
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: [...userKeys.items(id), page, limit],
     queryFn: () => usersApi.getUserItems(id, page, limit),
+    enabled: options?.enabled ?? true,
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 404 errors
+      if ((error as ApiClientError)?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 };
 
 // Get user reviews
-export const useUserReviews = (id: number, page = 1, limit = 20) => {
+export const useUserReviews = (
+  id: number,
+  page = 1,
+  limit = 20,
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: [...userKeys.reviews(id), page, limit],
     queryFn: () => usersApi.getUserReviews(id, page, limit),
+    enabled: options?.enabled ?? true,
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 404 errors
+      if ((error as ApiClientError)?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 };

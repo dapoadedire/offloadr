@@ -63,17 +63,28 @@ export default function ProfilePage({
 
   const isOwnProfile = currentUser?.id === userId;
 
-  // Fetch user data
+  // Fetch user data first
   const {
     data: user,
     isLoading: userLoading,
     error: userError,
   } = useUserProfile(userId);
   const { data: currentUserProfile } = useCurrentUser();
-  const { data: rating } = useUserRating(userId);
-  const { data: itemsData, isLoading: itemsLoading } = useUserItems(userId);
-  const { data: reviewsData, isLoading: reviewsLoading } =
-    useUserReviews(userId);
+
+  // Only fetch dependent data if user exists
+  const { data: rating } = useUserRating(userId, { enabled: !!user });
+  const { data: itemsData, isLoading: itemsLoading } = useUserItems(
+    userId,
+    1,
+    20,
+    { enabled: !!user }
+  );
+  const { data: reviewsData, isLoading: reviewsLoading } = useUserReviews(
+    userId,
+    1,
+    20,
+    { enabled: !!user }
+  );
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);

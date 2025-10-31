@@ -27,7 +27,10 @@ export default function FavoritesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const favoriteItems = favoritesData?.data || [];
+  const favoriteItems = useMemo(
+    () => favoritesData?.data || [],
+    [favoritesData?.data]
+  );
 
   const filteredItems = useMemo(() => {
     return favoriteItems.filter((item) => {
@@ -62,11 +65,9 @@ export default function FavoritesPage() {
             <h1 className="text-4xl font-bold">My Favorites</h1>
           </div>
           <p className="text-muted-foreground">
-            {isLoading ? (
-              "Loading favorites..."
-            ) : (
-              `Items you've saved for later (${favoriteItems.length})`
-            )}
+            {isLoading
+              ? "Loading favorites..."
+              : `Items you've saved for later (${favoriteItems.length})`}
           </p>
         </div>
 
@@ -87,7 +88,9 @@ export default function FavoritesPage() {
             <div className="rounded-full bg-destructive/10 w-16 h-16 flex items-center justify-center mx-auto mb-4">
               <X className="h-8 w-8 text-destructive" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Error loading favorites</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              Error loading favorites
+            </h3>
             <p className="text-muted-foreground mb-4">
               {error instanceof Error ? error.message : "Something went wrong"}
             </p>
@@ -212,7 +215,8 @@ function FavoriteItemCard({ item, index, onRemove }: FavoriteItemCardProps) {
   };
 
   // Get primary photo or first photo
-  const primaryPhoto = item.photos.find((p) => p.is_primary) || item.photos[0];
+  const primaryPhoto =
+    item.photos?.find((p) => p.is_primary) || item.photos?.[0];
   const photoUrl = primaryPhoto?.url || "/placeholder-image.jpg";
 
   const conditionDisplayName = (condition: ItemCondition) => {

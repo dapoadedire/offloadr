@@ -9,7 +9,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "motion/react";
 import { toast } from "sonner";
-import { Loader2, Upload, X, ImagePlus, Trash2, GripVertical } from "lucide-react";
+import {
+  Loader2,
+  Upload,
+  X,
+  ImagePlus,
+  Trash2,
+  GripVertical,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -68,13 +75,21 @@ const itemSchema = z.object({
 
 type ItemFormValues = z.infer<typeof itemSchema>;
 
-export default function EditItemPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditItemPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const itemId = parseInt(id);
   const router = useRouter();
 
   // Fetch item data
-  const { data: item, isLoading: itemLoading, error: itemError } = useItem(itemId);
+  const {
+    data: item,
+    isLoading: itemLoading,
+    error: itemError,
+  } = useItem(itemId);
   const { data: categories, isLoading: categoriesLoading } = useCategories();
 
   // Mutations
@@ -121,8 +136,12 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
       });
 
       // Sort photos by position and extract URLs
-      const sortedPhotos = [...item.photos].sort((a, b) => a.position - b.position);
-      setUploadedUrls(sortedPhotos.map((p) => p.url));
+      if (item.photos) {
+        const sortedPhotos = [...item.photos].sort(
+          (a, b) => a.position - b.position
+        );
+        setUploadedUrls(sortedPhotos.map((p) => p.url));
+      }
     }
   }, [item, form]);
 
@@ -314,7 +333,8 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
               <CardHeader>
                 <CardTitle>Photos</CardTitle>
                 <CardDescription>
-                  Upload up to 4 photos. Drag to reorder - first photo will be the cover image.
+                  Upload up to 4 photos. Drag to reorder - first photo will be
+                  the cover image.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -372,7 +392,10 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                       <motion.div
                         key={url}
                         initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: draggedIndex === index ? 0.5 : 1, scale: 1 }}
+                        animate={{
+                          opacity: draggedIndex === index ? 0.5 : 1,
+                          scale: 1,
+                        }}
                         transition={{ duration: 0.3 }}
                         className="relative aspect-square rounded-lg overflow-hidden group cursor-move"
                         draggable
@@ -493,7 +516,9 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                       <FormItem>
                         <FormLabel>Category</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          onValueChange={(value) =>
+                            field.onChange(parseInt(value))
+                          }
                           value={field.value?.toString()}
                         >
                           <FormControl>
@@ -503,7 +528,10 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
                           </FormControl>
                           <SelectContent>
                             {categories?.map((category) => (
-                              <SelectItem key={category.id} value={category.id.toString()}>
+                              <SelectItem
+                                key={category.id}
+                                value={category.id.toString()}
+                              >
                                 {category.name}
                               </SelectItem>
                             ))}

@@ -115,7 +115,11 @@ export default function MarketplacePage() {
   }, [filters]);
 
   // Fetch data
-  const { data: itemsData, isLoading: itemsLoading, error: itemsError } = useItems(filterQuery);
+  const {
+    data: itemsData,
+    isLoading: itemsLoading,
+    error: itemsError,
+  } = useItems(filterQuery);
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { data: schools, isLoading: schoolsLoading } = useSchools();
 
@@ -150,11 +154,11 @@ export default function MarketplacePage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Marketplace</h1>
         <p className="text-muted-foreground">
-          {itemsLoading ? (
-            "Loading items..."
-          ) : (
-            `Browse ${totalItems} ${totalItems === 1 ? "item" : "items"} from students across campuses`
-          )}
+          {itemsLoading
+            ? "Loading items..."
+            : `Browse ${totalItems} ${
+                totalItems === 1 ? "item" : "items"
+              } from students across campuses`}
         </p>
       </div>
 
@@ -174,7 +178,10 @@ export default function MarketplacePage() {
           </div>
 
           {/* Sort */}
-          <Select value={filters.sort} onValueChange={(value) => setFilters({ sort: value })}>
+          <Select
+            value={filters.sort}
+            onValueChange={(value) => setFilters({ sort: value })}
+          >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
@@ -190,7 +197,11 @@ export default function MarketplacePage() {
           {/* Filter Toggle */}
           <Button
             variant="outline"
-            onClick={() => setShowFiltersPanel({ showFilters: showFilters ? "false" : "true" })}
+            onClick={() =>
+              setShowFiltersPanel({
+                showFilters: showFilters ? "false" : "true",
+              })
+            }
             className="relative"
           >
             <Filter className="mr-2 h-4 w-4" />
@@ -224,7 +235,9 @@ export default function MarketplacePage() {
                       <label className="text-sm font-medium">Category</label>
                       <Select
                         value={filters.category}
-                        onValueChange={(value) => setFilters({ category: value })}
+                        onValueChange={(value) =>
+                          setFilters({ category: value })
+                        }
                         disabled={categoriesLoading}
                       >
                         <SelectTrigger>
@@ -233,7 +246,10 @@ export default function MarketplacePage() {
                         <SelectContent>
                           <SelectItem value="all">All Categories</SelectItem>
                           {categories?.map((category) => (
-                            <SelectItem key={category.id} value={category.id.toString()}>
+                            <SelectItem
+                              key={category.id}
+                              value={category.id.toString()}
+                            >
                               {category.name}
                             </SelectItem>
                           ))}
@@ -255,7 +271,10 @@ export default function MarketplacePage() {
                         <SelectContent>
                           <SelectItem value="all">All Schools</SelectItem>
                           {schools?.map((school) => (
-                            <SelectItem key={school.id} value={school.id.toString()}>
+                            <SelectItem
+                              key={school.id}
+                              value={school.id.toString()}
+                            >
                               {school.name}
                             </SelectItem>
                           ))}
@@ -268,7 +287,9 @@ export default function MarketplacePage() {
                       <label className="text-sm font-medium">Condition</label>
                       <Select
                         value={filters.condition}
-                        onValueChange={(value) => setFilters({ condition: value })}
+                        onValueChange={(value) =>
+                          setFilters({ condition: value })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="All Conditions" />
@@ -289,7 +310,9 @@ export default function MarketplacePage() {
                       <label className="text-sm font-medium">Price Range</label>
                       <Select
                         value={filters.priceRange}
-                        onValueChange={(value) => setFilters({ priceRange: value })}
+                        onValueChange={(value) =>
+                          setFilters({ priceRange: value })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="All Prices" />
@@ -350,7 +373,9 @@ export default function MarketplacePage() {
           </div>
           <h3 className="text-lg font-semibold mb-2">Error loading items</h3>
           <p className="text-muted-foreground mb-4">
-            {itemsError instanceof Error ? itemsError.message : "Something went wrong"}
+            {itemsError instanceof Error
+              ? itemsError.message
+              : "Something went wrong"}
           </p>
         </motion.div>
       )}
@@ -393,11 +418,14 @@ export default function MarketplacePage() {
 }
 
 function ItemCard({ item, index }: { item: ItemWithDetails; index: number }) {
-  const { data: isFavorited, isLoading: checkingFavorite } = useCheckFavorite(item.id);
+  const { data: isFavorited, isLoading: checkingFavorite } = useCheckFavorite(
+    item.id
+  );
   const { toggle, isPending } = useToggleFavorite();
 
   // Get primary photo or first photo
-  const primaryPhoto = item.photos.find((p) => p.is_primary) || item.photos[0];
+  const primaryPhoto =
+    item.photos?.find((p) => p.is_primary) || item.photos?.[0];
   const photoUrl = primaryPhoto?.url || "/placeholder-image.jpg";
 
   const conditionDisplayName = (condition: ItemCondition) => {

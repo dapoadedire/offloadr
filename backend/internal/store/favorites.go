@@ -177,6 +177,13 @@ func (s *FavoriteStore) GetUserFavorites(ctx context.Context, userID int64, limi
 		itemWithDetails.Category.ParentID = categoryParentID
 		itemWithDetails.Category.CreatedAt = categoryCreatedAt
 
+		// Fetch photos for the item
+		photos, err := s.getItemPhotos(ctx, itemWithDetails.ID)
+		if err != nil {
+			return nil, 0, err
+		}
+		itemWithDetails.Photos = photos
+
 		items = append(items, itemWithDetails)
 	}
 
@@ -200,4 +207,39 @@ func (s *FavoriteStore) CheckFavorite(ctx context.Context, userID, itemID int64)
 	}
 
 	return exists, nil
+}
+
+// getItemPhotos fetches photos for a specific item
+func (s *FavoriteStore) getItemPhotos(ctx context.Context, itemID int64) ([]*ItemPhoto, error) {
+	query := `
+		SELECT id, item_id, url, is_primary, position, uploaded_at
+		FROM item_photos
+		WHERE item_id = $1
+		ORDER BY is_primary DESC, position ASC
+	`
+
+	rows, err := s.db.QueryContext(ctx, query, itemID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	photos := []*ItemPhoto{}
+	for rows.Next() {
+		photo := &ItemPhoto{}
+		err := rows.Scan(
+			&photo.ID,
+			&photo.ItemID,
+			&photo.URL,
+			&photo.IsPrimary,
+			&photo.Position,
+			&photo.UploadedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		photos = append(photos, photo)
+	}
+
+	return photos, rows.Err()
 }
