@@ -29,6 +29,13 @@ export interface ResetPasswordPayload {
 }
 
 // Response Types
+export interface School {
+  id: number;
+  name: string;
+  domain: string;
+  location: string;
+}
+
 export interface User {
   id: number;
   username: string;

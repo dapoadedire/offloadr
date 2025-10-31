@@ -1,9 +1,8 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
 import { motion } from "motion/react";
 import {
   Calendar,
@@ -12,26 +11,100 @@ import {
   Edit,
   Package,
   MessageCircle,
+  Loader2,
+  Settings,
+  Lock,
+  ChevronDown,
+  Phone,
+  Mail,
 } from "lucide-react";
+import { FaWhatsapp, FaSnapchat } from "react-icons/fa";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getUserById, getItemsBySeller, reviews } from "@/lib/dummy-data";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuthStore } from "@/store/authStore";
+import {
+  useUserProfile,
+  useUserRating,
+  useUserItems,
+  useUserReviews,
+  useCurrentUser,
+} from "@/hooks/useUser";
+import { Item, Review } from "@/lib/types";
+import { EditProfileDialog } from "@/components/dialogs/edit-profile-dialog";
+import { ChangePasswordDialog } from "@/components/dialogs/change-password-dialog";
 
-export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default function ProfilePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
-  const user = getUserById(id);
-  const isOwnProfile = false; // In real app, check if logged-in user matches
+  const userId = parseInt(id);
+  const { user: currentUser } = useAuthStore();
 
-  if (!user) {
-    notFound();
+  const isOwnProfile = currentUser?.id === userId;
+
+  // Fetch user data
+  const {
+    data: user,
+    isLoading: userLoading,
+    error: userError,
+  } = useUserProfile(userId);
+  const { data: currentUserProfile } = useCurrentUser();
+  const { data: rating } = useUserRating(userId);
+  const { data: itemsData, isLoading: itemsLoading } = useUserItems(userId);
+  const { data: reviewsData, isLoading: reviewsLoading } =
+    useUserReviews(userId);
+
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+
+  if (userLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
   }
 
-  const userItems = getItemsBySeller(user.id);
-  const userReviews = reviews.filter((r) => r.sellerId === user.id);
+  if (userError || !user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="py-12 text-center">
+            <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">User Not Found</h3>
+            <p className="text-muted-foreground mb-4">
+              The user you&apos;re looking for does not exist or has been
+              deactivated.
+            </p>
+            <Link href="/marketplace">
+              <Button>Back to Marketplace</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const userItems = Array.isArray(itemsData?.data) ? itemsData.data : [];
+  const userReviews = Array.isArray(reviewsData?.data) ? reviewsData.data : [];
+
+  // Use currentUserProfile for own profile to get all contact details
+  const displayUser =
+    isOwnProfile && currentUserProfile ? currentUserProfile : user;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -46,10 +119,10 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               {/* Avatar */}
               <Avatar className="h-24 w-24">
-                <AvatarImage src={user.avatarUrl} />
+                <AvatarImage src={displayUser.avatar_url || undefined} />
                 <AvatarFallback className="text-2xl">
-                  {user.firstName[0]}
-                  {user.lastName[0]}
+                  {displayUser.firstname[0]}
+                  {displayUser.lastname[0]}
                 </AvatarFallback>
               </Avatar>
 
@@ -57,25 +130,30 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               <div className="flex-1 text-center sm:text-left">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                   <h1 className="text-3xl font-bold">
-                    {user.firstName} {user.lastName}
+                    {displayUser.firstname} {displayUser.lastname}
                   </h1>
-                  {user.emailVerified && (
-                    <Badge variant="default" className="w-fit mx-auto sm:mx-0 bg-green-600 hover:bg-green-700">
-                      Verified
-                    </Badge>
-                  )}
+                  <Badge
+                    variant="default"
+                    className="w-fit mx-auto sm:mx-0 bg-green-600 hover:bg-green-700"
+                  >
+                    Verified
+                  </Badge>
                 </div>
-                <p className="text-muted-foreground mb-4">@{user.username}</p>
+                <p className="text-muted-foreground mb-4">
+                  @{displayUser.username}
+                </p>
 
                 {/* Stats */}
                 <div className="flex flex-wrap justify-center sm:justify-start gap-6 mb-4">
                   <div className="flex items-center gap-2">
                     <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                     <span className="font-semibold">
-                      {user.averageRating.toFixed(1)}
+                      {rating?.average_rating
+                        ? rating.average_rating.toFixed(1)
+                        : "0.0"}
                     </span>
                     <span className="text-muted-foreground text-sm">
-                      ({user.reviewCount} reviews)
+                      ({rating?.total_reviews || 0} reviews)
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -89,26 +167,90 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
-                    <span>{user.school.name}</span>
+                    <span>{displayUser.school.name}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      Joined {new Date(user.joinedAt).toLocaleDateString()}
+                      Joined{" "}
+                      {new Date(
+                        isOwnProfile && currentUserProfile
+                          ? currentUserProfile.created_at
+                          : user.joined_at
+                      ).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
                 </div>
+
+                {/* Contact Details - Only show for own profile or if user has set them */}
+                {(isOwnProfile ||
+                  displayUser.phone ||
+                  displayUser.whatsapp ||
+                  displayUser.snapchat) && (
+                  <div className="mt-4 pt-4 border-t">
+                    <h3 className="text-sm font-semibold mb-2">
+                      Contact Information
+                    </h3>
+                    <div className="flex flex-wrap gap-3 text-sm">
+                      {displayUser.phone && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Phone className="h-4 w-4" />
+                          <span>{displayUser.phone}</span>
+                        </div>
+                      )}
+                      {displayUser.whatsapp && (
+                        <div className="flex items-center gap-2 text-green-600">
+                          <FaWhatsapp className="h-4 w-4" />
+                          <span>{displayUser.whatsapp}</span>
+                        </div>
+                      )}
+                      {displayUser.snapchat && (
+                        <div className="flex items-center gap-2 text-yellow-500">
+                          <FaSnapchat className="h-4 w-4" />
+                          <span>{displayUser.snapchat}</span>
+                        </div>
+                      )}
+                      {isOwnProfile && displayUser.email && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Mail className="h-4 w-4" />
+                          <span>{displayUser.email}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Actions */}
               <div className="flex gap-2">
                 {isOwnProfile ? (
-                  <Link href="/profile/edit">
-                    <Button>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit Profile
-                    </Button>
-                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button>
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem
+                        onClick={() => setEditProfileOpen(true)}
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setChangePasswordOpen(true)}
+                      >
+                        <Lock className="mr-2 h-4 w-4" />
+                        Change Password
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 ) : (
                   <Button>
                     <MessageCircle className="mr-2 h-4 w-4" />
@@ -133,7 +275,11 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
           {/* Listings Tab */}
           <TabsContent value="listings" className="mt-6">
-            {userItems.length === 0 ? (
+            {itemsLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : userItems.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
                   <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -154,7 +300,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               </Card>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {userItems.map((item, index) => (
+                {userItems.map((item: Item, index: number) => (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -164,12 +310,14 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     <Link href={`/items/${item.id}`}>
                       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
                         <div className="relative aspect-square overflow-hidden bg-muted">
-                          <Image
-                            src={item.photos[0]}
-                            alt={item.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
+                          {item.photos && item.photos[0] && (
+                            <Image
+                              src={item.photos[0].url}
+                              alt={item.title}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          )}
                           <div className="absolute bottom-2 left-2">
                             <Badge variant="secondary" className="text-xs">
                               {item.status}
@@ -194,7 +342,11 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
           {/* Reviews Tab */}
           <TabsContent value="reviews" className="mt-6">
-            {userReviews.length === 0 ? (
+            {reviewsLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : userReviews.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
                   <Star className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -208,7 +360,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               </Card>
             ) : (
               <div className="space-y-4">
-                {userReviews.map((review, index) => (
+                {userReviews.map((review: Review, index: number) => (
                   <motion.div
                     key={review.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -218,27 +370,38 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     <Card>
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between mb-3">
-                          <div className="flex gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-5 w-5 ${
-                                  i < review.rating
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-muted"
-                                }`}
-                              />
-                            ))}
+                          <div>
+                            <div className="flex gap-1 mb-2">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-5 w-5 ${
+                                    i < review.rating
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-muted"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-sm font-medium">
+                              {review.buyer_firstname} {review.buyer_lastname}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              @{review.buyer_username}
+                            </p>
                           </div>
                           <span className="text-sm text-muted-foreground">
-                            {new Date(review.createdAt).toLocaleDateString()}
+                            {new Date(review.created_at).toLocaleDateString()}
                           </span>
                         </div>
                         {review.comment && (
-                          <p className="text-muted-foreground">
+                          <p className="text-muted-foreground mt-2">
                             {review.comment}
                           </p>
                         )}
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Item: {review.item_title}
+                        </p>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -248,6 +411,28 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           </TabsContent>
         </Tabs>
       </motion.div>
+
+      {/* Dialogs */}
+      {isOwnProfile && currentUserProfile && (
+        <>
+          <EditProfileDialog
+            open={editProfileOpen}
+            onOpenChange={setEditProfileOpen}
+            defaultValues={{
+              firstname: currentUserProfile.firstname,
+              lastname: currentUserProfile.lastname,
+              phone: currentUserProfile.phone,
+              snapchat: currentUserProfile.snapchat,
+              whatsapp: currentUserProfile.whatsapp,
+              avatar_url: currentUserProfile.avatar_url,
+            }}
+          />
+          <ChangePasswordDialog
+            open={changePasswordOpen}
+            onOpenChange={setChangePasswordOpen}
+          />
+        </>
+      )}
     </div>
   );
 }
