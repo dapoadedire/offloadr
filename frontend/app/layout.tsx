@@ -6,8 +6,9 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
 import { AuthSessionHandler } from "@/components/auth-session-handler";
-
-
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from "uploadthing/server";
+import { ourFileRouter } from "@/app/api/uploadthing/core";
 
 const ibmPlexMono = Nunito_Sans({
   subsets: ["latin"],
@@ -60,6 +61,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${ibmPlexMono.variable} font-mono antialiased`}>
         <QueryProvider>
+          <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
           <AuthSessionHandler />
           <Header />
           {children}

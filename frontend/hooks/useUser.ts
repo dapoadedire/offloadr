@@ -1,24 +1,24 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { usersApi } from '@/lib/api/users';
-import { useAuthStore } from '@/store/authStore';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { usersApi } from "@/lib/api/users";
+import { useAuthStore } from "@/store/authStore";
 import {
   UpdateProfilePayload,
   ChangePasswordPayload,
   DeactivateAccountPayload,
   DeleteAccountPayload,
   ApiClientError,
-} from '@/lib/types';
-import { toast } from 'sonner';
+} from "@/lib/types";
+import { toast } from "sonner";
 
 // Query Keys
 export const userKeys = {
-  all: ['users'] as const,
-  current: () => [...userKeys.all, 'current'] as const,
+  all: ["users"] as const,
+  current: () => [...userKeys.all, "current"] as const,
   byId: (id: number) => [...userKeys.all, id] as const,
-  items: (id: number) => [...userKeys.byId(id), 'items'] as const,
-  reviews: (id: number) => [...userKeys.byId(id), 'reviews'] as const,
-  rating: (id: number) => [...userKeys.byId(id), 'rating'] as const,
+  items: (id: number) => [...userKeys.byId(id), "items"] as const,
+  reviews: (id: number) => [...userKeys.byId(id), "reviews"] as const,
+  rating: (id: number) => [...userKeys.byId(id), "rating"] as const,
 };
 
 // Get current user profile
@@ -52,18 +52,38 @@ export const useUserRating = (id: number) => {
 };
 
 // Update profile
+// Update profile
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
+  const setUser = useAuthStore((state) => state.setUser);
 
   return useMutation({
-    mutationFn: (payload: UpdateProfilePayload) => usersApi.updateProfile(payload),
+    mutationFn: (payload: UpdateProfilePayload) =>
+      usersApi.updateProfile(payload),
     onSuccess: (data) => {
       // Update current user cache
       queryClient.setQueryData(userKeys.current(), data);
-      toast.success('Profile updated successfully!');
+
+      // Convert UserProfile to User format for auth store
+      const userForStore = {
+        id: data.id,
+        username: data.username,
+        firstname: data.firstname,
+        lastname: data.lastname,
+        email: data.email,
+        email_verified: data.email_verified,
+        school_id: data.school.id,
+        is_active: data.is_active,
+        avatar_url: data.avatar_url,
+        created_at: data.created_at,
+      };
+
+      // Update auth store to reflect changes in header
+      setUser(userForStore);
+      toast.success("Profile updated successfully!");
     },
     onError: (error: ApiClientError) => {
-      const message = error.message || 'Failed to update profile';
+      const message = error.message || "Failed to update profile";
       toast.error(message);
 
       if (error.fields) {
@@ -81,21 +101,22 @@ export const useChangePassword = () => {
   const logout = useAuthStore((state) => state.clearAuth);
 
   return useMutation({
-    mutationFn: (payload: ChangePasswordPayload) => usersApi.changePassword(payload),
+    mutationFn: (payload: ChangePasswordPayload) =>
+      usersApi.changePassword(payload),
     onSuccess: (data) => {
-      toast.success(data.message || 'Password changed successfully!');
+      toast.success(data.message || "Password changed successfully!");
 
       // Log out user and redirect to login
       setTimeout(() => {
         logout();
-        router.push('/login?message=password-changed');
+        router.push("/login?message=password-changed");
       }, 2000);
     },
     onError: (error: ApiClientError) => {
-      const message = error.message || 'Failed to change password';
+      const message = error.message || "Failed to change password";
 
       if (error.status === 401) {
-        toast.error('Current password is incorrect');
+        toast.error("Current password is incorrect");
       } else {
         toast.error(message);
       }
@@ -110,20 +131,21 @@ export const useDeactivateAccount = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: DeactivateAccountPayload) => usersApi.deactivateAccount(payload),
+    mutationFn: (payload: DeactivateAccountPayload) =>
+      usersApi.deactivateAccount(payload),
     onSuccess: (data) => {
-      toast.success(data.message || 'Account deactivated');
+      toast.success(data.message || "Account deactivated");
 
       // Clear cache and log out
       queryClient.clear();
       logout();
-      router.push('/login');
+      router.push("/login");
     },
     onError: (error: ApiClientError) => {
-      const message = error.message || 'Failed to deactivate account';
+      const message = error.message || "Failed to deactivate account";
 
       if (error.status === 401) {
-        toast.error('Incorrect password');
+        toast.error("Incorrect password");
       } else {
         toast.error(message);
       }
@@ -138,20 +160,21 @@ export const useDeleteAccount = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: DeleteAccountPayload) => usersApi.deleteAccountPermanently(payload),
+    mutationFn: (payload: DeleteAccountPayload) =>
+      usersApi.deleteAccountPermanently(payload),
     onSuccess: (data) => {
-      toast.success(data.message || 'Account deleted permanently');
+      toast.success(data.message || "Account deleted permanently");
 
       // Clear cache and log out
       queryClient.clear();
       logout();
-      router.push('/');
+      router.push("/");
     },
     onError: (error: ApiClientError) => {
-      const message = error.message || 'Failed to delete account';
+      const message = error.message || "Failed to delete account";
 
       if (error.status === 401) {
-        toast.error('Incorrect password');
+        toast.error("Incorrect password");
       } else {
         toast.error(message);
       }
@@ -164,7 +187,7 @@ export const useCurrentUserItems = (page = 1, limit = 20) => {
   const { isAuthenticated } = useAuthStore();
 
   return useQuery({
-    queryKey: [...userKeys.current(), 'items', page, limit],
+    queryKey: [...userKeys.current(), "items", page, limit],
     queryFn: () => usersApi.getCurrentUserItems(page, limit),
     enabled: isAuthenticated,
   });

@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useAuthStore } from "@/store/authStore";
 import { useLogout } from "@/hooks/useAuth";
 
@@ -97,7 +97,8 @@ export const Header = () => {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                        <Avatar className="h-9 w-9">
+                        <Avatar className="h-8 w-8 ring-1 ring-primary ring-offset-1 ring-offset-background">
+                          <AvatarImage src={user.avatar_url || undefined} alt={`${user.firstname} ${user.lastname}`} />
                           <AvatarFallback>{getUserInitials()}</AvatarFallback>
                         </Avatar>
                       </Button>

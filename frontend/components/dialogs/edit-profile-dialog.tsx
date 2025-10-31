@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, Link as LinkIcon, Camera } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -16,6 +18,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -23,8 +26,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUpdateProfile } from "@/hooks/useUser";
 import { UpdateProfilePayload } from "@/lib/types";
+import { useUploadThing } from "@/lib/uploadthing";
+import { isValidImageUrl } from "@/lib/image-utils";
 
 const editProfileSchema = z.object({
   firstname: z.string().min(1, "First name is required"),
@@ -32,7 +38,11 @@ const editProfileSchema = z.object({
   phone: z.string().optional(),
   snapchat: z.string().optional(),
   whatsapp: z.string().optional(),
-  avatar_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  avatar_url: z
+    .string()
+    .url("Must be a valid URL")
+    .optional()
+    .or(z.literal("")),
 });
 
 interface EditProfileDialogProps {
@@ -54,6 +64,30 @@ export function EditProfileDialog({
   defaultValues,
 }: EditProfileDialogProps) {
   const { mutate: updateProfile, isPending } = useUpdateProfile();
+  const [isUploading, setIsUploading] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [avatarUrlInput, setAvatarUrlInput] = useState("");
+  const [previewAvatar, setPreviewAvatar] = useState(
+    defaultValues.avatar_url || ""
+  );
+
+  const { startUpload } = useUploadThing("avatarUploader", {
+    onClientUploadComplete: (res) => {
+      if (res && res[0]) {
+        const uploadedUrl = res[0].url;
+        setPreviewAvatar(uploadedUrl);
+        form.setValue("avatar_url", uploadedUrl);
+        toast.dismiss(); // Dismiss the loading toast
+        toast.success("Avatar uploaded successfully!");
+      }
+      setIsUploading(false);
+    },
+    onUploadError: (error: Error) => {
+      toast.dismiss(); // Dismiss the loading toast
+      toast.error(`Upload failed: ${error.message}`);
+      setIsUploading(false);
+    },
+  });
 
   const form = useForm<z.infer<typeof editProfileSchema>>({
     resolver: zodResolver(editProfileSchema),
@@ -66,6 +100,55 @@ export function EditProfileDialog({
       avatar_url: defaultValues.avatar_url || "",
     },
   });
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Only image files are allowed");
+      return;
+    }
+
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error("Image size must be less than 1MB");
+      return;
+    }
+
+    setIsUploading(true);
+    toast.loading("Uploading avatar...");
+
+    try {
+      await startUpload([file]);
+    } catch (error) {
+      console.error("Upload error:", error);
+      setIsUploading(false);
+    }
+  };
+
+  const handleUrlSubmit = async () => {
+    if (!avatarUrlInput.trim()) {
+      toast.error("Please enter a URL");
+      return;
+    }
+
+    const loadingToast = toast.loading("Validating image URL...");
+
+    const isValid = await isValidImageUrl(avatarUrlInput);
+
+    toast.dismiss(loadingToast);
+
+    if (!isValid) {
+      toast.error("Invalid image URL. Please enter a valid image URL.");
+      return;
+    }
+
+    setPreviewAvatar(avatarUrlInput);
+    form.setValue("avatar_url", avatarUrlInput);
+    setAvatarUrlInput("");
+    setShowUrlInput(false);
+    toast.success("Avatar URL updated!");
+  };
 
   const onSubmit = (data: z.infer<typeof editProfileSchema>) => {
     // Remove empty strings and convert to undefined
@@ -86,7 +169,7 @@ export function EditProfileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
           <DialogDescription>
@@ -96,6 +179,90 @@ export function EditProfileDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Avatar Upload Section */}
+            <div className="flex flex-col items-center gap-4 pb-4 border-b">
+              <div className="relative">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={previewAvatar} />
+                  <AvatarFallback className="text-2xl">
+                    {defaultValues.firstname[0]}
+                    {defaultValues.lastname[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <label
+                  htmlFor="avatar-upload-dialog"
+                  className={`absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full cursor-pointer hover:bg-primary/90 transition-colors ${
+                    isUploading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
+                </label>
+                <Input
+                  id="avatar-upload-dialog"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                  disabled={isUploading || isPending}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    document.getElementById("avatar-upload-dialog")?.click()
+                  }
+                  disabled={isUploading || isPending}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  {isUploading ? "Uploading..." : "Upload"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUrlInput(!showUrlInput)}
+                  disabled={isUploading || isPending}
+                >
+                  <LinkIcon className="mr-2 h-4 w-4" />
+                  {showUrlInput ? "Hide URL" : "Use URL"}
+                </Button>
+              </div>
+
+              {showUrlInput && (
+                <div className="w-full p-3 border rounded-lg bg-muted/50">
+                  <FormLabel className="mb-2 block text-sm">
+                    Image URL
+                  </FormLabel>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://example.com/avatar.jpg"
+                      value={avatarUrlInput}
+                      onChange={(e) => setAvatarUrlInput(e.target.value)}
+                      className="flex-1"
+                      disabled={isPending}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleUrlSubmit}
+                      size="sm"
+                      disabled={isPending}
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                  <FormDescription className="mt-2 text-xs">
+                    Paste a direct link to an image (max 1MB)
+                  </FormDescription>
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -168,33 +335,16 @@ export function EditProfileDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="avatar_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Avatar URL (Optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://example.com/avatar.jpg"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                disabled={isPending}
+                disabled={isPending || isUploading}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending || isUploading}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Changes
               </Button>

@@ -4,6 +4,7 @@ import { use, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
+import { toast } from "sonner";
 import {
   Calendar,
   MapPin,
@@ -42,6 +43,13 @@ import {
 import { Item, Review } from "@/lib/types";
 import { EditProfileDialog } from "@/components/dialogs/edit-profile-dialog";
 import { ChangePasswordDialog } from "@/components/dialogs/change-password-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ProfilePage({
   params,
@@ -68,6 +76,7 @@ export default function ProfilePage({
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
 
   if (userLoading) {
     return (
@@ -252,7 +261,7 @@ export default function ProfilePage({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Button>
+                  <Button onClick={() => setContactDialogOpen(true)}>
                     <MessageCircle className="mr-2 h-4 w-4" />
                     Contact
                   </Button>
@@ -432,6 +441,100 @@ export default function ProfilePage({
             onOpenChange={setChangePasswordOpen}
           />
         </>
+      )}
+
+      {/* Contact Dialog for other users' profiles */}
+      {!isOwnProfile && (
+        <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Contact {displayUser.firstname}</DialogTitle>
+              <DialogDescription>
+                Here are the available contact methods for this seller.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {displayUser.phone && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <Phone className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Phone</p>
+                    <p className="text-sm text-muted-foreground">
+                      {displayUser.phone}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(displayUser.phone!);
+                      toast.success("Phone number copied!");
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              )}
+              {displayUser.whatsapp && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <FaWhatsapp className="h-5 w-5 text-green-500" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">WhatsApp</p>
+                    <p className="text-sm text-muted-foreground">
+                      {displayUser.whatsapp}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      window.open(
+                        `https://wa.me/${displayUser.whatsapp!.replace(
+                          /\D/g,
+                          ""
+                        )}`,
+                        "_blank"
+                      );
+                    }}
+                  >
+                    Chat
+                  </Button>
+                </div>
+              )}
+              {displayUser.snapchat && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <FaSnapchat className="h-5 w-5 text-yellow-500" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Snapchat</p>
+                    <p className="text-sm text-muted-foreground">
+                      {displayUser.snapchat}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(displayUser.snapchat!);
+                      toast.success("Snapchat username copied!");
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              )}
+              {!displayUser.phone &&
+                !displayUser.whatsapp &&
+                !displayUser.snapchat && (
+                  <div className="text-center py-8">
+                    <MessageCircle className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      This seller hasn&apos;t added any contact information yet.
+                    </p>
+                  </div>
+                )}
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
