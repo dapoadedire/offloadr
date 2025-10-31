@@ -3,6 +3,7 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import {
@@ -89,23 +90,7 @@ export default function ProfilePage({
   }
 
   if (userError || !user) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="py-12 text-center">
-            <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">User Not Found</h3>
-            <p className="text-muted-foreground mb-4">
-              The user you&apos;re looking for does not exist or has been
-              deactivated.
-            </p>
-            <Link href="/marketplace">
-              <Button>Back to Marketplace</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    notFound();
   }
 
   const userItems = Array.isArray(itemsData?.data) ? itemsData.data : [];

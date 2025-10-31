@@ -3,6 +3,7 @@
 import { useState, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import {
@@ -67,24 +68,7 @@ export default function ItemDetailPage({
   }
 
   if (error || !item) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="py-12 text-center">
-            <div className="h-12 w-12 mx-auto mb-4 text-muted-foreground">
-              📦
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Item Not Found</h3>
-            <p className="text-muted-foreground mb-4">
-              This item doesn&apos;t exist or has been removed.
-            </p>
-            <Link href="/marketplace">
-              <Button>Back to Marketplace</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    notFound();
   }
 
   const relatedItems = relatedItemsData || [];

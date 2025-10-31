@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, use, useEffect } from "react";
-import { useRouter, notFound } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -86,7 +87,7 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-  const { startUpload } = useUploadThing("imageUploader", {
+  const { startUpload } = useUploadThing("itemImageUploader", {
     onClientUploadComplete: (res) => {
       const urls = res.map((file) => file.url);
       setUploadedUrls((prev) => [...prev, ...urls]);
@@ -255,10 +256,6 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
       console.error("Delete error:", error);
     }
   }
-
-  const conditionDisplayName = (condition: ItemCondition) => {
-    return condition.replace("_", " ");
-  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
