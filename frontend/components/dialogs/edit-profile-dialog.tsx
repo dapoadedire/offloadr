@@ -65,6 +65,7 @@ export function EditProfileDialog({
 }: EditProfileDialogProps) {
   const { mutate: updateProfile, isPending } = useUpdateProfile();
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [avatarUrlInput, setAvatarUrlInput] = useState("");
   const [previewAvatar, setPreviewAvatar] = useState(
@@ -72,6 +73,19 @@ export function EditProfileDialog({
   );
 
   const { startUpload } = useUploadThing("avatarUploader", {
+    headers: () => {
+      // Get token from localStorage and pass it to UploadThing
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("auth_token")
+          : null;
+      return {
+        "x-uploadthing-authorization": token || "",
+      };
+    },
+    onUploadProgress: (progress) => {
+      setUploadProgress(progress);
+    },
     onClientUploadComplete: (res) => {
       if (res && res[0]) {
         const uploadedUrl = res[0].url;
@@ -81,11 +95,13 @@ export function EditProfileDialog({
         toast.success("Avatar uploaded successfully!");
       }
       setIsUploading(false);
+      setUploadProgress(0);
     },
     onUploadError: (error: Error) => {
       toast.dismiss(); // Dismiss the loading toast
       toast.error(`Upload failed: ${error.message}`);
       setIsUploading(false);
+      setUploadProgress(0);
     },
   });
 
@@ -221,7 +237,7 @@ export function EditProfileDialog({
                   disabled={isUploading || isPending}
                 >
                   <Upload className="mr-2 h-4 w-4" />
-                  {isUploading ? "Uploading..." : "Upload"}
+                  {isUploading ? `Uploading ${uploadProgress}%` : "Upload"}
                 </Button>
                 <Button
                   type="button"
@@ -234,6 +250,23 @@ export function EditProfileDialog({
                   {showUrlInput ? "Hide URL" : "Use URL"}
                 </Button>
               </div>
+
+              {isUploading && (
+                <div className="w-full space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Uploading...</span>
+                    <span className="text-muted-foreground">
+                      {uploadProgress}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-primary h-full transition-all duration-300 ease-out"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {showUrlInput && (
                 <div className="w-full p-3 border rounded-lg bg-muted/50">
