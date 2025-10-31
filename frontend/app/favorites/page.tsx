@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
-import { toast } from "sonner";
-import { Heart, X, MapPin, Eye, Search } from "lucide-react";
+import { Heart, X, MapPin, Eye, Search, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -18,30 +17,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { items } from "@/lib/dummy-data";
+import { useFavorites, useRemoveFavorite } from "@/hooks/useFavorites";
+import { ItemWithDetails, ItemCondition } from "@/lib/types";
 
 export default function FavoritesPage() {
-  // In real app, fetch favorited items from API based on user
-  const [favoriteItems, setFavoriteItems] = useState(items.slice(0, 6));
+  const { data: favoritesData, isLoading, error } = useFavorites(1, 50);
+  const removeFavoriteMutation = useRemoveFavorite();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const filteredItems = favoriteItems.filter((item) => {
-    const matchesSearch =
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase());
+  const favoriteItems = favoritesData?.data || [];
 
-    const matchesStatus =
-      filterStatus === "all" ||
-      (filterStatus === "available" && item.status === "published") ||
-      (filterStatus === "sold" && item.status === "sold");
+  const filteredItems = useMemo(() => {
+    return favoriteItems.filter((item) => {
+      const matchesSearch =
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesSearch && matchesStatus;
-  });
+      const matchesStatus =
+        filterStatus === "all" ||
+        (filterStatus === "available" && item.status === "published") ||
+        (filterStatus === "sold" && item.status === "sold");
 
-  const removeFavorite = (itemId: string) => {
-    setFavoriteItems((prev) => prev.filter((item) => item.id !== itemId));
-    toast.success("Removed from favorites");
+      return matchesSearch && matchesStatus;
+    });
+  }, [favoriteItems, searchQuery, filterStatus]);
+
+  const removeFavorite = (itemId: number) => {
+    removeFavoriteMutation.mutate(itemId);
   };
 
   return (
@@ -58,38 +62,40 @@ export default function FavoritesPage() {
             <h1 className="text-4xl font-bold">My Favorites</h1>
           </div>
           <p className="text-muted-foreground">
-            Items you&apos;ve saved for later ({favoriteItems.length})
+            {isLoading ? (
+              "Loading favorites..."
+            ) : (
+              `Items you've saved for later (${favoriteItems.length})`
+            )}
           </p>
         </div>
 
-        {/* Search and Filter */}
-        {favoriteItems.length > 0 && (
-          <div className="mb-6 flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search favorites..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Items</SelectItem>
-                <SelectItem value="available">Available</SelectItem>
-                <SelectItem value="sold">Sold</SelectItem>
-              </SelectContent>
-            </Select>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
 
+        {/* Error State */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16"
+          >
+            <div className="rounded-full bg-destructive/10 w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <X className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Error loading favorites</h3>
+            <p className="text-muted-foreground mb-4">
+              {error instanceof Error ? error.message : "Something went wrong"}
+            </p>
+          </motion.div>
+        )}
+
         {/* Empty State */}
-        {favoriteItems.length === 0 ? (
+        {!isLoading && !error && favoriteItems.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -113,44 +119,75 @@ export default function FavoritesPage() {
               </CardContent>
             </Card>
           </motion.div>
-        ) : filteredItems.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16"
-          >
-            <div className="rounded-full bg-muted w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <Search className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">No items found</h3>
-            <p className="text-muted-foreground">
-              Try adjusting your search or filters
-            </p>
-          </motion.div>
-        ) : (
+        )}
+
+        {/* Search and Filter */}
+        {!isLoading && !error && favoriteItems.length > 0 && (
           <>
-            {/* Results Count */}
-            <div className="mb-4 text-sm text-muted-foreground">
-              {filteredItems.length}{" "}
-              {filteredItems.length === 1 ? "item" : "items"}
+            <div className="mb-6 flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search favorites..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Items</SelectItem>
+                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="sold">Sold</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Items Grid */}
-            <motion.div
-              layout
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            >
-              <AnimatePresence mode="popLayout">
-                {filteredItems.map((item, index) => (
-                  <FavoriteItemCard
-                    key={item.id}
-                    item={item}
-                    index={index}
-                    onRemove={removeFavorite}
-                  />
-                ))}
-              </AnimatePresence>
-            </motion.div>
+            {/* No Search Results */}
+            {filteredItems.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-16"
+              >
+                <div className="rounded-full bg-muted w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Search className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">No items found</h3>
+                <p className="text-muted-foreground">
+                  Try adjusting your search or filters
+                </p>
+              </motion.div>
+            ) : (
+              <>
+                {/* Results Count */}
+                <div className="mb-4 text-sm text-muted-foreground">
+                  {filteredItems.length}{" "}
+                  {filteredItems.length === 1 ? "item" : "items"}
+                </div>
+
+                {/* Items Grid */}
+                <motion.div
+                  layout
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                >
+                  <AnimatePresence mode="popLayout">
+                    {filteredItems.map((item, index) => (
+                      <FavoriteItemCard
+                        key={item.id}
+                        item={item}
+                        index={index}
+                        onRemove={removeFavorite}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              </>
+            )}
           </>
         )}
       </motion.div>
@@ -159,19 +196,9 @@ export default function FavoritesPage() {
 }
 
 interface FavoriteItemCardProps {
-  item: {
-    id: string;
-    title: string;
-    description: string;
-    price: number;
-    photos: string[];
-    condition: string;
-    status: string;
-    viewsCount: number;
-    school: { name: string };
-  };
+  item: ItemWithDetails;
   index: number;
-  onRemove: (id: string) => void;
+  onRemove: (id: number) => void;
 }
 
 function FavoriteItemCard({ item, index, onRemove }: FavoriteItemCardProps) {
@@ -182,6 +209,14 @@ function FavoriteItemCard({ item, index, onRemove }: FavoriteItemCardProps) {
     setTimeout(() => {
       onRemove(item.id);
     }, 300);
+  };
+
+  // Get primary photo or first photo
+  const primaryPhoto = item.photos.find((p) => p.is_primary) || item.photos[0];
+  const photoUrl = primaryPhoto?.url || "/placeholder-image.jpg";
+
+  const conditionDisplayName = (condition: ItemCondition) => {
+    return condition.replace("_", " ");
   };
 
   return (
@@ -200,7 +235,7 @@ function FavoriteItemCard({ item, index, onRemove }: FavoriteItemCardProps) {
         <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
           <div className="relative aspect-square overflow-hidden bg-muted">
             <Image
-              src={item.photos[0]}
+              src={photoUrl}
               alt={item.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -217,8 +252,8 @@ function FavoriteItemCard({ item, index, onRemove }: FavoriteItemCardProps) {
               <X className="h-4 w-4" />
             </Button>
             <div className="absolute bottom-2 left-2 flex gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {item.condition.replace("-", " ")}
+              <Badge variant="secondary" className="text-xs capitalize">
+                {conditionDisplayName(item.condition)}
               </Badge>
               {item.status === "sold" && (
                 <Badge variant="destructive" className="text-xs">
@@ -247,7 +282,7 @@ function FavoriteItemCard({ item, index, onRemove }: FavoriteItemCardProps) {
             </div>
             <div className="flex items-center gap-1">
               <Eye className="h-3 w-3" />
-              <span>{item.viewsCount}</span>
+              <span>{item.views_count}</span>
             </div>
           </CardFooter>
         </Card>

@@ -9,6 +9,7 @@ import { AuthSessionHandler } from "@/components/auth-session-handler";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "@/app/api/uploadthing/core";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const ibmPlexMono = Nunito_Sans({
   subsets: ["latin"],
@@ -60,14 +61,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${ibmPlexMono.variable} font-mono antialiased`}>
-        <QueryProvider>
-          <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
-          <AuthSessionHandler />
-          <Header />
-          {children}
-          <Footer />
-          <Toaster />
-        </QueryProvider>
+        <NuqsAdapter>
+          <QueryProvider>
+            <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
+            <AuthSessionHandler />
+            <Header />
+            {children}
+            <Footer />
+            <Toaster />
+          </QueryProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );

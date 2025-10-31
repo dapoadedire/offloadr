@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useItem, useRelatedItems, useItemContact } from "@/hooks/useItems";
 import { useUserReviews, useUserRating } from "@/hooks/useUser";
+import { useCheckFavorite, useToggleFavorite } from "@/hooks/useFavorites";
 
 export default function ItemDetailPage({
   params,
@@ -51,8 +52,10 @@ export default function ItemDetailPage({
     isFetching: isFetchingContact,
   } = useItemContact(itemId);
 
+  const { data: isFavorited, isLoading: checkingFavorite } = useCheckFavorite(itemId);
+  const { toggle, isPending: togglingFavorite } = useToggleFavorite();
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorited, setIsFavorited] = useState(false);
   const [showContact, setShowContact] = useState(false);
 
   if (isLoading) {
@@ -107,10 +110,7 @@ export default function ItemDetailPage({
   };
 
   const handleFavorite = () => {
-    setIsFavorited(!isFavorited);
-    toast.success(
-      isFavorited ? "Removed from favorites" : "Added to favorites"
-    );
+    toggle(itemId, isFavorited || false);
   };
 
   const handleContactSeller = async () => {
@@ -393,6 +393,7 @@ export default function ItemDetailPage({
                   size="icon"
                   variant="outline"
                   onClick={handleFavorite}
+                  disabled={togglingFavorite || checkingFavorite}
                   className="h-11 w-11"
                 >
                   <Heart

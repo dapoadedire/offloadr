@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "motion/react";
+import Link from "next/link";
 import { Button } from "./button";
 import {
   ShieldCheck,
@@ -63,16 +64,20 @@ export const Hero = () => {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="flex gap-3 sm:gap-4 flex-wrap justify-center"
         >
-          <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8">
-            Start Selling
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="text-base sm:text-lg px-6 sm:px-8"
-          >
-            Browse Items
-          </Button>
+          <Link href="/items/new">
+            <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8">
+              Start Selling
+            </Button>
+          </Link>
+          <Link href="/marketplace">
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-base sm:text-lg px-6 sm:px-8"
+            >
+              Browse Items
+            </Button>
+          </Link>
         </motion.div>
 
         {/* Trust indicators */}

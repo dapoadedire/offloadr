@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { Search, Filter, X, Heart, MapPin, Eye, Loader2 } from "lucide-react";
+import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,45 +22,68 @@ import { Separator } from "@/components/ui/separator";
 import { useItems } from "@/hooks/useItems";
 import { useCategories } from "@/hooks/useCategories";
 import { useSchools } from "@/hooks/useSchools";
+import { useCheckFavorite, useToggleFavorite } from "@/hooks/useFavorites";
 import { ItemWithDetails, ItemCondition } from "@/lib/types";
 
 export default function MarketplacePage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedSchool, setSelectedSchool] = useState<string>("all");
-  const [selectedCondition, setSelectedCondition] = useState<string>("all");
-  const [priceRange, setPriceRange] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("newest");
-  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useQueryStates({
+    search: parseAsString.withDefault(""),
+    category: parseAsString.withDefault("all"),
+    school: parseAsString.withDefault("all"),
+    condition: parseAsString.withDefault("all"),
+    priceRange: parseAsString.withDefault("all"),
+    sort: parseAsString.withDefault("newest"),
+  });
+
+  const [showFiltersPanel, setShowFiltersPanel] = useQueryStates({
+    showFilters: parseAsString.withDefault("false"),
+  });
+
+  const showFilters = showFiltersPanel.showFilters === "true";
+
+  // Local search state for debouncing
+  const [searchInput, setSearchInput] = useState(filters.search);
+
+  // Update local search input when URL changes (e.g., browser back/forward)
+  useEffect(() => {
+    setSearchInput(filters.search);
+  }, [filters.search]);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters({ search: searchInput });
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   // Build filter query for API
-  const [filterQuery, setFilterQuery] = useState({});
-
-  useEffect(() => {
+  const filterQuery = useMemo(() => {
     const query: any = {
       page: 1,
       limit: 50,
     };
 
-    if (searchQuery) {
-      query.search = searchQuery;
+    if (filters.search) {
+      query.search = filters.search;
     }
 
-    if (selectedCategory !== "all") {
-      query.category_id = parseInt(selectedCategory);
+    if (filters.category !== "all") {
+      query.category_id = parseInt(filters.category);
     }
 
-    if (selectedSchool !== "all") {
-      query.school_id = parseInt(selectedSchool);
+    if (filters.school !== "all") {
+      query.school_id = parseInt(filters.school);
     }
 
-    if (selectedCondition !== "all") {
-      query.condition = selectedCondition;
+    if (filters.condition !== "all") {
+      query.condition = filters.condition;
     }
 
     // Price range filter
-    if (priceRange !== "all") {
-      switch (priceRange) {
+    if (filters.priceRange !== "all") {
+      switch (filters.priceRange) {
         case "under-50":
           query.max_price = 50;
           break;
@@ -85,17 +109,10 @@ export default function MarketplacePage() {
       "price-high": "price_desc",
       popular: "most_viewed",
     };
-    query.sort = sortMapping[sortBy] || "newest";
+    query.sort = sortMapping[filters.sort] || "newest";
 
-    setFilterQuery(query);
-  }, [
-    searchQuery,
-    selectedCategory,
-    selectedSchool,
-    selectedCondition,
-    priceRange,
-    sortBy,
-  ]);
+    return query;
+  }, [filters]);
 
   // Fetch data
   const { data: itemsData, isLoading: itemsLoading, error: itemsError } = useItems(filterQuery);
@@ -106,18 +123,21 @@ export default function MarketplacePage() {
   const totalItems = itemsData?.pagination?.total || 0;
 
   const activeFiltersCount = [
-    selectedCategory !== "all",
-    selectedSchool !== "all",
-    selectedCondition !== "all",
-    priceRange !== "all",
+    filters.category !== "all",
+    filters.school !== "all",
+    filters.condition !== "all",
+    filters.priceRange !== "all",
   ].filter(Boolean).length;
 
   function clearAllFilters() {
-    setSelectedCategory("all");
-    setSelectedSchool("all");
-    setSelectedCondition("all");
-    setPriceRange("all");
-    setSearchQuery("");
+    setSearchInput("");
+    setFilters({
+      search: "",
+      category: "all",
+      school: "all",
+      condition: "all",
+      priceRange: "all",
+    });
   }
 
   const conditionDisplayName = (condition: string) => {
@@ -147,14 +167,14 @@ export default function MarketplacePage() {
             <Input
               type="text"
               placeholder="Search items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="pl-10"
             />
           </div>
 
           {/* Sort */}
-          <Select value={sortBy} onValueChange={setSortBy}>
+          <Select value={filters.sort} onValueChange={(value) => setFilters({ sort: value })}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
@@ -170,7 +190,7 @@ export default function MarketplacePage() {
           {/* Filter Toggle */}
           <Button
             variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={() => setShowFiltersPanel({ showFilters: showFilters ? "false" : "true" })}
             className="relative"
           >
             <Filter className="mr-2 h-4 w-4" />
@@ -203,8 +223,8 @@ export default function MarketplacePage() {
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Category</label>
                       <Select
-                        value={selectedCategory}
-                        onValueChange={setSelectedCategory}
+                        value={filters.category}
+                        onValueChange={(value) => setFilters({ category: value })}
                         disabled={categoriesLoading}
                       >
                         <SelectTrigger>
@@ -225,8 +245,8 @@ export default function MarketplacePage() {
                     <div className="space-y-2">
                       <label className="text-sm font-medium">School</label>
                       <Select
-                        value={selectedSchool}
-                        onValueChange={setSelectedSchool}
+                        value={filters.school}
+                        onValueChange={(value) => setFilters({ school: value })}
                         disabled={schoolsLoading}
                       >
                         <SelectTrigger>
@@ -247,8 +267,8 @@ export default function MarketplacePage() {
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Condition</label>
                       <Select
-                        value={selectedCondition}
-                        onValueChange={setSelectedCondition}
+                        value={filters.condition}
+                        onValueChange={(value) => setFilters({ condition: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="All Conditions" />
@@ -267,7 +287,10 @@ export default function MarketplacePage() {
                     {/* Price Range Filter */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Price Range</label>
-                      <Select value={priceRange} onValueChange={setPriceRange}>
+                      <Select
+                        value={filters.priceRange}
+                        onValueChange={(value) => setFilters({ priceRange: value })}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="All Prices" />
                         </SelectTrigger>
@@ -370,7 +393,8 @@ export default function MarketplacePage() {
 }
 
 function ItemCard({ item, index }: { item: ItemWithDetails; index: number }) {
-  const [isFavorited, setIsFavorited] = useState(false);
+  const { data: isFavorited, isLoading: checkingFavorite } = useCheckFavorite(item.id);
+  const { toggle, isPending } = useToggleFavorite();
 
   // Get primary photo or first photo
   const primaryPhoto = item.photos.find((p) => p.is_primary) || item.photos[0];
@@ -378,6 +402,11 @@ function ItemCard({ item, index }: { item: ItemWithDetails; index: number }) {
 
   const conditionDisplayName = (condition: ItemCondition) => {
     return condition.replace("_", " ");
+  };
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    toggle(item.id, isFavorited || false);
   };
 
   return (
@@ -400,10 +429,8 @@ function ItemCard({ item, index }: { item: ItemWithDetails; index: number }) {
               size="icon"
               variant="secondary"
               className="absolute top-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsFavorited(!isFavorited);
-              }}
+              onClick={handleToggleFavorite}
+              disabled={isPending || checkingFavorite}
             >
               <Heart
                 className={`h-4 w-4 ${

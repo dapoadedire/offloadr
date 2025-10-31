@@ -3,6 +3,7 @@
 import React from "react";
 import { motion } from "motion/react";
 import Image from "next/image";
+import Link from "next/link";
 
 const items = [
   {
@@ -64,47 +65,51 @@ export const ItemShowcase = () => {
       {/* Items bento grid */}
       <div className="relative grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 p-4">
         {items.map((item, index) => (
-          <motion.div
+          <Link
             key={index}
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{
-              duration: 0.4,
-              delay: 0.5 + index * 0.05,
-              ease: "easeOut",
-            }}
-            whileHover={{ scale: 1.05, y: -5 }}
-            className="relative group cursor-pointer overflow-hidden rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300"
+            href={`/marketplace?search=${encodeURIComponent(item.label.toLowerCase())}`}
           >
-            {/* Image */}
-            <div className="relative aspect-square overflow-hidden">
-              <Image
-                src={item.image}
-                alt={item.label}
-                fill
-                className="object-cover group-hover:scale-110 transition-transform duration-300"
-                sizes="(max-width: 768px) 50vw, 25vw"
-                priority={index < 4}
-                placeholder="blur"
-                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzMzMzMzMyIvPjwvc3ZnPg=="
-              />
-              {/* Overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{
+                duration: 0.4,
+                delay: 0.5 + index * 0.05,
+                ease: "easeOut",
+              }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative group cursor-pointer overflow-hidden rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300"
+            >
+              {/* Image */}
+              <div className="relative aspect-square overflow-hidden">
+                <Image
+                  src={item.image}
+                  alt={item.label}
+                  fill
+                  className="object-cover group-hover:scale-110 transition-transform duration-300"
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                  priority={index < 4}
+                  placeholder="blur"
+                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzMzMzMzMyIvPjwvc3ZnPg=="
+                />
+                {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-              {/* Label and price */}
-              <div className="absolute bottom-0 left-0 right-0 p-3">
-                <p className="text-white font-semibold text-sm mb-1 font-mono">
-                  {item.label}
-                </p>
-                <p className="text-primary font-bold text-lg font-mono">
-                  {item.price}
-                </p>
+                {/* Label and price */}
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                  <p className="text-white font-semibold text-sm mb-1 font-mono">
+                    {item.label}
+                  </p>
+                  <p className="text-primary font-bold text-lg font-mono">
+                    {item.price}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* Hover effect */}
-            <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </motion.div>
+              {/* Hover effect */}
+              <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </motion.div>
+          </Link>
         ))}
       </div>
 
