@@ -33,17 +33,20 @@ import {
 } from "@/lib/types/report";
 
 const reportSchema = z.object({
-  report_type: z.enum([
-    "scam",
-    "inappropriate",
-    "spam",
-    "sold",
-    "wrong_category",
-    "duplicate",
-    "other",
-  ] as const, {
-    required_error: "Please select a report reason",
-  }),
+  report_type: z.enum(
+    [
+      "scam",
+      "inappropriate",
+      "spam",
+      "sold",
+      "wrong_category",
+      "duplicate",
+      "other",
+    ],
+    {
+      message: "Please select a report reason",
+    }
+  ),
   comment: z.string().optional(),
 });
 
@@ -106,7 +109,8 @@ export function ReportDialog({
             Report Item
           </DialogTitle>
           <DialogDescription>
-            Reporting &quot;{itemTitle}&quot;. Please help us understand the issue.
+            Reporting &quot;{itemTitle}&quot;. Please help us understand the
+            issue.
           </DialogDescription>
         </DialogHeader>
 

@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { Suspense, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { Search, Filter, X, Heart, MapPin, Eye, Loader2 } from "lucide-react";
-import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
+import { useQueryStates, parseAsString } from "nuqs";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ import { useSchools } from "@/hooks/useSchools";
 import { useCheckFavorite, useToggleFavorite } from "@/hooks/useFavorites";
 import { ItemWithDetails, ItemCondition } from "@/lib/types";
 
-export default function MarketplacePage() {
+function MarketplaceContent() {
   const [filters, setFilters] = useQueryStates({
     search: parseAsString.withDefault(""),
     category: parseAsString.withDefault("all"),
@@ -56,11 +56,11 @@ export default function MarketplacePage() {
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, setFilters]);
 
   // Build filter query for API
   const filterQuery = useMemo(() => {
-    const query: any = {
+    const query: Record<string, string | number> = {
       page: 1,
       limit: 50,
     };
@@ -143,10 +143,6 @@ export default function MarketplacePage() {
       priceRange: "all",
     });
   }
-
-  const conditionDisplayName = (condition: string) => {
-    return condition.replace("_", " ");
-  };
 
   return (
     <div className="container mx-auto px-4 py-8 font-mono">
@@ -505,5 +501,19 @@ function ItemCard({ item, index }: { item: ItemWithDetails; index: number }) {
         </Card>
       </Link>
     </motion.div>
+  );
+}
+
+export default function MarketplacePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <MarketplaceContent />
+    </Suspense>
   );
 }

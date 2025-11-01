@@ -29,30 +29,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCurrentUserItems } from "@/hooks/useUser";
-import { useDeleteItem, useMarkAsSold, useUpdateItemStatus } from "@/hooks/useItems";
+import { useDeleteItem, useUpdateItemStatus } from "@/hooks/useItems";
 import { ItemWithDetails } from "@/lib/types";
 import { MarkSoldDialog } from "@/components/dialogs/mark-sold-dialog";
 
 export default function MyListingsPage() {
   const { data: itemsData, isLoading } = useCurrentUserItems();
   const { mutate: deleteItem, isPending: isDeleting } = useDeleteItem();
-  const { mutate: markAsSold, isPending: isMarkingAsSold } = useMarkAsSold();
-  const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateItemStatus();
+  const { mutate: updateStatus, isPending: isUpdatingStatus } =
+    useUpdateItemStatus();
 
   // Mark as sold dialog state
   const [markSoldDialogOpen, setMarkSoldDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<ItemWithDetails | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ItemWithDetails | null>(
+    null
+  );
 
   // Filter items by status
-  const { publishedItems, draftItems, soldItems, archivedItems } = useMemo(() => {
-    const myItems = itemsData?.data || [];
-    return {
-      publishedItems: myItems.filter((item) => item.status === "published"),
-      draftItems: myItems.filter((item) => item.status === "draft"),
-      soldItems: myItems.filter((item) => item.status === "sold"),
-      archivedItems: myItems.filter((item) => item.status === "archived"),
-    };
-  }, [itemsData?.data]);
+  const { publishedItems, draftItems, soldItems, archivedItems } =
+    useMemo(() => {
+      const myItems = itemsData?.data || [];
+      return {
+        publishedItems: myItems.filter((item) => item.status === "published"),
+        draftItems: myItems.filter((item) => item.status === "draft"),
+        soldItems: myItems.filter((item) => item.status === "sold"),
+        archivedItems: myItems.filter((item) => item.status === "archived"),
+      };
+    }, [itemsData?.data]);
 
   const handleMarkAsSold = (item: ItemWithDetails) => {
     setSelectedItem(item);
@@ -64,7 +67,11 @@ export default function MyListingsPage() {
   };
 
   const handleDelete = (itemId: number) => {
-    if (confirm("Are you sure you want to delete this item? This action cannot be undone.")) {
+    if (
+      confirm(
+        "Are you sure you want to delete this item? This action cannot be undone."
+      )
+    ) {
       deleteItem(itemId);
     }
   };
@@ -77,7 +84,7 @@ export default function MyListingsPage() {
     );
   }
 
-  const isPending = isDeleting || isMarkingAsSold || isUpdatingStatus;
+  const isPending = isDeleting || isUpdatingStatus;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -277,7 +284,8 @@ function ItemCard({
   onDelete,
   disabled = false,
 }: ItemCardProps) {
-  const primaryPhoto = item.photos?.find((p) => p.is_primary) || item.photos?.[0];
+  const primaryPhoto =
+    item.photos?.find((p) => p.is_primary) || item.photos?.[0];
 
   return (
     <motion.div
@@ -309,9 +317,7 @@ function ItemCard({
                   : "secondary"
               }
               className={
-                item.status === "sold"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : ""
+                item.status === "sold" ? "bg-green-600 hover:bg-green-700" : ""
               }
             >
               {item.status}

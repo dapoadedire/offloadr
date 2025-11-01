@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -55,10 +54,11 @@ export function MarkSoldDialog({
     },
   });
 
-  async function onSubmit(data: MarkSoldFormValues) {
+  async function onSubmit() {
     try {
+      // TODO: Convert buyer_identifier to buyer_id when user lookup is implemented
       await markSoldMutation.mutateAsync({
-        buyer_identifier: data.buyer_identifier || undefined,
+        // buyer_id: undefined, // Optional buyer_id field
       });
       form.reset();
       onOpenChange(false);
@@ -79,7 +79,8 @@ export function MarkSoldDialog({
         <DialogHeader>
           <DialogTitle>Mark Item as Sold</DialogTitle>
           <DialogDescription>
-            Marking &quot;{itemTitle}&quot; as sold. This will remove it from active listings.
+            Marking &quot;{itemTitle}&quot; as sold. This will remove it from
+            active listings.
           </DialogDescription>
         </DialogHeader>
 
@@ -98,7 +99,8 @@ export function MarkSoldDialog({
                     />
                   </FormControl>
                   <FormDescription>
-                    If you provide the buyer&apos;s username or email, they&apos;ll be able to leave a review for this transaction.
+                    If you provide the buyer&apos;s username or email,
+                    they&apos;ll be able to leave a review for this transaction.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -113,7 +115,9 @@ export function MarkSoldDialog({
                   <ul className="text-xs text-muted-foreground space-y-1">
                     <li>• Item will be marked as &quot;Sold&quot;</li>
                     <li>• Removed from active marketplace listings</li>
-                    <li>• Still visible in your &quot;Sold Items&quot; history</li>
+                    <li>
+                      • Still visible in your &quot;Sold Items&quot; history
+                    </li>
                     <li>• Buyer can leave a review (if identified)</li>
                   </ul>
                 </div>
@@ -129,10 +133,7 @@ export function MarkSoldDialog({
               >
                 Skip & Mark Sold
               </Button>
-              <Button
-                type="submit"
-                disabled={markSoldMutation.isPending}
-              >
+              <Button type="submit" disabled={markSoldMutation.isPending}>
                 {markSoldMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

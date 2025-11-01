@@ -1,6 +1,5 @@
 import apiClient from "./client";
 import type { Report, CreateReportPayload } from "@/lib/types/report";
-import type { MessageResponse } from "@/lib/types";
 
 export const reportsApi = {
   // Report an item
