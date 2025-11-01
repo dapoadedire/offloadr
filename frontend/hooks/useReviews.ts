@@ -1,14 +1,18 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { reviewsApi, CreateReviewPayload, UpdateReviewPayload } from '@/lib/api/reviews';
-import { ApiClientError } from '@/lib/types';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  reviewsApi,
+  CreateReviewPayload,
+  UpdateReviewPayload,
+} from "@/lib/api/reviews";
+import { ApiClientError } from "@/lib/types";
+import { toast } from "sonner";
 
 // Query Keys
 export const reviewKeys = {
-  all: ['reviews'] as const,
-  details: () => [...reviewKeys.all, 'detail'] as const,
+  all: ["reviews"] as const,
+  details: () => [...reviewKeys.all, "detail"] as const,
   detail: (id: number) => [...reviewKeys.details(), id] as const,
-  itemReviews: (itemId: number) => [...reviewKeys.all, 'item', itemId] as const,
+  itemReviews: (itemId: number) => [...reviewKeys.all, "item", itemId] as const,
 };
 
 // Get review by ID
@@ -21,11 +25,15 @@ export const useReview = (id: number) => {
 };
 
 // Get reviews for an item
-export const useItemReviews = (itemId: number) => {
+export const useItemReviews = (
+  itemId: number,
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: reviewKeys.itemReviews(itemId),
     queryFn: () => reviewsApi.getItemReviews(itemId),
     staleTime: 2 * 60 * 1000, // 2 minutes
+    enabled: options?.enabled ?? true,
   });
 };
 
@@ -37,15 +45,17 @@ export const useCreateReview = () => {
     mutationFn: (payload: CreateReviewPayload) => reviewsApi.create(payload),
     onSuccess: (data, variables) => {
       // Invalidate item reviews
-      queryClient.invalidateQueries({ queryKey: reviewKeys.itemReviews(variables.item_id) });
+      queryClient.invalidateQueries({
+        queryKey: reviewKeys.itemReviews(variables.item_id),
+      });
 
       // Invalidate user ratings (will need to create these keys when we implement user hooks)
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
 
-      toast.success('Review submitted successfully!');
+      toast.success("Review submitted successfully!");
     },
     onError: (error: ApiClientError) => {
-      const message = error.message || 'Failed to submit review';
+      const message = error.message || "Failed to submit review";
       toast.error(message);
 
       if (error.fields) {
@@ -62,21 +72,24 @@ export const useUpdateReview = (reviewId: number) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: UpdateReviewPayload) => reviewsApi.update(reviewId, payload),
+    mutationFn: (payload: UpdateReviewPayload) =>
+      reviewsApi.update(reviewId, payload),
     onSuccess: (data) => {
       // Update cache for this specific review
       queryClient.setQueryData(reviewKeys.detail(reviewId), data);
 
       // Invalidate item reviews
-      queryClient.invalidateQueries({ queryKey: reviewKeys.itemReviews(data.item_id) });
+      queryClient.invalidateQueries({
+        queryKey: reviewKeys.itemReviews(data.item_id),
+      });
 
       // Invalidate user ratings
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
 
-      toast.success('Review updated successfully!');
+      toast.success("Review updated successfully!");
     },
     onError: (error: ApiClientError) => {
-      const message = error.message || 'Failed to update review';
+      const message = error.message || "Failed to update review";
       toast.error(message);
 
       if (error.fields) {
@@ -102,12 +115,12 @@ export const useDeleteReview = () => {
       queryClient.invalidateQueries({ queryKey: reviewKeys.all });
 
       // Invalidate user ratings
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
 
-      toast.success(data.message || 'Review deleted successfully!');
+      toast.success(data.message || "Review deleted successfully!");
     },
     onError: (error: ApiClientError) => {
-      const message = error.message || 'Failed to delete review';
+      const message = error.message || "Failed to delete review";
       toast.error(message);
     },
   });

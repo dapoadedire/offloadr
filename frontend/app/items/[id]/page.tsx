@@ -42,9 +42,13 @@ export default function ItemDetailPage({
   const { id } = use(params);
   const itemId = parseInt(id);
 
-  // Fetch item data
+  // Fetch item data first
   const { data: item, isLoading, error } = useItem(itemId);
-  const { data: relatedItemsData } = useRelatedItems(itemId);
+
+  // Only fetch dependent data if item exists
+  const { data: relatedItemsData } = useRelatedItems(itemId, {
+    enabled: !!item,
+  });
   const { data: sellerReviewsData } = useUserReviews(
     item?.seller?.id || 0,
     1,
@@ -65,8 +69,10 @@ export default function ItemDetailPage({
   const { toggle, isPending: togglingFavorite } = useToggleFavorite();
 
   // Reviews
-  const { data: itemReviews, isLoading: loadingReviews } =
-    useItemReviews(itemId);
+  const { data: itemReviews, isLoading: loadingReviews } = useItemReviews(
+    itemId,
+    { enabled: !!item }
+  );
   const { user } = useAuthStore();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
