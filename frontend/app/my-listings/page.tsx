@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Plus,
   Package,
@@ -31,12 +31,17 @@ import {
 import { useCurrentUserItems } from "@/hooks/useUser";
 import { useDeleteItem, useMarkAsSold, useUpdateItemStatus } from "@/hooks/useItems";
 import { ItemWithDetails } from "@/lib/types";
+import { MarkSoldDialog } from "@/components/dialogs/mark-sold-dialog";
 
 export default function MyListingsPage() {
   const { data: itemsData, isLoading } = useCurrentUserItems();
   const { mutate: deleteItem, isPending: isDeleting } = useDeleteItem();
   const { mutate: markAsSold, isPending: isMarkingAsSold } = useMarkAsSold();
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateItemStatus();
+
+  // Mark as sold dialog state
+  const [markSoldDialogOpen, setMarkSoldDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ItemWithDetails | null>(null);
 
   // Filter items by status
   const { publishedItems, draftItems, soldItems, archivedItems } = useMemo(() => {
@@ -49,8 +54,9 @@ export default function MyListingsPage() {
     };
   }, [itemsData?.data]);
 
-  const handleMarkAsSold = (itemId: number) => {
-    markAsSold({ itemId });
+  const handleMarkAsSold = (item: ItemWithDetails) => {
+    setSelectedItem(item);
+    setMarkSoldDialogOpen(true);
   };
 
   const handleArchive = (itemId: number) => {
@@ -239,6 +245,16 @@ export default function MyListingsPage() {
           </TabsContent>
         </Tabs>
       </motion.div>
+
+      {/* Mark as Sold Dialog */}
+      {selectedItem && (
+        <MarkSoldDialog
+          open={markSoldDialogOpen}
+          onOpenChange={setMarkSoldDialogOpen}
+          itemId={selectedItem.id}
+          itemTitle={selectedItem.title}
+        />
+      )}
     </div>
   );
 }
@@ -248,7 +264,7 @@ interface ItemCardProps {
   index: number;
   isSold?: boolean;
   disabled?: boolean;
-  onMarkAsSold: (itemId: number) => void;
+  onMarkAsSold: (item: ItemWithDetails) => void;
   onArchive: (itemId: number) => void;
   onDelete: (itemId: number) => void;
 }
@@ -338,7 +354,7 @@ function ItemCard({
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => onMarkAsSold(item.id)}
+                      onClick={() => onMarkAsSold(item)}
                       disabled={disabled}
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />

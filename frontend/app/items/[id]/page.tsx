@@ -29,6 +29,10 @@ import { Separator } from "@/components/ui/separator";
 import { useItem, useRelatedItems, useItemContact } from "@/hooks/useItems";
 import { useUserReviews, useUserRating } from "@/hooks/useUser";
 import { useCheckFavorite, useToggleFavorite } from "@/hooks/useFavorites";
+import { useItemReviews } from "@/hooks/useReviews";
+import { useAuthStore } from "@/store/authStore";
+import { ReviewDialog } from "@/components/dialogs/review-dialog";
+import { ReportDialog } from "@/components/dialogs/report-dialog";
 
 export default function ItemDetailPage({
   params,
@@ -57,8 +61,14 @@ export default function ItemDetailPage({
     useCheckFavorite(itemId);
   const { toggle, isPending: togglingFavorite } = useToggleFavorite();
 
+  // Reviews
+  const { data: itemReviews, isLoading: loadingReviews } = useItemReviews(itemId);
+  const { user } = useAuthStore();
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showContact, setShowContact] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -74,6 +84,15 @@ export default function ItemDetailPage({
 
   const relatedItems = relatedItemsData || [];
   const sellerReviews = sellerReviewsData?.data?.slice(0, 3) || [];
+  const reviews = itemReviews || [];
+
+  // Check if current user can leave a review
+  const userExistingReview = reviews.find((r) => r.buyer_id === user?.id);
+  const canLeaveReview =
+    user &&
+    item.status === "sold" &&
+    item.buyer_id === user.id &&
+    item.seller?.id !== user.id;
 
   const nextImage = () => {
     if (item.photos && item.photos.length > 0) {
@@ -106,7 +125,7 @@ export default function ItemDetailPage({
   };
 
   const handleReport = () => {
-    toast.success("Item reported. We'll review it shortly.");
+    setReportDialogOpen(true);
   };
 
   // Sort photos by position
@@ -344,6 +363,75 @@ export default function ItemDetailPage({
               </CardContent>
             </Card>
           )}
+
+          {/* Item Reviews */}
+          {(reviews.length > 0 || canLeaveReview) && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Reviews for this Item</CardTitle>
+                {canLeaveReview && (
+                  <Button
+                    onClick={() => setReviewDialogOpen(true)}
+                    variant={userExistingReview ? "outline" : "default"}
+                    size="sm"
+                  >
+                    {userExistingReview ? "Edit Review" : "Leave Review"}
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {loadingReviews ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : reviews.length > 0 ? (
+                  reviews.map((review) => (
+                    <div key={review.id} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="flex">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < review.rating
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-muted"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {new Date(review.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium">
+                          {review.buyer_firstname} {review.buyer_lastname}
+                        </p>
+                        {review.buyer_id === item.buyer_id && (
+                          <Badge variant="secondary" className="text-xs">
+                            Verified Buyer
+                          </Badge>
+                        )}
+                      </div>
+                      {review.comment && (
+                        <p className="text-sm text-muted-foreground">
+                          {review.comment}
+                        </p>
+                      )}
+                      <Separator />
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No reviews yet. Be the first to review!
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Right Column - Pricing and Seller Info */}
@@ -566,6 +654,23 @@ export default function ItemDetailPage({
           </div>
         </div>
       )}
+
+      {/* Review Dialog */}
+      <ReviewDialog
+        open={reviewDialogOpen}
+        onOpenChange={setReviewDialogOpen}
+        itemId={itemId}
+        itemTitle={item.title}
+        existingReview={userExistingReview || null}
+      />
+
+      {/* Report Dialog */}
+      <ReportDialog
+        open={reportDialogOpen}
+        onOpenChange={setReportDialogOpen}
+        itemId={itemId}
+        itemTitle={item.title}
+      />
     </div>
   );
 }

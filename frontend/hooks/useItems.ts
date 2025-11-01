@@ -199,6 +199,18 @@ export const useMarkAsSold = () => {
   });
 };
 
+// Convenience hook for marking a specific item as sold
+export const useMarkItemAsSold = (itemId: number) => {
+  const markAsSold = useMarkAsSold();
+
+  return useMutation({
+    mutationFn: (payload?: MarkSoldPayload) =>
+      markAsSold.mutateAsync({ itemId, payload }),
+    onSuccess: markAsSold.onSuccess,
+    onError: markAsSold.onError,
+  });
+};
+
 // Repost item
 export const useRepostItem = () => {
   const router = useRouter();
