@@ -58,7 +58,6 @@ import { Badge } from "@/components/ui/badge";
 import { useItem, useUpdateItem, useDeleteItem } from "@/hooks/useItems";
 import { useCategories } from "@/hooks/useCategories";
 import { useUploadThing } from "@/lib/uploadthing";
-import { ItemCondition } from "@/lib/types";
 
 const itemSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100),
