@@ -48,9 +48,12 @@ export default function ItemDetailPage({
   const { data: sellerReviewsData } = useUserReviews(
     item?.seller?.id || 0,
     1,
-    3
+    3,
+    { enabled: !!item?.seller?.id }
   );
-  const { data: sellerRating } = useUserRating(item?.seller?.id || 0);
+  const { data: sellerRating } = useUserRating(item?.seller?.id || 0, {
+    enabled: !!item?.seller?.id,
+  });
   const {
     data: contactInfo,
     refetch: fetchContact,
@@ -62,7 +65,8 @@ export default function ItemDetailPage({
   const { toggle, isPending: togglingFavorite } = useToggleFavorite();
 
   // Reviews
-  const { data: itemReviews, isLoading: loadingReviews } = useItemReviews(itemId);
+  const { data: itemReviews, isLoading: loadingReviews } =
+    useItemReviews(itemId);
   const { user } = useAuthStore();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -87,7 +91,9 @@ export default function ItemDetailPage({
   const reviews = itemReviews || [];
 
   // Check if current user can leave a review
-  const userExistingReview = reviews.find((r) => r.buyer_id === user?.id);
+  const userExistingReview = Array.isArray(reviews)
+    ? reviews.find((r) => r.buyer_id === user?.id)
+    : undefined;
   const canLeaveReview =
     user &&
     item.status === "sold" &&
