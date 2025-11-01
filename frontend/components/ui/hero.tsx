@@ -23,13 +23,9 @@ export const Hero = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-2 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm"
+          className="inline-flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-full"
         >
-          <span
-            className="text-primary font-medium text-xs
-          sm:text-sm  
-          "
-          >
+          <span className="text-primary font-medium text-xs sm:text-sm">
             Join 20+ students already selling on campus
           </span>
         </motion.div>
@@ -40,7 +36,7 @@ export const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-pretty leading-tight text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter font-mono"
+            className="text-pretty leading-tight text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter font-mono px-2"
           >
             Sell your stuff before you{" "}
             <span className="text-primary">leave campus</span>
@@ -49,9 +45,10 @@ export const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-pretty leading-tight text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto"
+            className="text-pretty leading-relaxed text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-4"
           >
-            Offloadr makes moving out stress-free. <br />
+            Offloadr makes moving out stress-free.{" "}
+            <br className="hidden sm:block" />
             List items in minutes, connect with buyers instantly, and get paid
             before you pack.
           </motion.p>
@@ -62,18 +59,21 @@ export const Hero = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex gap-3 sm:gap-4 flex-wrap justify-center"
+          className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto px-4 sm:px-0"
         >
-          <Link href="/items/new">
-            <Button size="lg" className="text-base sm:text-lg px-6 sm:px-8">
+          <Link href="/items/new" className="w-full sm:w-auto">
+            <Button
+              size="lg"
+              className="text-sm sm:text-base md:text-lg px-6 sm:px-8 w-full"
+            >
               Start Selling
             </Button>
           </Link>
-          <Link href="/marketplace">
+          <Link href="/marketplace" className="w-full sm:w-auto">
             <Button
               size="lg"
               variant="outline"
-              className="text-base sm:text-lg px-6 sm:px-8"
+              className="text-sm sm:text-base md:text-lg px-6 sm:px-8 w-full"
             >
               Browse Items
             </Button>
@@ -105,7 +105,7 @@ export const Hero = () => {
         <ItemShowcase />
 
         {/* Feature cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12 w-full">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

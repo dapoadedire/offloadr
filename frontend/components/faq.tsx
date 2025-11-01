@@ -75,9 +75,11 @@ export const FAQ = () => {
           >
             <button
               onClick={() => setOpenIndex(openIndex === index ? null : index)}
-              className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-muted/50 transition-colors"
+              className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-muted/50 transition-colors"
             >
-              <span className="font-semibold pr-8">{faq.question}</span>
+              <span className="font-semibold pr-4 sm:pr-8 text-sm sm:text-base">
+                {faq.question}
+              </span>
               <motion.div
                 animate={{ rotate: openIndex === index ? 180 : 0 }}
                 transition={{ duration: 0.3 }}
@@ -95,7 +97,7 @@ export const FAQ = () => {
                   transition={{ duration: 0.3 }}
                   className="overflow-hidden"
                 >
-                  <div className="px-6 pb-4 text-muted-foreground">
+                  <div className="px-4 sm:px-6 pb-4 text-muted-foreground text-sm sm:text-base">
                     {faq.answer}
                   </div>
                 </motion.div>

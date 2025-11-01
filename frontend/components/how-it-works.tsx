@@ -52,7 +52,7 @@ export const HowItWorks = () => {
         </motion.p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 lg:gap-12">
         {steps.map((step, index) => {
           const Icon = step.icon;
           return (
@@ -70,7 +70,7 @@ export const HowItWorks = () => {
               </div>
 
               {/* Content card */}
-              <div className="bg-card border border-border rounded-2xl p-8 h-full hover:border-primary/50 transition-all duration-300">
+              <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 h-full hover:border-primary/50 transition-all duration-300">
                 <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                   <Icon className="w-7 h-7 text-primary" />
                 </div>
