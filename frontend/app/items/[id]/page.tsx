@@ -64,8 +64,10 @@ export default function ItemDetailPage({
     isFetching: isFetchingContact,
   } = useItemContact(itemId);
 
-  const { data: isFavorited, isLoading: checkingFavorite } =
-    useCheckFavorite(itemId);
+  const { data: isFavorited, isLoading: checkingFavorite } = useCheckFavorite(
+    itemId,
+    { enabled: !!item }
+  );
   const { toggle, isPending: togglingFavorite } = useToggleFavorite();
 
   // Reviews

@@ -16,11 +16,17 @@ export const reviewKeys = {
 };
 
 // Get review by ID
-export const useReview = (id: number) => {
+export const useReview = (id: number, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: reviewKeys.detail(id),
     queryFn: () => reviewsApi.getById(id),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: options?.enabled ?? true,
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 404 errors
+      if ((error as ApiClientError)?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 };
 
@@ -34,6 +40,11 @@ export const useItemReviews = (
     queryFn: () => reviewsApi.getItemReviews(itemId),
     staleTime: 2 * 60 * 1000, // 2 minutes
     enabled: options?.enabled ?? true,
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 404 errors
+      if ((error as ApiClientError)?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 };
 

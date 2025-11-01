@@ -1,14 +1,15 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { favoritesApi, AddFavoritePayload } from '@/lib/api/favorites';
-import { ApiClientError } from '@/lib/types';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { favoritesApi, AddFavoritePayload } from "@/lib/api/favorites";
+import { ApiClientError } from "@/lib/types";
+import { toast } from "sonner";
 
 // Query Keys
 export const favoriteKeys = {
-  all: ['favorites'] as const,
-  lists: () => [...favoriteKeys.all, 'list'] as const,
-  list: (page: number, limit: number) => [...favoriteKeys.lists(), page, limit] as const,
-  check: (itemId: number) => [...favoriteKeys.all, 'check', itemId] as const,
+  all: ["favorites"] as const,
+  lists: () => [...favoriteKeys.all, "list"] as const,
+  list: (page: number, limit: number) =>
+    [...favoriteKeys.lists(), page, limit] as const,
+  check: (itemId: number) => [...favoriteKeys.all, "check", itemId] as const,
 };
 
 // Get user's favorited items
@@ -21,11 +22,15 @@ export const useFavorites = (page = 1, limit = 20) => {
 };
 
 // Check if item is favorited
-export const useCheckFavorite = (itemId: number) => {
+export const useCheckFavorite = (
+  itemId: number,
+  options?: { enabled?: boolean }
+) => {
   return useQuery({
     queryKey: favoriteKeys.check(itemId),
     queryFn: () => favoritesApi.checkFavorite(itemId),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: options?.enabled ?? true,
   });
 };
 
@@ -42,10 +47,10 @@ export const useAddFavorite = () => {
       // Update check favorite cache
       queryClient.setQueryData(favoriteKeys.check(variables.item_id), true);
 
-      toast.success('Added to favorites!');
+      toast.success("Added to favorites!");
     },
     onError: (error: ApiClientError) => {
-      const message = error.message || 'Failed to add to favorites';
+      const message = error.message || "Failed to add to favorites";
       toast.error(message);
     },
   });
@@ -64,10 +69,10 @@ export const useRemoveFavorite = () => {
       // Update check favorite cache
       queryClient.setQueryData(favoriteKeys.check(itemId), false);
 
-      toast.success('Removed from favorites');
+      toast.success("Removed from favorites");
     },
     onError: (error: ApiClientError) => {
-      const message = error.message || 'Failed to remove from favorites';
+      const message = error.message || "Failed to remove from favorites";
       toast.error(message);
     },
   });

@@ -84,13 +84,17 @@ export default function EditItemPage({
   const itemId = parseInt(id);
   const router = useRouter();
 
-  // Fetch item data
+  // Fetch item data first
   const {
     data: item,
     isLoading: itemLoading,
     error: itemError,
   } = useItem(itemId);
-  const { data: categories, isLoading: categoriesLoading } = useCategories();
+
+  // Only fetch categories if item exists
+  const { data: categories, isLoading: categoriesLoading } = useCategories({
+    enabled: !!item,
+  });
 
   // Mutations
   const updateItemMutation = useUpdateItem(itemId);
