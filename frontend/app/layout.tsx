@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Roboto_Mono } from "next/font/google";
+import { Work_Sans} from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/lib/query-provider";
 import { Header } from "@/components/header";
@@ -11,7 +11,7 @@ import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "@/app/api/uploadthing/core";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
-const ibmPlexMono = Roboto_Mono({
+const ibmPlexMono = Work_Sans({
   subsets: ["latin"],
   variable: "--font-ibm-plex-mono",
   display: "swap",
