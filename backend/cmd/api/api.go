@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/dapoadedire/offloadr/backend/docs"
 	"github.com/dapoadedire/offloadr/backend/internal/auth"
 	"github.com/dapoadedire/offloadr/backend/internal/env"
 	"github.com/dapoadedire/offloadr/backend/internal/mailer"
@@ -16,6 +17,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 )
 
@@ -95,6 +97,11 @@ func (app *application) mount() *chi.Mux {
 
 	// Serve Insomnia collection for easy API testing
 	r.Get("/insomnia.yaml", app.serveInsomniaCollection)
+
+	// Swagger documentation
+	r.Get("/docs/*", httpSwagger.Handler(
+		httpSwagger.URL("/docs/swagger.json"),
+	))
 
 	r.Route(version, func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
