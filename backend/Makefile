@@ -201,7 +201,7 @@ db-shell:
 DB_HOST ?= $(or $(POSTGRES_HOST),localhost)
 DB_PORT ?= $(or $(POSTGRES_PORT),5432)
 DB_USER ?= $(or $(POSTGRES_USER),offloadr)
-DB_PASSWORD ?= $(or $(POSTGRES_PASSWORD),offloadr-db-password)
+DB_PASSWORD ?= $(or $(POSTGRES_PASSWORD),password)
 DB_NAME ?= $(or $(POSTGRES_DB),offloadr)
 DB_CONN_STRING = "host=$(DB_HOST) user=$(DB_USER) password=$(DB_PASSWORD) dbname=$(DB_NAME) port=$(DB_PORT) sslmode=disable"
 
