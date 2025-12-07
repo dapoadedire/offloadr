@@ -19,15 +19,15 @@ const testimonials = [
     rating: 5,
   },
   {
-    name: "David O.",
+    name: "Abdullah O.",
     school: "Obafemi Awolowo University",
     text: "Best campus marketplace I've used. Found a great laptop for my studies at half the price. Safe and reliable!",
     rating: 4,
   },
   {
-    name: "Blessing M.",
+    name: "Adedapo A.",
     school: "Obafemi Awolowo University",
-    text: "Sold my textbooks, mini fridge, and desk lamp all within a week. The process was super smooth and everyone was trustworthy.",
+    text: "Sold my textbooks and desk lamp all within a week. The process was super smooth and everyone was trustworthy.",
     rating: 5,
   },
 ];
