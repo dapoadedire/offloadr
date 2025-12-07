@@ -22,7 +22,7 @@ const auth = async (req: Request) => {
   try {
     // Fetch user data from backend API using the token
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/users/me`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
