@@ -145,11 +145,43 @@ export default function ProfilePage({
                     >
                       Verified
                     </Badge>
+                  ) : isOwnProfile &&
+                    currentUserProfile &&
+                    !currentUserProfile.email_verified ? (
+                    <Badge
+                      variant="destructive"
+                      className="w-fit mx-auto sm:mx-0"
+                    >
+                      Not Verified
+                    </Badge>
                   ) : null}
                 </div>
                 <p className="text-muted-foreground mb-4">
                   @{displayUser.username}
                 </p>
+
+                {/* Email Verification Alert for Own Profile */}
+                {isOwnProfile &&
+                  currentUserProfile &&
+                  !currentUserProfile.email_verified && (
+                    <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-lg">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <p className="text-sm text-yellow-800 dark:text-yellow-200 flex-1">
+                          Your email is not verified. Please verify your email
+                          to unlock all features.
+                        </p>
+                        <Link href="/verify-email">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full sm:w-auto border-yellow-600 text-yellow-700 hover:bg-yellow-100 dark:border-yellow-800 dark:text-yellow-300 dark:hover:bg-yellow-950"
+                          >
+                            Verify Email
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
 
                 {/* Stats */}
                 <div className="flex flex-wrap justify-center sm:justify-start gap-6 mb-4">
