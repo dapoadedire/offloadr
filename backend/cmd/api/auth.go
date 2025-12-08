@@ -106,8 +106,8 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	emailParts := strings.Split(payload.Email, "@")
-	if len(emailParts) != 2 || emailParts[1] != school.Domain {
-		app.badRequestResponse(w, r, fmt.Errorf("email must match school domain: @%s", school.Domain))
+	if len(emailParts) != 2 || !strings.HasSuffix(emailParts[1], school.Domain) {
+		app.badRequestResponse(w, r, fmt.Errorf("email must match school domain: @%s or @student.%s", school.Domain, school.Domain))
 		return
 	}
 
