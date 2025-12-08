@@ -24,6 +24,7 @@ export interface PublicUserProfile {
   username: string;
   firstname: string;
   lastname: string;
+  email_verified: boolean;
   school: School;
   avatar_url: string | null;
   joined_at: string;

@@ -64,13 +64,14 @@ type SchoolResponse struct {
 
 // PublicUserResponse represents public user profile
 type PublicUserResponse struct {
-	ID        int64          `json:"id"`
-	Username  string         `json:"username"`
-	Firstname string         `json:"firstname"`
-	Lastname  string         `json:"lastname"`
-	School    SchoolResponse `json:"school"`
-	AvatarURL *string        `json:"avatar_url,omitempty"`
-	JoinedAt  string         `json:"joined_at"`
+	ID            int64          `json:"id"`
+	Username      string         `json:"username"`
+	Firstname     string         `json:"firstname"`
+	Lastname      string         `json:"lastname"`
+	EmailVerified bool           `json:"email_verified"`
+	School        SchoolResponse `json:"school"`
+	AvatarURL     *string        `json:"avatar_url,omitempty"`
+	JoinedAt      string         `json:"joined_at"`
 }
 
 // GET /v1/users/me
@@ -168,10 +169,11 @@ func (app *application) getUserByIDHandler(w http.ResponseWriter, r *http.Reques
 
 	// Return public profile (no email, phone, etc.)
 	response := PublicUserResponse{
-		ID:        user.ID,
-		Username:  user.Username,
-		Firstname: user.Firstname,
-		Lastname:  user.Lastname,
+		ID:            user.ID,
+		Username:      user.Username,
+		Firstname:     user.Firstname,
+		Lastname:      user.Lastname,
+		EmailVerified: user.EmailVerified,
 		School: SchoolResponse{
 			ID:       school.ID,
 			Name:     school.Name,

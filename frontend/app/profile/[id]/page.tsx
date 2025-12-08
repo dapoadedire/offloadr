@@ -137,12 +137,15 @@ export default function ProfilePage({
                   <h1 className="text-3xl font-bold">
                     {displayUser.firstname} {displayUser.lastname}
                   </h1>
-                  <Badge
-                    variant="default"
-                    className="w-fit mx-auto sm:mx-0 bg-green-600 hover:bg-green-700"
-                  >
-                    Verified
-                  </Badge>
+                  {(isOwnProfile && currentUserProfile?.email_verified) ||
+                  (!isOwnProfile && user.email_verified) ? (
+                    <Badge
+                      variant="default"
+                      className="w-fit mx-auto sm:mx-0 bg-green-600 hover:bg-green-700"
+                    >
+                      Verified
+                    </Badge>
+                  ) : null}
                 </div>
                 <p className="text-muted-foreground mb-4">
                   @{displayUser.username}
