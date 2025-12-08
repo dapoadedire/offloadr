@@ -57,14 +57,21 @@ const itemSchema = z.object({
 
 type ItemFormValues = z.infer<typeof itemSchema>;
 
+interface UploadingImage {
+  id: string;
+  file: File;
+  progress: number;
+  url?: string;
+  error?: string;
+}
+
 export default function NewItemPage() {
   const router = useRouter();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { mutate: createItem, isPending: isCreating } = useCreateItem();
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState<UploadingImage[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const { startUpload } = useUploadThing("itemImageUploader", {
@@ -76,25 +83,6 @@ export default function NewItemPage() {
       return {
         "x-uploadthing-authorization": token || "",
       };
-    },
-    onUploadProgress: (progress) => {
-      setUploadProgress(progress);
-    },
-    onClientUploadComplete: (res) => {
-      if (res) {
-        const urls = res.map((file) => file.url);
-        setUploadedUrls((prev) => [...prev, ...urls]);
-        toast.dismiss();
-        toast.success(`${res.length} image(s) uploaded successfully!`);
-      }
-      setIsUploading(false);
-      setUploadProgress(0);
-    },
-    onUploadError: (error: Error) => {
-      toast.dismiss();
-      toast.error(`Upload failed: ${error.message}`);
-      setIsUploading(false);
-      setUploadProgress(0);
     },
   });
 
@@ -115,6 +103,7 @@ export default function NewItemPage() {
     if (!files || files.length === 0) return;
 
     const fileArray = Array.from(files);
+    const totalImages = uploadedUrls.length + uploadingImages.length;
 
     // Validate files
     const validFiles: File[] = [];
@@ -129,7 +118,7 @@ export default function NewItemPage() {
         continue;
       }
 
-      if (uploadedUrls.length + validFiles.length >= 4) {
+      if (totalImages + validFiles.length >= 4) {
         toast.error("Maximum 4 images allowed");
         break;
       }
@@ -139,23 +128,90 @@ export default function NewItemPage() {
 
     if (validFiles.length === 0) return;
 
-    // Auto-upload immediately
-    setIsUploading(true);
-    toast.loading("Uploading images...");
+    // Process each file individually in the background
+    validFiles.forEach((file) => {
+      uploadSingleFile(file);
+    });
+  };
+
+  const uploadSingleFile = async (file: File) => {
+    const uploadId = `${Date.now()}-${Math.random()}`;
+
+    // Add to uploading queue
+    const newUploadingImage: UploadingImage = {
+      id: uploadId,
+      file,
+      progress: 0,
+    };
+
+    setUploadingImages((prev) => [...prev, newUploadingImage]);
 
     try {
-      await startUpload(validFiles);
+      // Simulate progress updates (UploadThing doesn't provide granular progress)
+      const progressInterval = setInterval(() => {
+        setUploadingImages((prev) =>
+          prev.map((img) =>
+            img.id === uploadId && img.progress < 90
+              ? { ...img, progress: img.progress + 10 }
+              : img
+          )
+        );
+      }, 200);
+
+      const res = await startUpload([file]);
+      clearInterval(progressInterval);
+
+      if (res && res[0]) {
+        // Update to 100% and mark as complete
+        setUploadingImages((prev) =>
+          prev.map((img) =>
+            img.id === uploadId
+              ? { ...img, progress: 100, url: res[0].url }
+              : img
+          )
+        );
+
+        // Move to uploaded list after a brief moment
+        setTimeout(() => {
+          setUploadedUrls((prev) => [...prev, res[0].url]);
+          setUploadingImages((prev) =>
+            prev.filter((img) => img.id !== uploadId)
+          );
+          toast.success(`${file.name} uploaded!`);
+        }, 300);
+      }
     } catch (error) {
       console.error("Upload error:", error);
-      toast.dismiss();
-      toast.error("Upload failed");
-      setIsUploading(false);
+      setUploadingImages((prev) =>
+        prev.map((img) =>
+          img.id === uploadId
+            ? {
+                ...img,
+                error: error instanceof Error ? error.message : "Upload failed",
+              }
+            : img
+        )
+      );
+      toast.error(`Failed to upload ${file.name}`);
     }
   };
 
   const removeImage = (index: number) => {
     setUploadedUrls((prev) => prev.filter((_, i) => i !== index));
     toast.success("Image removed");
+  };
+
+  const cancelUpload = (uploadId: string) => {
+    setUploadingImages((prev) => prev.filter((img) => img.id !== uploadId));
+    toast.info("Upload cancelled");
+  };
+
+  const retryUpload = (uploadId: string) => {
+    const uploadingImage = uploadingImages.find((img) => img.id === uploadId);
+    if (uploadingImage) {
+      setUploadingImages((prev) => prev.filter((img) => img.id !== uploadId));
+      uploadSingleFile(uploadingImage.file);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -196,6 +252,11 @@ export default function NewItemPage() {
   };
 
   async function onSubmit(data: ItemFormValues, status: "draft" | "published") {
+    if (uploadingImages.length > 0) {
+      toast.error("Please wait for all images to finish uploading");
+      return;
+    }
+
     if (uploadedUrls.length === 0 && status === "published") {
       toast.error("Please upload at least one image before publishing");
       return;
@@ -248,7 +309,7 @@ export default function NewItemPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Image Upload Dropzone */}
-                {uploadedUrls.length < 4 && (
+                {uploadedUrls.length + uploadingImages.length < 4 && (
                   <div
                     className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                       isDragging
@@ -261,9 +322,7 @@ export default function NewItemPage() {
                   >
                     <ImagePlus className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                     <p className="text-sm text-muted-foreground mb-4">
-                      {isUploading
-                        ? `Uploading... ${uploadProgress}%`
-                        : "Drag and drop images here, or click to select files"}
+                      Drag and drop images here, or click to select files
                     </p>
                     <Input
                       type="file"
@@ -272,7 +331,9 @@ export default function NewItemPage() {
                       onChange={(e) => handleFileSelect(e.target.files)}
                       className="hidden"
                       id="file-input"
-                      disabled={isUploading || uploadedUrls.length >= 4}
+                      disabled={
+                        uploadedUrls.length + uploadingImages.length >= 4
+                      }
                     />
                     <Button
                       type="button"
@@ -280,29 +341,75 @@ export default function NewItemPage() {
                       onClick={() =>
                         document.getElementById("file-input")?.click()
                       }
-                      disabled={isUploading || uploadedUrls.length >= 4}
+                      disabled={
+                        uploadedUrls.length + uploadingImages.length >= 4
+                      }
                     >
-                      {isUploading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Uploading {uploadProgress}%
-                        </>
-                      ) : (
-                        "Select Files"
-                      )}
+                      Select Files
                     </Button>
                   </div>
                 )}
 
-                {/* Upload Progress */}
-                {isUploading && (
-                  <div className="w-full space-y-2">
-                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                {/* Uploading Images with Individual Progress */}
+                {uploadingImages.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">Uploading...</p>
+                    {uploadingImages.map((upload) => (
                       <div
-                        className="bg-primary h-full transition-all duration-300 ease-out"
-                        style={{ width: `${uploadProgress}%` }}
-                      />
-                    </div>
+                        key={upload.id}
+                        className="border rounded-lg p-3 space-y-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Loader2 className="h-4 w-4 animate-spin shrink-0 text-primary" />
+                            <span className="text-sm truncate">
+                              {upload.file.name}
+                            </span>
+                          </div>
+                          {upload.error ? (
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => retryUpload(upload.id)}
+                              >
+                                Retry
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => cancelUpload(upload.id)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => cancelUpload(upload.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                        {upload.error ? (
+                          <p className="text-xs text-destructive">
+                            {upload.error}
+                          </p>
+                        ) : (
+                          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className="bg-primary h-full transition-all duration-300"
+                              style={{ width: `${upload.progress}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -316,7 +423,7 @@ export default function NewItemPage() {
                       {uploadedUrls.map((url, index) => (
                         <div
                           key={url}
-                          draggable={!isUploading}
+                          draggable={uploadingImages.length === 0}
                           onDragStart={() => handleImageDragStart(index)}
                           onDragOver={(e) => handleImageDragOver(e, index)}
                           onDragEnd={handleImageDragEnd}
@@ -349,7 +456,7 @@ export default function NewItemPage() {
                             type="button"
                             onClick={() => removeImage(index)}
                             className="absolute bottom-2 right-2 bg-destructive text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            disabled={isUploading}
+                            disabled={uploadingImages.length > 0}
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -542,7 +649,7 @@ export default function NewItemPage() {
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
-                disabled={isLoading || isUploading}
+                disabled={isLoading || uploadingImages.length > 0}
               >
                 Cancel
               </Button>
@@ -550,7 +657,7 @@ export default function NewItemPage() {
                 type="button"
                 variant="outline"
                 onClick={form.handleSubmit((data) => onSubmit(data, "draft"))}
-                disabled={isLoading || isUploading}
+                disabled={isLoading || uploadingImages.length > 0}
               >
                 {isCreating && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -562,7 +669,7 @@ export default function NewItemPage() {
                 onClick={form.handleSubmit((data) =>
                   onSubmit(data, "published")
                 )}
-                disabled={isLoading || isUploading}
+                disabled={isLoading || uploadingImages.length > 0}
               >
                 {isCreating && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
