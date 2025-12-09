@@ -622,7 +622,7 @@ export default function NewItemPage() {
                         <FormLabel>Location</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="e.g., Campus North, Room 204"
+                            placeholder="e.g., Awo Hall, Block 7, Room 204"
                             {...field}
                           />
                         </FormControl>
