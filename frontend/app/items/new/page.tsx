@@ -539,7 +539,7 @@ export default function NewItemPage() {
                           <Input
                             type="number"
                             step="0.01"
-                            placeholder="0.00"
+                            placeholder="50000.00"
                             {...field}
                             onChange={(e) =>
                               field.onChange(parseFloat(e.target.value) || 0)

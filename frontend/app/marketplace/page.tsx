@@ -25,6 +25,16 @@ import { useSchools } from "@/hooks/useSchools";
 import { useCheckFavorite, useToggleFavorite } from "@/hooks/useFavorites";
 import { ItemWithDetails, ItemCondition } from "@/lib/types";
 
+// Price range constants in Naira
+const PRICE_RANGES = {
+  LOW_MAX: 50000,
+  MID_MIN: 50000,
+  MID_MAX: 100000,
+  HIGH_MIN: 100000,
+  HIGH_MAX: 500000,
+  PREMIUM_MIN: 500000,
+};
+
 function MarketplaceContent() {
   const [filters, setFilters] = useQueryStates({
     search: parseAsString.withDefault(""),
@@ -59,15 +69,6 @@ function MarketplaceContent() {
   }, [searchInput, setFilters]);
 
   // Build filter query for API
-  // Price range constants in Naira
-  const PRICE_RANGES = {
-    LOW_MAX: 50000,
-    MID_MIN: 50000,
-    MID_MAX: 100000,
-    HIGH_MIN: 100000,
-    HIGH_MAX: 500000,
-    PREMIUM_MIN: 500000,
-  };
 
   const filterQuery = useMemo(() => {
     const query: Record<string, string | number> = {
