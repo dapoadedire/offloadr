@@ -62,6 +62,7 @@ export default function ItemDetailPage({
     data: contactInfo,
     refetch: fetchContact,
     isFetching: isFetchingContact,
+    error: contactError,
   } = useItemContact(itemId);
 
   const { data: isFavorited, isLoading: checkingFavorite } = useCheckFavorite(
@@ -128,17 +129,61 @@ export default function ItemDetailPage({
   };
 
   const handleFavorite = () => {
+    // Check if user is authenticated first
+    if (!user) {
+      toast.error("Please log in to save favorites");
+      return;
+    }
     toggle(itemId, isFavorited || false);
   };
 
   const handleContactSeller = async () => {
+    // Check if user is authenticated first
+    if (!user) {
+      // Show a toast message and redirect to login
+      toast.error("Please log in to view seller contact details");
+      // Optionally redirect to login with return URL
+      const currentPath = `/items/${itemId}`;
+      window.location.href = `/login?redirect=${encodeURIComponent(
+        currentPath
+      )}`;
+      return;
+    }
+
     if (!showContact) {
-      await fetchContact();
+      try {
+        const result = await fetchContact();
+        if (result.error) {
+          // Handle API errors (e.g., unauthorized)
+          if (
+            result.error.message?.includes("401") ||
+            result.error.message?.includes("unauthorized")
+          ) {
+            toast.error("Please log in to view seller contact details");
+            const currentPath = `/items/${itemId}`;
+            window.location.href = `/login?redirect=${encodeURIComponent(
+              currentPath
+            )}`;
+            return;
+          } else {
+            toast.error("Failed to load contact information");
+            return;
+          }
+        }
+      } catch (error) {
+        toast.error("Failed to load contact information");
+        return;
+      }
     }
     setShowContact(true);
   };
 
   const handleReport = () => {
+    // Check if user is authenticated first
+    if (!user) {
+      toast.error("Please log in to report listings");
+      return;
+    }
     setReportDialogOpen(true);
   };
 
@@ -455,7 +500,11 @@ export default function ItemDetailPage({
             <CardContent className="pt-6 space-y-4">
               <div>
                 <div className="text-4xl font-bold text-primary mb-1">
-                  ₦{item.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ₦
+                  {item.price.toLocaleString("en-NG", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </div>
                 {item.negotiable && (
                   <p className="text-sm text-muted-foreground">
@@ -470,6 +519,7 @@ export default function ItemDetailPage({
                   size="lg"
                   onClick={handleContactSeller}
                   disabled={isFetchingContact}
+                  title={!user ? "Please log in to contact seller" : undefined}
                 >
                   {isFetchingContact ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -492,6 +542,15 @@ export default function ItemDetailPage({
                   />
                 </Button>
               </div>
+
+              {!user && (
+                <p className="text-xs text-muted-foreground text-center">
+                  <Link href="/login" className="text-primary hover:underline">
+                    Log in
+                  </Link>{" "}
+                  to contact the seller
+                </p>
+              )}
 
               <Button
                 variant="outline"
@@ -658,7 +717,11 @@ export default function ItemDetailPage({
                         {relatedItem.title}
                       </h3>
                       <p className="text-2xl font-bold text-primary">
-                        ₦{relatedItem.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ₦
+                        {relatedItem.price.toLocaleString("en-NG", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </p>
                     </CardContent>
                   </Card>
