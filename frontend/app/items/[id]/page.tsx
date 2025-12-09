@@ -214,14 +214,14 @@ export default function ItemDetailPage({
         <span className="text-foreground">{item.title}</span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         {/* Left Column - Images and Details */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-3 space-y-6">
           {/* Image Carousel */}
           <Card className="overflow-hidden">
             {sortedPhotos.length > 0 ? (
               <>
-                <div className="relative aspect-square bg-muted">
+                <div className="relative aspect-video bg-muted">
                   <motion.div
                     key={currentImageIndex}
                     className="w-full h-full"
@@ -275,12 +275,12 @@ export default function ItemDetailPage({
 
                 {/* Thumbnail Grid */}
                 {sortedPhotos.length > 1 && (
-                  <div className="grid grid-cols-6 gap-2 p-2">
+                  <div className="grid grid-cols-4 gap-2 p-2">
                     {sortedPhotos.map((photo, index) => (
                       <button
                         key={photo.id}
                         onClick={() => setCurrentImageIndex(index)}
-                        className={`relative aspect-square rounded-md overflow-hidden border-2 transition-all ${
+                        className={`relative aspect-[16/9] rounded-md overflow-hidden border-2 transition-all ${
                           index === currentImageIndex
                             ? "border-primary"
                             : "border-transparent"
@@ -494,7 +494,7 @@ export default function ItemDetailPage({
         </div>
 
         {/* Right Column - Pricing and Seller Info */}
-        <div className="space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           {/* Price and Actions */}
           <Card>
             <CardContent className="pt-6 space-y-4">
