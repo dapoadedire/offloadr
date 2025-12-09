@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,6 +35,7 @@ import { ItemWithDetails } from "@/lib/types";
 import { MarkSoldDialog } from "@/components/dialogs/mark-sold-dialog";
 
 export default function MyListingsPage() {
+  const { isLoading: authLoading } = useRequireAuth();
   const { data: itemsData, isLoading } = useCurrentUserItems();
   const { mutate: deleteItem, isPending: isDeleting } = useDeleteItem();
   const { mutate: updateStatus, isPending: isUpdatingStatus } =
@@ -44,6 +46,16 @@ export default function MyListingsPage() {
   const [selectedItem, setSelectedItem] = useState<ItemWithDetails | null>(
     null
   );
+
+  if (authLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   // Filter items by status
   const { publishedItems, draftItems, soldItems, archivedItems } =

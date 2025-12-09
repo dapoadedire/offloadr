@@ -58,6 +58,8 @@ import { Badge } from "@/components/ui/badge";
 import { useItem, useUpdateItem, useDeleteItem } from "@/hooks/useItems";
 import { useCategories } from "@/hooks/useCategories";
 import { useUploadThing } from "@/lib/uploadthing";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useAuthStore } from "@/store/authStore";
 
 const itemSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100),
@@ -82,6 +84,8 @@ export default function EditItemPage({
   const { id } = use(params);
   const itemId = parseInt(id);
   const router = useRouter();
+  const { isLoading: authLoading } = useRequireAuth();
+  const { user: currentUser } = useAuthStore();
 
   // Fetch item data first
   const {
@@ -89,6 +93,28 @@ export default function EditItemPage({
     isLoading: itemLoading,
     error: itemError,
   } = useItem(itemId);
+
+  // Check if current user owns this item
+  if (
+    !authLoading &&
+    !itemLoading &&
+    item &&
+    currentUser &&
+    item.user_id !== currentUser.id
+  ) {
+    router.push(`/items/${itemId}`);
+    return null;
+  }
+
+  if (authLoading || itemLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   // Only fetch categories if item exists
   const { data: categories, isLoading: categoriesLoading } = useCategories({

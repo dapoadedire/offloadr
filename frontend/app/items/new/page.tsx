@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Loader2, X, ImagePlus, GripVertical } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import {
   Form,
   FormControl,
@@ -66,6 +67,7 @@ interface UploadingImage {
 }
 
 export default function NewItemPage() {
+  const { isLoading: authLoading } = useRequireAuth();
   const router = useRouter();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { mutate: createItem, isPending: isCreating } = useCreateItem();
@@ -73,6 +75,16 @@ export default function NewItemPage() {
   const [uploadingImages, setUploadingImages] = useState<UploadingImage[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  if (authLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   const { startUpload } = useUploadThing("itemImageUploader", {
     headers: () => {

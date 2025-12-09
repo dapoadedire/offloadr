@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Heart, X, MapPin, Eye, Search, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -21,11 +22,22 @@ import { useFavorites, useRemoveFavorite } from "@/hooks/useFavorites";
 import { ItemWithDetails, ItemCondition } from "@/lib/types";
 
 export default function FavoritesPage() {
+  const { isLoading: authLoading } = useRequireAuth();
   const { data: favoritesData, isLoading, error } = useFavorites(1, 50);
   const removeFavoriteMutation = useRemoveFavorite();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  if (authLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   const favoriteItems = useMemo(
     () => favoritesData?.data || [],
