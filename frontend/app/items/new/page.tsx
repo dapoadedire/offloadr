@@ -364,64 +364,60 @@ export default function NewItemPage() {
 
                 {/* Uploading Images with Individual Progress */}
                 {uploadingImages.length > 0 && (
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium">Uploading...</p>
-                    {uploadingImages.map((upload) => (
-                      <div
-                        key={upload.id}
-                        className="border rounded-lg p-3 space-y-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <Loader2 className="h-4 w-4 animate-spin shrink-0 text-primary" />
-                            <span className="text-sm truncate">
-                              {upload.file.name}
-                            </span>
-                          </div>
+                  <div>
+                    <p className="text-sm font-medium mb-3">Uploading...</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {uploadingImages.map((upload) => (
+                        <div
+                          key={upload.id}
+                          className="relative aspect-square border rounded-lg p-3 flex flex-col justify-center items-center"
+                        >
+                          {/* Cancel button */}
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => cancelUpload(upload.id)}
+                            className="absolute top-1 right-1 h-6 w-6"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+
+                          {/* Loading indicator and filename */}
+                          <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                          <span className="text-xs text-center px-2 truncate max-w-full">
+                            {upload.file.name}
+                          </span>
+
+                          {/* Progress bar */}
                           {upload.error ? (
-                            <div className="flex gap-2">
+                            <div className="absolute bottom-3 left-3 right-3">
+                              <p className="text-xs text-destructive text-center mb-1">
+                                {upload.error}
+                              </p>
                               <Button
                                 type="button"
                                 size="sm"
                                 variant="outline"
                                 onClick={() => retryUpload(upload.id)}
+                                className="w-full h-6 text-xs"
                               >
                                 Retry
                               </Button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => cancelUpload(upload.id)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
                             </div>
                           ) : (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => cancelUpload(upload.id)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
+                            <div className="absolute bottom-3 left-3 right-3">
+                              <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="bg-primary h-full transition-all duration-300"
+                                  style={{ width: `${upload.progress}%` }}
+                                />
+                              </div>
+                            </div>
                           )}
                         </div>
-                        {upload.error ? (
-                          <p className="text-xs text-destructive">
-                            {upload.error}
-                          </p>
-                        ) : (
-                          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                            <div
-                              className="bg-primary h-full transition-all duration-300"
-                              style={{ width: `${upload.progress}%` }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
 
