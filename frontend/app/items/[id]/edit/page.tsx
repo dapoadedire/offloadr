@@ -524,7 +524,7 @@ export default function EditItemPage({
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="100000.00"
+                            placeholder="50000.00"
                             step="0.01"
                             {...field}
                             value={field.value || ""}

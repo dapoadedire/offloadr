@@ -59,6 +59,16 @@ function MarketplaceContent() {
   }, [searchInput, setFilters]);
 
   // Build filter query for API
+  // Price range constants in Naira
+  const PRICE_RANGES = {
+    LOW_MAX: 50000,
+    MID_MIN: 50000,
+    MID_MAX: 100000,
+    HIGH_MIN: 100000,
+    HIGH_MAX: 500000,
+    PREMIUM_MIN: 500000,
+  };
+
   const filterQuery = useMemo(() => {
     const query: Record<string, string | number> = {
       page: 1,
@@ -85,18 +95,18 @@ function MarketplaceContent() {
     if (filters.priceRange !== "all") {
       switch (filters.priceRange) {
         case "under-50":
-          query.max_price = 50000;
+          query.max_price = PRICE_RANGES.LOW_MAX;
           break;
         case "50-100":
-          query.min_price = 50000;
-          query.max_price = 100000;
+          query.min_price = PRICE_RANGES.MID_MIN;
+          query.max_price = PRICE_RANGES.MID_MAX;
           break;
         case "100-500":
-          query.min_price = 100000;
-          query.max_price = 500000;
+          query.min_price = PRICE_RANGES.HIGH_MIN;
+          query.max_price = PRICE_RANGES.HIGH_MAX;
           break;
         case "over-500":
-          query.min_price = 500000;
+          query.min_price = PRICE_RANGES.PREMIUM_MIN;
           break;
       }
     }
