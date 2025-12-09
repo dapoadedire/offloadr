@@ -534,7 +534,7 @@ export default function NewItemPage() {
                     name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Price ($)</FormLabel>
+                        <FormLabel>Price (₦)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"

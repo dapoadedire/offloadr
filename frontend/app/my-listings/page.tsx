@@ -406,7 +406,7 @@ function ItemCard({
             {item.title}
           </h3>
           <p className="text-2xl font-bold text-primary mb-2">
-            ${item.price.toFixed(2)}
+            ₦{item.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
           <p className="text-sm text-muted-foreground line-clamp-2">
             {item.description}

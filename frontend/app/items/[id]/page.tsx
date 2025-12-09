@@ -455,7 +455,7 @@ export default function ItemDetailPage({
             <CardContent className="pt-6 space-y-4">
               <div>
                 <div className="text-4xl font-bold text-primary mb-1">
-                  ${item.price.toFixed(2)}
+                  ₦{item.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 {item.negotiable && (
                   <p className="text-sm text-muted-foreground">
@@ -658,7 +658,7 @@ export default function ItemDetailPage({
                         {relatedItem.title}
                       </h3>
                       <p className="text-2xl font-bold text-primary">
-                        ${relatedItem.price.toFixed(2)}
+                        ₦{relatedItem.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </CardContent>
                   </Card>

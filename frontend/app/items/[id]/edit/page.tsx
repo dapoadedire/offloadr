@@ -520,11 +520,11 @@ export default function EditItemPage({
                     name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Price ($)</FormLabel>
+                        <FormLabel>Price (₦)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="100.00"
+                            placeholder="100000.00"
                             step="0.01"
                             {...field}
                             value={field.value || ""}
