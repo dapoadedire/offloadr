@@ -369,7 +369,7 @@ export default function ProfilePage({
                             {item.title}
                           </h3>
                           <p className="text-2xl font-bold text-primary">
-                            ${item.price.toFixed(2)}
+                            ₦{item.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </p>
                         </CardContent>
                       </Card>
