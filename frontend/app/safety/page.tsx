@@ -155,7 +155,7 @@ export default function SafetyPage() {
           <Card className="border-primary/50 bg-primary/5">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <AlertTriangle className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
+                <AlertTriangle className="w-6 h-6 text-primary shrink-0 mt-1" />
                 <div>
                   <h3 className="font-semibold mb-2">Trust Your Instincts</h3>
                   <p className="text-muted-foreground">
@@ -184,7 +184,7 @@ export default function SafetyPage() {
                 <Card className="hover:border-primary/50 transition-colors">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4 mb-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
                         <Icon className="w-6 h-6 text-primary" />
                       </div>
                       <div>

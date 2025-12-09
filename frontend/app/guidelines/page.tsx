@@ -183,7 +183,7 @@ export default function GuidelinesPage() {
                 <Card className="hover:border-primary/50 transition-colors">
                   <CardContent className="p-6 sm:p-8">
                     <div className="flex items-start gap-4 mb-6">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
                         <Icon className="w-6 h-6 text-primary" />
                       </div>
                       <div>
@@ -267,7 +267,7 @@ export default function GuidelinesPage() {
                     key={index}
                     className="flex items-center gap-2 text-sm text-muted-foreground"
                   >
-                    <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                    <XCircle className="w-4 h-4 text-red-500 shrink-0" />
                     {item}
                   </div>
                 ))}

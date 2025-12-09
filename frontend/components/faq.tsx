@@ -87,7 +87,7 @@ export const FAQ = () => {
                 animate={{ rotate: openIndex === index ? 180 : 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <ChevronDown className="w-5 h-5 text-primary flex-shrink-0" />
+                <ChevronDown className="w-5 h-5 text-primary shrink-0" />
               </motion.div>
             </button>
 
