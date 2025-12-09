@@ -280,7 +280,7 @@ export default function ItemDetailPage({
                       <button
                         key={photo.id}
                         onClick={() => setCurrentImageIndex(index)}
-                        className={`relative aspect-[16/9] rounded-md overflow-hidden border-2 transition-all ${
+                        className={`relative aspect-video rounded-md overflow-hidden border-2 transition-all ${
                           index === currentImageIndex
                             ? "border-primary"
                             : "border-transparent"
