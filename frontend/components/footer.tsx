@@ -79,16 +79,16 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/contact"
+                <a
+                  href="mailto:hello@offloadr.com?subject=Contact%20from%20Offloadr%20Website&body=Hi%20Offloadr%20Team%2C%0A%0A"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Contact
-                </Link>
+                </a>
               </li>
               <li>
                 <Link
-                  href="/faq"
+                  href="/#faq"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   FAQ
@@ -127,7 +127,7 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
-                  href="/report"
+                  href="/guidelines#reporting"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Report Listing

@@ -41,7 +41,10 @@ export const FAQ = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-20 md:py-24 font-mono">
+    <section
+      id="faq"
+      className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-20 md:py-24 font-mono"
+    >
       <div className="text-center mb-12 sm:mb-16">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
