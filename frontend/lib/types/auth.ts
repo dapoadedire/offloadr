@@ -63,6 +63,11 @@ export interface UserWithMessageResponse {
   user: User;
 }
 
+export interface UsernameAvailabilityResponse {
+  available: boolean;
+  message?: string;
+}
+
 // API Response Wrapper
 export interface ApiResponse<T> {
   data: T;

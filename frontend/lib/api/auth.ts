@@ -8,6 +8,7 @@ import {
   AuthResponse,
   MessageResponse,
   UserWithMessageResponse,
+  UsernameAvailabilityResponse,
   ApiResponse,
 } from '../types/auth';
 
@@ -61,6 +62,14 @@ export const authApi = {
     const response = await apiClient.post<ApiResponse<MessageResponse>>(
       '/auth/reset-password',
       payload
+    );
+    return extractData(response.data);
+  },
+
+  // GET /auth/check-username/{username}
+  checkUsernameAvailability: async (username: string): Promise<UsernameAvailabilityResponse> => {
+    const response = await apiClient.get<ApiResponse<UsernameAvailabilityResponse>>(
+      `/auth/check-username/${encodeURIComponent(username)}`
     );
     return extractData(response.data);
   },

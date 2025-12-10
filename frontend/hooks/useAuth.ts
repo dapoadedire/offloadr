@@ -142,6 +142,14 @@ export const useResetPassword = () => {
   });
 };
 
+// Check username availability hook
+export const useCheckUsernameAvailability = () => {
+  return useMutation({
+    mutationFn: (username: string) => authApi.checkUsernameAvailability(username),
+    retry: false,
+  });
+};
+
 // Logout hook
 export const useLogout = () => {
   const router = useRouter();
