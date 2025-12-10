@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -54,7 +54,13 @@ export default function SignupPage() {
   const [usernameMessage, setUsernameMessage] = useState('')
   
   const { mutate: register, isPending } = useRegister()
-  const { mutate: checkUsername, isPending: isCheckingUsername } = useCheckUsernameAvailability()
+  const { mutate: checkUsername } = useCheckUsernameAvailability()
+  
+  // Use ref to keep the latest checkUsername without causing re-renders
+  const checkUsernameRef = useRef(checkUsername)
+  useEffect(() => {
+    checkUsernameRef.current = checkUsername
+  }, [checkUsername])
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -98,7 +104,7 @@ export default function SignupPage() {
       setUsernameStatus('checking')
       setUsernameMessage('Checking availability...')
 
-      checkUsername(username, {
+      checkUsernameRef.current(username, {
         onSuccess: (data) => {
           if (data.available) {
             setUsernameStatus('available')
@@ -116,7 +122,6 @@ export default function SignupPage() {
     }, 500)
 
     return () => clearTimeout(timeoutId)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username])
 
   function onSubmit(data: SignupFormValues) {
