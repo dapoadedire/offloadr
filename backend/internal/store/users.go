@@ -226,6 +226,22 @@ func (s *UserStore) GetByUsername(ctx context.Context, username string) (*User, 
 	return user, nil
 }
 
+func (s *UserStore) CheckUsernameAvailability(ctx context.Context, username string) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	query := `SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)`
+
+	var exists bool
+	err := s.db.QueryRowContext(ctx, query, username).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	// Return true if username is available (does not exist)
+	return !exists, nil
+}
+
 func (s *UserStore) Update(ctx context.Context, user *User) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()

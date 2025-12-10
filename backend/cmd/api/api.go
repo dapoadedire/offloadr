@@ -115,6 +115,7 @@ func (app *application) mount() *chi.Mux {
 			r.Post("/login", app.loginHandler)
 			r.Post("/forgot-password", app.forgotPasswordHandler)
 			r.Post("/reset-password", app.resetPasswordHandler)
+			r.Get("/check-username/{username}", app.checkUsernameAvailabilityHandler)
 		})
 
 		// Protected user routes
