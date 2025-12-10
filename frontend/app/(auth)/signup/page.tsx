@@ -114,18 +114,18 @@ export default function SignupPage() {
   }, [checkUsername])
 
   // Debounce username check
+  const username = form.watch('username')
   useEffect(() => {
-    const username = form.watch('username')
     const timeoutId = setTimeout(() => {
       checkUsernameAvailability(username)
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [form.watch('username'), checkUsernameAvailability])
+  }, [username, checkUsernameAvailability])
 
   function onSubmit(data: SignupFormValues) {
-    // Prevent submission if username is unavailable
-    if (usernameStatus === 'unavailable') {
+    // Prevent submission if username is unavailable or still checking
+    if (usernameStatus === 'unavailable' || usernameStatus === 'checking') {
       return
     }
 
