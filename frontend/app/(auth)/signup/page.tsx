@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -85,43 +85,39 @@ export default function SignupPage() {
     fetchSchools()
   }, [])
 
-  // Debounced username availability check
-  const checkUsernameAvailability = useCallback((username: string) => {
+  // Debounce username check
+  const username = form.watch('username')
+  useEffect(() => {
     if (!username || username.length < 3) {
       setUsernameStatus('idle')
       setUsernameMessage('')
       return
     }
 
-    setUsernameStatus('checking')
-    setUsernameMessage('Checking availability...')
-
-    checkUsername(username, {
-      onSuccess: (data) => {
-        if (data.available) {
-          setUsernameStatus('available')
-          setUsernameMessage(data.message || 'Username is available')
-        } else {
-          setUsernameStatus('unavailable')
-          setUsernameMessage(data.message || 'Username is not available')
-        }
-      },
-      onError: () => {
-        setUsernameStatus('idle')
-        setUsernameMessage('')
-      },
-    })
-  }, [checkUsername])
-
-  // Debounce username check
-  const username = form.watch('username')
-  useEffect(() => {
     const timeoutId = setTimeout(() => {
-      checkUsernameAvailability(username)
+      setUsernameStatus('checking')
+      setUsernameMessage('Checking availability...')
+
+      checkUsername(username, {
+        onSuccess: (data) => {
+          if (data.available) {
+            setUsernameStatus('available')
+            setUsernameMessage(data.message || 'Username is available')
+          } else {
+            setUsernameStatus('unavailable')
+            setUsernameMessage(data.message || 'Username is not available')
+          }
+        },
+        onError: () => {
+          setUsernameStatus('idle')
+          setUsernameMessage('')
+        },
+      })
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [username, checkUsernameAvailability])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username])
 
   function onSubmit(data: SignupFormValues) {
     // Prevent submission if username is unavailable or still checking

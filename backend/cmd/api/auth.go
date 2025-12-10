@@ -566,6 +566,9 @@ func (app *application) checkUsernameAvailabilityHandler(w http.ResponseWriter, 
 		return
 	}
 
+	// Sanitize input - trim whitespace
+	username = strings.TrimSpace(username)
+
 	// Validate username format and length
 	if errMsg := validation.ValidateUsername(username); errMsg != "" {
 		response := UsernameAvailabilityResponse{

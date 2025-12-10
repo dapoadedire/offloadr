@@ -4,8 +4,8 @@ import (
 	"strings"
 )
 
-// RestrictedUsernames is a list of usernames that cannot be used for registration
-var RestrictedUsernames = []string{
+// restrictedUsernames is a list of usernames that cannot be used for registration
+var restrictedUsernames = []string{
 	// Religious/offensive terms
 	"god", "allah", "jesus", "satan", "devil", "lucifer",
 	// System/admin terms
@@ -27,7 +27,7 @@ var RestrictedUsernames = []string{
 func IsUsernameRestricted(username string) bool {
 	lowerUsername := strings.ToLower(strings.TrimSpace(username))
 	
-	for _, restricted := range RestrictedUsernames {
+	for _, restricted := range restrictedUsernames {
 		if lowerUsername == restricted {
 			return true
 		}
