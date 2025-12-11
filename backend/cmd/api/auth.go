@@ -98,9 +98,9 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Check if username is restricted
-	if validation.IsUsernameRestricted(payload.Username) {
-		app.badRequestResponse(w, r, store.ErrRestrictedUsername)
+	// Validate username
+	if errMsg := validation.ValidateUsername(payload.Username); errMsg != "" {
+		app.badRequestResponse(w, r, fmt.Errorf("%s", errMsg))
 		return
 	}
 
@@ -592,9 +592,9 @@ func (app *application) checkUsernameAvailabilityHandler(w http.ResponseWriter, 
 
 	var message string
 	if available {
-		message = "username is available"
+		message = "Username is available"
 	} else {
-		message = "username is already taken"
+		message = "Username is already taken"
 	}
 
 	response := UsernameAvailabilityResponse{

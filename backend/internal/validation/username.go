@@ -42,15 +42,15 @@ func ValidateUsername(username string) string {
 	username = strings.TrimSpace(username)
 	
 	if len(username) < 3 {
-		return "username must be at least 3 characters"
+		return "Username must be at least 3 characters"
 	}
 	
 	if len(username) > 50 {
-		return "username must not exceed 50 characters"
+		return "Username must not exceed 50 characters"
 	}
 	
 	if IsUsernameRestricted(username) {
-		return "this username is not allowed"
+		return "This username is not allowed"
 	}
 	
 	return ""

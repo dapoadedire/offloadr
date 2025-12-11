@@ -230,7 +230,7 @@ func (s *UserStore) CheckUsernameAvailability(ctx context.Context, username stri
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	query := `SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)`
+	query := `SELECT EXISTS(SELECT 1 FROM users WHERE LOWER(username) = LOWER($1))`
 
 	var exists bool
 	err := s.db.QueryRowContext(ctx, query, username).Scan(&exists)

@@ -94,7 +94,7 @@ export default function SignupPage() {
   // Debounce username check
   const username = form.watch('username')
   useEffect(() => {
-    if (!username || username.length < 3) {
+    if (!username || username.trim().length < 3) {
       setUsernameStatus('idle')
       setUsernameMessage('')
       return
@@ -166,23 +166,34 @@ export default function SignupPage() {
                         <div className="relative">
                           <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                           <Input placeholder="johndoe" className="pl-10 pr-10" {...field} />
-                          {usernameStatus === 'checking' && (
-                            <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-                          )}
-                          {usernameStatus === 'available' && (
-                            <CheckCircle2 className="absolute right-3 top-2.5 h-4 w-4 text-green-600" />
-                          )}
-                          {usernameStatus === 'unavailable' && (
-                            <XCircle className="absolute right-3 top-2.5 h-4 w-4 text-red-600" />
-                          )}
+                          <div className="absolute right-3 top-2.5 transition-opacity duration-200">
+                            {usernameStatus === 'checking' && (
+                              <Loader2 
+                                className="h-4 w-4 animate-spin text-muted-foreground" 
+                                aria-label="Checking username availability" 
+                              />
+                            )}
+                            {usernameStatus === 'available' && (
+                              <CheckCircle2 
+                                className="h-4 w-4 text-green-600 animate-in fade-in zoom-in duration-200" 
+                                aria-label="Username is available" 
+                              />
+                            )}
+                            {usernameStatus === 'unavailable' && (
+                              <XCircle 
+                                className="h-4 w-4 text-red-600 animate-in fade-in zoom-in duration-200" 
+                                aria-label="Username is not available" 
+                              />
+                            )}
+                          </div>
                         </div>
                       </FormControl>
                       {usernameMessage && (
-                        <FormDescription className={
+                        <FormDescription className={`transition-colors duration-200 ${
                           usernameStatus === 'available' ? 'text-green-600' : 
                           usernameStatus === 'unavailable' ? 'text-red-600' : 
                           'text-muted-foreground'
-                        }>
+                        }`}>
                           {usernameMessage}
                         </FormDescription>
                       )}
