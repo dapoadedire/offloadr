@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dapoadedire/offloadr/backend/internal/store"
+	"github.com/dapoadedire/offloadr/backend/internal/validation"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -78,6 +79,12 @@ type UserWithMessageResponse struct {
 	User    UserResponse `json:"user"`
 }
 
+// UsernameAvailabilityResponse represents username availability check response
+type UsernameAvailabilityResponse struct {
+	Available bool   `json:"available"`
+	Message   string `json:"message,omitempty"`
+}
+
 // POST /v1/auth/register
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	var payload RegisterUserPayload
@@ -88,6 +95,12 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	if err := Validate.Struct(payload); err != nil {
 		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Validate username
+	if errMsg := validation.ValidateUsername(payload.Username); errMsg != "" {
+		app.badRequestResponse(w, r, fmt.Errorf("%s", errMsg))
 		return
 	}
 
@@ -538,6 +551,55 @@ func (app *application) resetPasswordHandler(w http.ResponseWriter, r *http.Requ
 
 	response := MessageResponse{
 		Message: "Password reset successfully. Please login with your new password.",
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, response); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+// GET /v1/auth/check-username/{username}
+func (app *application) checkUsernameAvailabilityHandler(w http.ResponseWriter, r *http.Request) {
+	username := r.PathValue("username")
+	if username == "" {
+		app.badRequestResponse(w, r, fmt.Errorf("username is required"))
+		return
+	}
+
+	// Sanitize input - trim whitespace
+	username = strings.TrimSpace(username)
+
+	// Validate username format and length
+	if errMsg := validation.ValidateUsername(username); errMsg != "" {
+		response := UsernameAvailabilityResponse{
+			Available: false,
+			Message:   errMsg,
+		}
+		if err := app.jsonResponse(w, http.StatusOK, response); err != nil {
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	ctx := r.Context()
+
+	// Check database for availability
+	available, err := app.store.Users.CheckUsernameAvailability(ctx, username)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	var message string
+	if available {
+		message = "Username is available"
+	} else {
+		message = "Username is already taken"
+	}
+
+	response := UsernameAvailabilityResponse{
+		Available: available,
+		Message:   message,
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, response); err != nil {

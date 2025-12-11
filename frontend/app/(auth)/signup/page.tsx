@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { motion } from "motion/react"
-import { Loader2, User, Mail, Lock, School as SchoolIcon, Eye, EyeOff } from "lucide-react"
+import { Loader2, User, Mail, Lock, School as SchoolIcon, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useRegister } from "@/hooks/useAuth"
+import { useRegister, useCheckUsernameAvailability } from "@/hooks/useAuth"
 import { schoolsApi, School } from "@/lib/api/schools"
 
 const signupSchema = z.object({
@@ -50,7 +50,17 @@ export default function SignupPage() {
   const [loadingSchools, setLoadingSchools] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable'>('idle')
+  const [usernameMessage, setUsernameMessage] = useState('')
+  
   const { mutate: register, isPending } = useRegister()
+  const { mutate: checkUsername } = useCheckUsernameAvailability()
+  
+  // Use ref to keep the latest checkUsername without causing re-renders
+  const checkUsernameRef = useRef(checkUsername)
+  useEffect(() => {
+    checkUsernameRef.current = checkUsername
+  }, [checkUsername])
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -81,7 +91,45 @@ export default function SignupPage() {
     fetchSchools()
   }, [])
 
+  // Debounce username check
+  const username = form.watch('username')
+  useEffect(() => {
+    if (!username || username.trim().length < 3) {
+      setUsernameStatus('idle')
+      setUsernameMessage('')
+      return
+    }
+
+    const timeoutId = setTimeout(() => {
+      setUsernameStatus('checking')
+      setUsernameMessage('Checking availability...')
+
+      checkUsernameRef.current(username, {
+        onSuccess: (data) => {
+          if (data.available) {
+            setUsernameStatus('available')
+            setUsernameMessage(data.message || 'Username is available')
+          } else {
+            setUsernameStatus('unavailable')
+            setUsernameMessage(data.message || 'Username is not available')
+          }
+        },
+        onError: () => {
+          setUsernameStatus('idle')
+          setUsernameMessage('')
+        },
+      })
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [username])
+
   function onSubmit(data: SignupFormValues) {
+    // Prevent submission if username is unavailable or still checking
+    if (usernameStatus === 'unavailable' || usernameStatus === 'checking') {
+      return
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { confirmPassword, ...payload } = data
     register({
@@ -117,9 +165,38 @@ export default function SignupPage() {
                       <FormControl>
                         <div className="relative">
                           <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input placeholder="johndoe" className="pl-10" {...field} />
+                          <Input placeholder="johndoe" className="pl-10 pr-10" {...field} />
+                          <div className="absolute right-3 top-2.5 transition-opacity duration-200">
+                            {usernameStatus === 'checking' && (
+                              <Loader2 
+                                className="h-4 w-4 animate-spin text-muted-foreground" 
+                                aria-label="Checking username availability" 
+                              />
+                            )}
+                            {usernameStatus === 'available' && (
+                              <CheckCircle2 
+                                className="h-4 w-4 text-green-600 animate-in fade-in zoom-in duration-200" 
+                                aria-label="Username is available" 
+                              />
+                            )}
+                            {usernameStatus === 'unavailable' && (
+                              <XCircle 
+                                className="h-4 w-4 text-red-600 animate-in fade-in zoom-in duration-200" 
+                                aria-label="Username is not available" 
+                              />
+                            )}
+                          </div>
                         </div>
                       </FormControl>
+                      {usernameMessage && (
+                        <FormDescription className={`transition-colors duration-200 ${
+                          usernameStatus === 'available' ? 'text-green-600' : 
+                          usernameStatus === 'unavailable' ? 'text-red-600' : 
+                          'text-muted-foreground'
+                        }`}>
+                          {usernameMessage}
+                        </FormDescription>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -269,7 +346,11 @@ export default function SignupPage() {
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={isPending}>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isPending || usernameStatus === 'unavailable' || usernameStatus === 'checking'}
+                >
                   {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
