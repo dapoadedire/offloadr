@@ -22,12 +22,13 @@ import (
 )
 
 type application struct {
-	config        config
-	logger        *zap.SugaredLogger
-	store         store.Storage
-	authenticator auth.Authenticator
-	mailer        *mailer.Client
-	rateLimiter   ratelimiter.Limiter
+	config         config
+	logger         *zap.SugaredLogger
+	store          store.Storage
+	authenticator  auth.Authenticator
+	mailer         *mailer.Client
+	rateLimiter    ratelimiter.Limiter
+	rateLimiters   map[string]ratelimiter.Limiter // Endpoint-specific rate limiters
 }
 
 type config struct {
@@ -109,11 +110,11 @@ func (app *application) mount() *chi.Mux {
 
 		// Public authentication routes
 		r.Route("/auth", func(r chi.Router) {
-			r.Post("/register", app.registerUserHandler)
+			r.With(app.EndpointRateLimiterMiddleware("auth:register")).Post("/register", app.registerUserHandler)
 			r.Put("/verify-email/{token}", app.verifyEmailHandler)
-			r.Post("/resend-verification", app.resendVerificationHandler)
-			r.Post("/login", app.loginHandler)
-			r.Post("/forgot-password", app.forgotPasswordHandler)
+			r.With(app.EndpointRateLimiterMiddleware("auth:resend-verification")).Post("/resend-verification", app.resendVerificationHandler)
+			r.With(app.EndpointRateLimiterMiddleware("auth:login")).Post("/login", app.loginHandler)
+			r.With(app.EndpointRateLimiterMiddleware("auth:forgot-password")).Post("/forgot-password", app.forgotPasswordHandler)
 			r.Post("/reset-password", app.resetPasswordHandler)
 			r.Get("/check-username/{username}", app.checkUsernameAvailabilityHandler)
 		})
@@ -167,7 +168,7 @@ func (app *application) mount() *chi.Mux {
 				r.Use(app.AuthTokenMiddleware)
 
 				r.Get("/{id}/contact", app.getItemContactHandler)
-				r.Post("/", app.createItemHandler)
+				r.With(app.EndpointRateLimiterMiddleware("items:create")).Post("/", app.createItemHandler)
 				r.Patch("/{id}", app.updateItemHandler)
 				r.Delete("/{id}", app.deleteItemHandler)
 				r.Patch("/{id}/status", app.updateItemStatusHandler)
@@ -195,7 +196,7 @@ func (app *application) mount() *chi.Mux {
 		r.Route("/reviews", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
 
-			r.Post("/", app.createReviewHandler)
+			r.With(app.EndpointRateLimiterMiddleware("reviews:create")).Post("/", app.createReviewHandler)
 			r.Get("/{id}", app.getReviewByIDHandler)
 			r.Patch("/{id}", app.updateReviewHandler)
 			r.Delete("/{id}", app.deleteReviewHandler)
@@ -205,7 +206,7 @@ func (app *application) mount() *chi.Mux {
 		r.Route("/reports", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
 
-			r.Post("/", app.createReportHandler)
+			r.With(app.EndpointRateLimiterMiddleware("reports:create")).Post("/", app.createReportHandler)
 		})
 	})
 

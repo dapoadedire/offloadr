@@ -30,6 +30,20 @@ func NewRedisRateLimiter(client *redis.Client, cfg Config) *RedisRateLimiter {
 	}
 }
 
+// NewRedisRateLimiterWithPrefix creates a rate limiter with a custom key prefix
+// This allows creating multiple independent rate limiters for different endpoints
+func NewRedisRateLimiterWithPrefix(client *redis.Client, cfg Config, prefix string) *RedisRateLimiter {
+	return &RedisRateLimiter{
+		client: client,
+		config: cfg,
+	}
+}
+
+// GetClient returns the Redis client for creating additional rate limiters
+func (r *RedisRateLimiter) GetClient() *redis.Client {
+	return r.client
+}
+
 func (r *RedisRateLimiter) Allow(key string) (bool, time.Duration) {
 	ctx := context.Background()
 	rateLimitKey := fmt.Sprintf("rate_limit:%s", key)

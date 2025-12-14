@@ -115,6 +115,38 @@ func (app *application) RateLimiterMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// EndpointRateLimiterMiddleware creates a rate limiter middleware for specific endpoints
+// Each endpoint gets its own independent rate limit bucket using the rateLimiters map
+func (app *application) EndpointRateLimiterMiddleware(endpointName string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !app.config.rateLimiter.Enabled {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Get the rate limiter for this specific endpoint
+			limiter, exists := app.rateLimiters[endpointName]
+			if !exists {
+				// If no specific limiter exists, allow the request
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			ip := getRealIP(r)
+			// Use just the IP as the key since the limiter is already endpoint-specific
+			allowed, retryAfter := limiter.Allow(ip)
+
+			if !allowed {
+				app.rateLimitExceededResponse(w, r, retryAfter.String())
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 func getRealIP(r *http.Request) string {
 	// Try X-Forwarded-For header
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {

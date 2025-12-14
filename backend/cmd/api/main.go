@@ -51,6 +51,8 @@ func main() {
 
 	// Initialize Redis client for rate limiter (optional)
 	var rateLimiter ratelimiter.Limiter
+	rateLimiters := make(map[string]ratelimiter.Limiter)
+
 	if cfg.rateLimiter.Enabled {
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:     env.GetEnv("REDIS_ADDR", "localhost:6379"),
@@ -59,7 +61,53 @@ func main() {
 		})
 
 		rateLimiter = ratelimiter.NewRedisRateLimiter(redisClient, cfg.rateLimiter)
-		logger.Info("rate limiter enabled with Redis")
+
+		// Initialize endpoint-specific rate limiters with industry-standard limits
+		// High Priority - Authentication & Security Endpoints
+		rateLimiters["auth:login"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+			RequestsPerWindow: 10,
+			Window:            1 * time.Minute, // 10 requests per minute
+			Enabled:           true,
+		})
+
+		rateLimiters["auth:register"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+			RequestsPerWindow: 3,
+			Window:            1 * time.Hour, // 3 requests per hour
+			Enabled:           true,
+		})
+
+		rateLimiters["auth:forgot-password"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+			RequestsPerWindow: 5,
+			Window:            15 * time.Minute, // 5 requests per 15 minutes
+			Enabled:           true,
+		})
+
+		rateLimiters["auth:resend-verification"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+			RequestsPerWindow: 5,
+			Window:            1 * time.Hour, // 5 requests per hour
+			Enabled:           true,
+		})
+
+		rateLimiters["reports:create"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+			RequestsPerWindow: 10,
+			Window:            1 * time.Hour, // 10 requests per hour
+			Enabled:           true,
+		})
+
+		// Medium Priority - Content Creation Endpoints
+		rateLimiters["items:create"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+			RequestsPerWindow: 20,
+			Window:            1 * time.Hour, // 20 requests per hour
+			Enabled:           true,
+		})
+
+		rateLimiters["reviews:create"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+			RequestsPerWindow: 30,
+			Window:            1 * time.Hour, // 30 requests per hour
+			Enabled:           true,
+		})
+
+		logger.Info("rate limiter enabled with Redis and endpoint-specific limits configured")
 	}
 
 	app := &application{
@@ -69,6 +117,7 @@ func main() {
 		authenticator: jwtAuthenticator,
 		mailer:        mailerClient,
 		rateLimiter:   rateLimiter,
+		rateLimiters:  rateLimiters,
 	}
 
 	chi := app.mount()
