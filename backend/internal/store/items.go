@@ -850,6 +850,16 @@ func (s *ItemStore) DeletePhoto(ctx context.Context, photoID int64) error {
 	return nil
 }
 
+func (s *ItemStore) DeletePhotosByItemID(ctx context.Context, itemID int64) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	query := `DELETE FROM item_photos WHERE item_id = $1`
+
+	_, err := s.db.ExecContext(ctx, query, itemID)
+	return err
+}
+
 func (s *ItemStore) GetPhotoByID(ctx context.Context, photoID int64) (*ItemPhoto, error) {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()

@@ -94,29 +94,7 @@ export default function EditItemPage({
     error: itemError,
   } = useItem(itemId);
 
-  // Check if current user owns this item
-  if (
-    !authLoading &&
-    !itemLoading &&
-    item &&
-    currentUser &&
-    item.user_id !== currentUser.id
-  ) {
-    router.push(`/items/${itemId}`);
-    return null;
-  }
-
-  if (authLoading || itemLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </div>
-    );
-  }
-
-  // Only fetch categories if item exists
+  // Fetch categories (always call hooks unconditionally)
   const { data: categories, isLoading: categoriesLoading } = useCategories({
     enabled: !!item,
   });
@@ -132,6 +110,15 @@ export default function EditItemPage({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const { startUpload } = useUploadThing("itemImageUploader", {
+    headers: () => {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("auth_token")
+          : null;
+      return {
+        "x-uploadthing-authorization": token || "",
+      };
+    },
     onClientUploadComplete: (res) => {
       const urls = res.map((file) => file.url);
       setUploadedUrls((prev) => [...prev, ...urls]);
@@ -174,10 +161,37 @@ export default function EditItemPage({
     }
   }, [item, form]);
 
-  if (itemLoading || categoriesLoading) {
+  // Check if current user owns this item - redirect if not
+  useEffect(() => {
+    if (
+      !authLoading &&
+      !itemLoading &&
+      item &&
+      currentUser &&
+      item.user_id !== currentUser.id
+    ) {
+      router.push(`/items/${itemId}`);
+    }
+  }, [authLoading, itemLoading, item, currentUser, router, itemId]);
+
+  // Show loading state
+  if (authLoading || itemLoading || categoriesLoading) {
     return (
-      <div className="container mx-auto px-4 py-16 flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  // Check ownership - show loading while redirecting
+  if (item && currentUser && item.user_id !== currentUser.id) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
@@ -548,7 +562,7 @@ export default function EditItemPage({
                           onValueChange={(value) =>
                             field.onChange(parseInt(value))
                           }
-                          value={field.value?.toString()}
+                          value={field.value ? field.value.toString() : ""}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -581,7 +595,7 @@ export default function EditItemPage({
                         <FormLabel>Condition</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value}
+                          value={field.value || ""}
                         >
                           <FormControl>
                             <SelectTrigger>

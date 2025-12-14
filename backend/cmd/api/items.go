@@ -34,6 +34,7 @@ type UpdateItemPayload struct {
 	CategoryID  *int64                 `json:"category_id" validate:"omitempty,gt=0"`
 	Negotiable  *bool                  `json:"negotiable"`
 	Location    *string                `json:"location" validate:"omitempty,min=2,max=255"`
+	Photos      []PhotoPayload         `json:"photos" validate:"omitempty,dive"`
 }
 
 type UpdateStatusPayload struct {
@@ -495,6 +496,49 @@ func (app *application) updateItemHandler(w http.ResponseWriter, r *http.Request
 	if err := app.store.Items.Update(ctx, item); err != nil {
 		app.internalServerError(w, r, err)
 		return
+	}
+
+	// Update photos if provided
+	if payload.Photos != nil {
+		// Validate photos: only one can be primary
+		if len(payload.Photos) > 0 {
+			primaryCount := 0
+			for _, photo := range payload.Photos {
+				if photo.IsPrimary {
+					primaryCount++
+				}
+			}
+			if primaryCount > 1 {
+				app.badRequestResponse(w, r, fmt.Errorf("only one photo can be marked as primary"))
+				return
+			}
+		}
+
+		// Delete existing photos
+		existingPhotos, err := app.store.Items.GetItemPhotos(ctx, item.ID)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+		for _, photo := range existingPhotos {
+			if err := app.store.Items.DeletePhoto(ctx, photo.ID); err != nil {
+				app.internalServerError(w, r, err)
+				return
+			}
+		}
+
+		// Create new photos
+		for _, photoPayload := range payload.Photos {
+			photo := &store.ItemPhoto{
+				ItemID:    item.ID,
+				URL:       photoPayload.URL,
+				Position:  photoPayload.Position,
+				IsPrimary: photoPayload.IsPrimary,
+			}
+			if err := app.store.Items.CreatePhoto(ctx, photo); err != nil {
+				app.logger.Errorw("failed to create photo", "error", err, "item_id", item.ID)
+			}
+		}
 	}
 
 	// Get updated item with details

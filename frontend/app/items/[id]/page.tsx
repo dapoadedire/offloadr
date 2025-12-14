@@ -18,6 +18,7 @@ import {
   User,
   Loader2,
   Mail,
+  Edit,
 } from "lucide-react";
 import { FaWhatsapp, FaSnapchat } from "react-icons/fa";
 
@@ -108,6 +109,9 @@ export default function ItemDetailPage({
     item.status === "sold" &&
     item.buyer_id === user.id &&
     item.seller?.id !== user.id;
+
+  // Check if current user owns this item
+  const isOwner = user && item.seller?.id === user.id;
 
   const nextImage = () => {
     if (item.photos && item.photos.length > 0) {
@@ -514,20 +518,31 @@ export default function ItemDetailPage({
               </div>
 
               <div className="flex gap-2">
-                <Button
-                  className="flex-1"
-                  size="lg"
-                  onClick={handleContactSeller}
-                  disabled={isFetchingContact}
-                  title={!user ? "Please log in to contact seller" : undefined}
-                >
-                  {isFetchingContact ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                  )}
-                  Contact Seller
-                </Button>
+                {isOwner ? (
+                  <Button asChild className="flex-1" size="lg">
+                    <Link href={`/items/${item.id}/edit`}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Item
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    className="flex-1"
+                    size="lg"
+                    onClick={handleContactSeller}
+                    disabled={isFetchingContact}
+                    title={
+                      !user ? "Please log in to contact seller" : undefined
+                    }
+                  >
+                    {isFetchingContact ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                    )}
+                    Contact Seller
+                  </Button>
+                )}
                 <Button
                   size="icon"
                   variant="outline"
@@ -543,7 +558,7 @@ export default function ItemDetailPage({
                 </Button>
               </div>
 
-              {!user && (
+              {!user && !isOwner && (
                 <p className="text-xs text-muted-foreground text-center">
                   <Link href="/login" className="text-primary hover:underline">
                     Log in
