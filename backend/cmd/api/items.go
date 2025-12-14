@@ -9,15 +9,15 @@ import (
 )
 
 type CreateItemPayload struct {
-	Title       string                `json:"title" validate:"required,min=3,max=255"`
-	Description string                `json:"description" validate:"required,min=10,max=5000"`
-	Price       float64               `json:"price" validate:"required,gte=0"`
-	Condition   store.ItemCondition   `json:"condition" validate:"required,oneof=new like_new good fair poor"`
-	CategoryID  int64                 `json:"category_id" validate:"required,gt=0"`
-	Negotiable  bool                  `json:"negotiable"`
-	Location    string                `json:"location" validate:"required,min=2,max=255"`
-	Status      *store.ItemStatus     `json:"status" validate:"omitempty,oneof=draft published"`
-	Photos      []PhotoPayload        `json:"photos" validate:"omitempty,dive"`
+	Title       string              `json:"title" validate:"required,min=3,max=255"`
+	Description string              `json:"description" validate:"required,min=10,max=5000"`
+	Price       float64             `json:"price" validate:"required,gte=0"`
+	Condition   store.ItemCondition `json:"condition" validate:"required,oneof=new like_new good fair poor"`
+	CategoryID  int64               `json:"category_id" validate:"required,gt=0"`
+	Negotiable  bool                `json:"negotiable"`
+	Location    string              `json:"location" validate:"required,min=2,max=255"`
+	Status      *store.ItemStatus   `json:"status" validate:"omitempty,oneof=draft published"`
+	Photos      []PhotoPayload      `json:"photos" validate:"omitempty,dive"`
 }
 
 type PhotoPayload struct {
@@ -27,13 +27,13 @@ type PhotoPayload struct {
 }
 
 type UpdateItemPayload struct {
-	Title       *string                `json:"title" validate:"omitempty,min=3,max=255"`
-	Description *string                `json:"description" validate:"omitempty,min=10,max=5000"`
-	Price       *float64               `json:"price" validate:"omitempty,gte=0"`
-	Condition   *store.ItemCondition   `json:"condition" validate:"omitempty,oneof=new like_new good fair poor"`
-	CategoryID  *int64                 `json:"category_id" validate:"omitempty,gt=0"`
-	Negotiable  *bool                  `json:"negotiable"`
-	Location    *string                `json:"location" validate:"omitempty,min=2,max=255"`
+	Title       *string              `json:"title" validate:"omitempty,min=3,max=255"`
+	Description *string              `json:"description" validate:"omitempty,min=10,max=5000"`
+	Price       *float64             `json:"price" validate:"omitempty,gte=0"`
+	Condition   *store.ItemCondition `json:"condition" validate:"omitempty,oneof=new like_new good fair poor"`
+	CategoryID  *int64               `json:"category_id" validate:"omitempty,gt=0"`
+	Negotiable  *bool                `json:"negotiable"`
+	Location    *string              `json:"location" validate:"omitempty,min=2,max=255"`
 }
 
 type UpdateStatusPayload struct {

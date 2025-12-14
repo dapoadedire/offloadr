@@ -23,14 +23,14 @@ import (
 )
 
 type application struct {
-	config         config
-	logger         *zap.SugaredLogger
-	store          store.Storage
-	cacheStorage   cache.Storage // Redis cache storage
-	authenticator  auth.Authenticator
-	mailer         *mailer.Client
-	rateLimiter    ratelimiter.Limiter
-	rateLimiters   map[string]ratelimiter.Limiter // Endpoint-specific rate limiters
+	config        config
+	logger        *zap.SugaredLogger
+	store         store.Storage
+	cacheStorage  cache.Storage // Redis cache storage
+	authenticator auth.Authenticator
+	mailer        *mailer.Client
+	rateLimiter   ratelimiter.Limiter
+	rateLimiters  map[string]ratelimiter.Limiter // Endpoint-specific rate limiters
 }
 
 type config struct {
@@ -69,7 +69,6 @@ type mailerConfig struct {
 	apiKey    string
 	fromEmail string
 }
-
 
 func (app *application) mount() *chi.Mux {
 	version := env.GetEnv("API_VERSION", "/v1")
@@ -161,8 +160,8 @@ func (app *application) mount() *chi.Mux {
 			// Public/Browse routes
 			r.Get("/", app.listItemsHandler)
 			r.Get("/search", app.searchItemsHandler)
-			r.Get("/{id}", app.getItemByIDHandler)
-			r.Get("/{id}/related", app.getRelatedItemsHandler)
+			r.With(app.OptionalAuthTokenMiddleware).Get("/{id}", app.getItemByIDHandler)
+			r.With(app.OptionalAuthTokenMiddleware).Get("/{id}/related", app.getRelatedItemsHandler)
 			r.Get("/{id}/reviews", app.getItemReviewsHandler)
 
 			// Protected routes

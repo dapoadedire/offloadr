@@ -49,10 +49,10 @@ type Item struct {
 
 type ItemWithDetails struct {
 	Item
-	Category *Category      `json:"category"`
-	Seller   *PublicUser    `json:"seller"`
-	School   *School        `json:"school"`
-	Photos   []*ItemPhoto   `json:"photos"`
+	Category *Category    `json:"category"`
+	Seller   *PublicUser  `json:"seller"`
+	School   *School      `json:"school"`
+	Photos   []*ItemPhoto `json:"photos"`
 }
 
 type PublicUser struct {
@@ -64,11 +64,11 @@ type PublicUser struct {
 }
 
 type ItemPhoto struct {
-	ID        int64     `json:"id"`
-	ItemID    int64     `json:"item_id"`
-	URL       string    `json:"url"`
-	IsPrimary bool      `json:"is_primary"`
-	Position  int       `json:"position"`
+	ID         int64     `json:"id"`
+	ItemID     int64     `json:"item_id"`
+	URL        string    `json:"url"`
+	IsPrimary  bool      `json:"is_primary"`
+	Position   int       `json:"position"`
 	UploadedAt time.Time `json:"uploaded_at"`
 }
 

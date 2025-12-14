@@ -9,9 +9,9 @@ import (
 
 // CreateReportPayload represents the request body for creating a report
 type CreateReportPayload struct {
-	ItemID     int64              `json:"item_id" validate:"required"`
-	ReportType store.ReportType   `json:"report_type" validate:"required,oneof=scam inappropriate spam sold wrong_category duplicate other"`
-	Comment    *string            `json:"comment" validate:"omitempty,max=1000"`
+	ItemID     int64            `json:"item_id" validate:"required"`
+	ReportType store.ReportType `json:"report_type" validate:"required,oneof=scam inappropriate spam sold wrong_category duplicate other"`
+	Comment    *string          `json:"comment" validate:"omitempty,max=1000"`
 }
 
 // createReportHandler creates a new report for an item

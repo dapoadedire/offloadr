@@ -26,13 +26,13 @@ var restrictedUsernames = []string{
 // It performs a case-insensitive comparison
 func IsUsernameRestricted(username string) bool {
 	lowerUsername := strings.ToLower(strings.TrimSpace(username))
-	
+
 	for _, restricted := range restrictedUsernames {
 		if lowerUsername == restricted {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -40,18 +40,18 @@ func IsUsernameRestricted(username string) bool {
 // Returns an error message if invalid, empty string if valid
 func ValidateUsername(username string) string {
 	username = strings.TrimSpace(username)
-	
+
 	if len(username) < 3 {
 		return "Username must be at least 3 characters"
 	}
-	
+
 	if len(username) > 50 {
 		return "Username must not exceed 50 characters"
 	}
-	
+
 	if IsUsernameRestricted(username) {
 		return "This username is not allowed"
 	}
-	
+
 	return ""
 }

@@ -84,6 +84,74 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// OptionalAuthTokenMiddleware extracts user from JWT token if present, but doesn't fail if absent
+// This allows endpoints to be accessible to both authenticated and unauthenticated users
+func (app *application) OptionalAuthTokenMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Extract Authorization header
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			// No auth header - continue without user in context
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Check Bearer format
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			// Invalid format - continue without user in context
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		token := parts[1]
+
+		// Validate JWT token
+		jwtToken, err := app.authenticator.ValidateToken(token)
+		if err != nil {
+			// Invalid token - continue without user in context
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Extract claims
+		claims, ok := jwtToken.Claims.(jwt.MapClaims)
+		if !ok {
+			// Invalid claims - continue without user in context
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Get user ID from subject claim
+		userID, err := strconv.ParseInt(fmt.Sprintf("%v", claims["sub"]), 10, 64)
+		if err != nil {
+			// Invalid user ID - continue without user in context
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Load user from database
+		ctx := r.Context()
+		user, err := app.store.Users.GetByID(ctx, userID)
+		if err != nil {
+			// User not found or error - continue without user in context
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Check if user is active
+		if !user.IsActive {
+			// Inactive user - continue without user in context
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Store user in context and continue
+		ctx = context.WithValue(ctx, userCtxKey, user)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func (app *application) RequireEmailVerification(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := getUserFromContext(r)

@@ -24,9 +24,9 @@ type ReviewWithDetails struct {
 }
 
 type SellerRating struct {
-	SellerID      int64   `json:"seller_id"`
-	AverageRating float64 `json:"average_rating"`
-	TotalReviews  int     `json:"total_reviews"`
+	SellerID      int64       `json:"seller_id"`
+	AverageRating float64     `json:"average_rating"`
+	TotalReviews  int         `json:"total_reviews"`
 	RatingCounts  map[int]int `json:"rating_counts"` // e.g., {5: 10, 4: 5, 3: 2, 2: 1, 1: 0}
 }
 

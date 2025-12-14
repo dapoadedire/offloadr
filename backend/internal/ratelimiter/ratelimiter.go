@@ -19,8 +19,8 @@ type Limiter interface {
 }
 
 type RedisRateLimiter struct {
-	client  *redis.Client
-	config  Config
+	client *redis.Client
+	config Config
 }
 
 func NewRedisRateLimiter(client *redis.Client, cfg Config) *RedisRateLimiter {
