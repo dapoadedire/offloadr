@@ -288,6 +288,16 @@ func (app *application) getRelatedItemsHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// Only show related items if user has access to the original item
+	user := getUserFromContext(r)
+	if item.Status != store.ItemStatusPublished {
+		// Check if user is the owner
+		if user == nil || user.ID != item.UserID {
+			app.notFoundResponse(w, r, fmt.Errorf("item not found"))
+			return
+		}
+	}
+
 	// Get related items
 	relatedItems, err := app.store.Items.GetRelated(ctx, itemID, item.CategoryID, 10)
 	if err != nil {
