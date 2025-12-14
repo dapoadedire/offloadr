@@ -19,6 +19,8 @@ import {
   ChevronDown,
   Phone,
   Mail,
+  BadgeCheck,
+  AlertCircle,
 } from "lucide-react";
 import { FaWhatsapp, FaSnapchat } from "react-icons/fa";
 
@@ -139,21 +141,17 @@ export default function ProfilePage({
                   </h1>
                   {(isOwnProfile && currentUserProfile?.email_verified) ||
                   (!isOwnProfile && user.email_verified) ? (
-                    <Badge
-                      variant="default"
-                      className="w-fit mx-auto sm:mx-0 bg-green-600 hover:bg-green-700"
-                    >
-                      Verified
-                    </Badge>
+                    <BadgeCheck
+                      className="h-6 w-6 text-green-600"
+                      aria-label="Verified"
+                    />
                   ) : isOwnProfile &&
                     currentUserProfile &&
                     !currentUserProfile.email_verified ? (
-                    <Badge
-                      variant="destructive"
-                      className="w-fit mx-auto sm:mx-0"
-                    >
-                      Not Verified
-                    </Badge>
+                    <AlertCircle
+                      className="h-6 w-6 text-destructive"
+                      aria-label="Not Verified"
+                    />
                   ) : null}
                 </div>
                 <p className="text-muted-foreground mb-4">
@@ -369,7 +367,11 @@ export default function ProfilePage({
                             {item.title}
                           </h3>
                           <p className="text-2xl font-bold text-primary">
-                            ₦{item.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ₦
+                            {item.price.toLocaleString("en-NG", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </p>
                         </CardContent>
                       </Card>
