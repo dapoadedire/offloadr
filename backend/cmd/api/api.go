@@ -161,7 +161,7 @@ func (app *application) mount() *chi.Mux {
 			// Public/Browse routes
 			r.Get("/", app.listItemsHandler)
 			r.Get("/search", app.searchItemsHandler)
-			r.Get("/{id}", app.getItemByIDHandler)
+			r.With(app.OptionalAuthTokenMiddleware).Get("/{id}", app.getItemByIDHandler)
 			r.Get("/{id}/related", app.getRelatedItemsHandler)
 			r.Get("/{id}/reviews", app.getItemReviewsHandler)
 
