@@ -75,6 +75,7 @@ export default function NewItemPage() {
   const [uploadingImages, setUploadingImages] = useState<UploadingImage[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [clickedButton, setClickedButton] = useState<"draft" | "published" | null>(null);
 
   if (authLoading) {
     return (
@@ -274,6 +275,9 @@ export default function NewItemPage() {
       return;
     }
 
+    // Set which button was clicked
+    setClickedButton(status);
+
     // Prepare photos array with proper position based on current order
     const photos = uploadedUrls.map((url, index) => ({
       url,
@@ -281,17 +285,25 @@ export default function NewItemPage() {
       is_primary: index === 0, // First image is always primary
     }));
 
-    createItem({
-      title: data.title,
-      description: data.description,
-      price: data.price,
-      condition: data.condition as ItemCondition,
-      category_id: data.category_id,
-      negotiable: data.negotiable,
-      location: data.location,
-      status,
-      photos,
-    });
+    createItem(
+      {
+        title: data.title,
+        description: data.description,
+        price: data.price,
+        condition: data.condition as ItemCondition,
+        category_id: data.category_id,
+        negotiable: data.negotiable,
+        location: data.location,
+        status,
+        photos,
+      },
+      {
+        onSettled: () => {
+          // Reset clicked button state after mutation completes (success or error)
+          setClickedButton(null);
+        },
+      }
+    );
   }
 
   const isLoading = isCreating || categoriesLoading;
@@ -667,7 +679,7 @@ export default function NewItemPage() {
                 onClick={form.handleSubmit((data) => onSubmit(data, "draft"))}
                 disabled={isLoading || uploadingImages.length > 0}
               >
-                {isCreating && (
+                {isCreating && clickedButton === "draft" && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Save as Draft
@@ -679,7 +691,7 @@ export default function NewItemPage() {
                 )}
                 disabled={isLoading || uploadingImages.length > 0}
               >
-                {isCreating && (
+                {isCreating && clickedButton === "published" && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Publish Item
