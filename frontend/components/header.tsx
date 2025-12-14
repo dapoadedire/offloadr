@@ -46,7 +46,7 @@ export const Header = () => {
   return (
     <>
       <header className="font-mono border-b border-border bg-background sticky top-0 z-40">
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 max-w-7xl mx-auto">
+        <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div>
             <Link href="/" className="flex items-center gap-2">
               <span className="text-xl sm:text-2xl font-bold text-primary font-mono">
@@ -56,7 +56,7 @@ export const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex gap-8 items-center">
+          <nav className="hidden lg:flex gap-8 items-center">
             <ul className="flex gap-6 items-center">
               <li>
                 <Link
@@ -145,7 +145,7 @@ export const Header = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-foreground z-50"
+            className="lg:hidden text-foreground z-50"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -156,7 +156,7 @@ export const Header = () => {
 
       {/* Mobile Menu - Full Screen Overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden bg-background animate-in fade-in duration-200 font-mono">
+        <div className="fixed inset-0 z-50 lg:hidden bg-background animate-in fade-in duration-200 font-mono">
           <div className="flex flex-col h-full">
             {/* Header with close button */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-border">
