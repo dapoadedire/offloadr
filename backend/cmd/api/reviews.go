@@ -68,6 +68,11 @@ func (app *application) createReviewHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Invalidate seller rating cache (new review affects rating)
+	if app.cacheStorage.Ratings != nil {
+		app.cacheStorage.Ratings.Delete(r.Context(), review.SellerID)
+	}
+
 	if err := app.jsonResponse(w, http.StatusCreated, review); err != nil {
 		app.internalServerError(w, r, err)
 	}
@@ -164,6 +169,11 @@ func (app *application) updateReviewHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Invalidate seller rating cache (review updated affects rating)
+	if app.cacheStorage.Ratings != nil {
+		app.cacheStorage.Ratings.Delete(r.Context(), existingReview.SellerID)
+	}
+
 	// Return updated review
 	updatedReview, err := app.store.Reviews.GetByID(r.Context(), reviewID)
 	if err != nil {
@@ -215,6 +225,11 @@ func (app *application) deleteReviewHandler(w http.ResponseWriter, r *http.Reque
 	if err := app.store.Reviews.Delete(r.Context(), reviewID); err != nil {
 		app.internalServerError(w, r, err)
 		return
+	}
+
+	// Invalidate seller rating cache (review deleted affects rating)
+	if app.cacheStorage.Ratings != nil {
+		app.cacheStorage.Ratings.Delete(r.Context(), existingReview.SellerID)
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, map[string]string{

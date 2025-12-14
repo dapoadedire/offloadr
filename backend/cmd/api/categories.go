@@ -11,10 +11,32 @@ import (
 func (app *application) listCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	categories, err := app.store.Categories.GetAll(ctx)
-	if err != nil {
-		app.internalServerError(w, r, err)
-		return
+	var categories []*store.Category
+	var err error
+
+	// Try to get from cache first (if Redis is enabled)
+	if app.cacheStorage.Categories != nil {
+		categories, err = app.cacheStorage.Categories.GetAll(ctx)
+		if err != nil {
+			// Log cache error but continue to database
+			app.logger.Errorw("failed to get categories from cache", "error", err)
+		}
+	}
+
+	// If cache miss or error, fetch from database
+	if categories == nil {
+		categories, err = app.store.Categories.GetAll(ctx)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		// Populate cache (don't fail on cache error)
+		if app.cacheStorage.Categories != nil {
+			if err := app.cacheStorage.Categories.SetAll(ctx, categories); err != nil {
+				app.logger.Errorw("failed to set categories in cache", "error", err)
+			}
+		}
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, categories); err != nil {
@@ -38,15 +60,37 @@ func (app *application) getCategoryByIDHandler(w http.ResponseWriter, r *http.Re
 
 	ctx := r.Context()
 
-	category, err := app.store.Categories.GetByID(ctx, categoryID)
-	if err != nil {
-		switch err {
-		case store.ErrNotFound:
-			app.notFoundResponse(w, r, fmt.Errorf("category not found"))
-		default:
-			app.internalServerError(w, r, err)
+	var category *store.Category
+	var err error
+
+	// Try to get from cache first (if Redis is enabled)
+	if app.cacheStorage.Categories != nil {
+		category, err = app.cacheStorage.Categories.Get(ctx, categoryID)
+		if err != nil {
+			// Log cache error but continue to database
+			app.logger.Errorw("failed to get category from cache", "error", err, "category_id", categoryID)
 		}
-		return
+	}
+
+	// If cache miss or error, fetch from database
+	if category == nil {
+		category, err = app.store.Categories.GetByID(ctx, categoryID)
+		if err != nil {
+			switch err {
+			case store.ErrNotFound:
+				app.notFoundResponse(w, r, fmt.Errorf("category not found"))
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		// Populate cache (don't fail on cache error)
+		if app.cacheStorage.Categories != nil {
+			if err := app.cacheStorage.Categories.Set(ctx, category); err != nil {
+				app.logger.Errorw("failed to set category in cache", "error", err, "category_id", categoryID)
+			}
+		}
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, category); err != nil {

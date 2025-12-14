@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dapoadedire/offloadr/backend/internal/cache"
 	"github.com/dapoadedire/offloadr/backend/internal/store"
 )
 
@@ -61,10 +62,50 @@ func (app *application) listItemsHandler(w http.ResponseWriter, r *http.Request)
 
 	ctx := r.Context()
 
-	items, total, err := app.store.Items.GetAll(ctx, filter)
-	if err != nil {
-		app.internalServerError(w, r, err)
-		return
+	var items []*store.ItemWithDetails
+	var total int
+	var err error
+
+	// Generate cache key from filter parameters
+	filterParams := map[string]interface{}{
+		"school_id":   filter.SchoolID,
+		"category_id": filter.CategoryID,
+		"min_price":   filter.MinPrice,
+		"max_price":   filter.MaxPrice,
+		"condition":   filter.Condition,
+		"negotiable":  filter.Negotiable,
+		"search":      filter.Search,
+		"user_id":     filter.UserID,
+		"status":      filter.Status,
+		"page":        filter.Page,
+		"limit":       filter.Limit,
+		"sort":        filter.Sort,
+	}
+	listKey := cache.GenerateListKey(filterParams)
+
+	// Try to get from cache first (if Redis is enabled)
+	if app.cacheStorage.Items != nil {
+		items, total, err = app.cacheStorage.Items.GetList(ctx, listKey)
+		if err != nil {
+			// Log cache error but continue to database
+			app.logger.Errorw("failed to get item list from cache", "error", err)
+		}
+	}
+
+	// If cache miss or error, fetch from database
+	if items == nil {
+		items, total, err = app.store.Items.GetAll(ctx, filter)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		// Populate cache (don't fail on cache error)
+		if app.cacheStorage.Items != nil {
+			if err := app.cacheStorage.Items.SetList(ctx, listKey, items, total); err != nil {
+				app.logger.Errorw("failed to set item list in cache", "error", err)
+			}
+		}
 	}
 
 	pagination := store.CalculatePaginationMeta(filter.Page, filter.Limit, total)
@@ -101,16 +142,37 @@ func (app *application) getItemByIDHandler(w http.ResponseWriter, r *http.Reques
 
 	ctx := r.Context()
 
-	// Get item with details
-	item, err := app.store.Items.GetByIDWithDetails(ctx, itemID)
-	if err != nil {
-		switch err {
-		case store.ErrNotFound:
-			app.notFoundResponse(w, r, fmt.Errorf("item not found"))
-		default:
-			app.internalServerError(w, r, err)
+	var item *store.ItemWithDetails
+	var err error
+
+	// Try to get from cache first (if Redis is enabled)
+	if app.cacheStorage.Items != nil {
+		item, err = app.cacheStorage.Items.Get(ctx, itemID)
+		if err != nil {
+			// Log cache error but continue to database
+			app.logger.Errorw("failed to get item from cache", "error", err, "item_id", itemID)
 		}
-		return
+	}
+
+	// If cache miss or error, fetch from database
+	if item == nil {
+		item, err = app.store.Items.GetByIDWithDetails(ctx, itemID)
+		if err != nil {
+			switch err {
+			case store.ErrNotFound:
+				app.notFoundResponse(w, r, fmt.Errorf("item not found"))
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		// Populate cache (don't fail on cache error)
+		if app.cacheStorage.Items != nil {
+			if err := app.cacheStorage.Items.Set(ctx, item); err != nil {
+				app.logger.Errorw("failed to set item in cache", "error", err, "item_id", itemID)
+			}
+		}
 	}
 
 	// Only show published items to non-owners
@@ -333,6 +395,13 @@ func (app *application) createItemHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Invalidate item list caches (new item affects listings)
+	if app.cacheStorage.Items != nil {
+		app.cacheStorage.Items.DeleteBySchool(ctx, item.SchoolID)
+		app.cacheStorage.Items.DeleteByCategory(ctx, item.CategoryID)
+		app.cacheStorage.Items.DeleteByUser(ctx, item.UserID)
+	}
+
 	if err := app.jsonResponse(w, http.StatusCreated, itemWithDetails); err != nil {
 		app.internalServerError(w, r, err)
 	}
@@ -435,6 +504,14 @@ func (app *application) updateItemHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Invalidate item caches (item updated)
+	if app.cacheStorage.Items != nil {
+		app.cacheStorage.Items.Delete(ctx, item.ID)
+		app.cacheStorage.Items.DeleteBySchool(ctx, item.SchoolID)
+		app.cacheStorage.Items.DeleteByCategory(ctx, item.CategoryID)
+		app.cacheStorage.Items.DeleteByUser(ctx, item.UserID)
+	}
+
 	if err := app.jsonResponse(w, http.StatusOK, itemWithDetails); err != nil {
 		app.internalServerError(w, r, err)
 	}
@@ -483,6 +560,14 @@ func (app *application) deleteItemHandler(w http.ResponseWriter, r *http.Request
 	if err := app.store.Items.Delete(ctx, itemID); err != nil {
 		app.internalServerError(w, r, err)
 		return
+	}
+
+	// Invalidate item caches (item deleted)
+	if app.cacheStorage.Items != nil {
+		app.cacheStorage.Items.Delete(ctx, item.ID)
+		app.cacheStorage.Items.DeleteBySchool(ctx, item.SchoolID)
+		app.cacheStorage.Items.DeleteByCategory(ctx, item.CategoryID)
+		app.cacheStorage.Items.DeleteByUser(ctx, item.UserID)
 	}
 
 	response := MessageResponse{
@@ -550,6 +635,14 @@ func (app *application) updateItemStatusHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	// Invalidate item caches (status changed)
+	if app.cacheStorage.Items != nil {
+		app.cacheStorage.Items.Delete(ctx, item.ID)
+		app.cacheStorage.Items.DeleteBySchool(ctx, item.SchoolID)
+		app.cacheStorage.Items.DeleteByCategory(ctx, item.CategoryID)
+		app.cacheStorage.Items.DeleteByUser(ctx, item.UserID)
+	}
+
 	response := MessageResponse{
 		Message: "Item status updated successfully.",
 	}
@@ -608,6 +701,14 @@ func (app *application) markItemAsSoldHandler(w http.ResponseWriter, r *http.Req
 	if err := app.store.Items.MarkAsSold(ctx, itemID, payload.BuyerID); err != nil {
 		app.internalServerError(w, r, err)
 		return
+	}
+
+	// Invalidate item caches (item marked as sold)
+	if app.cacheStorage.Items != nil {
+		app.cacheStorage.Items.Delete(ctx, item.ID)
+		app.cacheStorage.Items.DeleteBySchool(ctx, item.SchoolID)
+		app.cacheStorage.Items.DeleteByCategory(ctx, item.CategoryID)
+		app.cacheStorage.Items.DeleteByUser(ctx, item.UserID)
 	}
 
 	response := MessageResponse{

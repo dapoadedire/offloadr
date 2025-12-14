@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/dapoadedire/offloadr/backend/internal/auth"
+	"github.com/dapoadedire/offloadr/backend/internal/cache"
 	"github.com/dapoadedire/offloadr/backend/internal/db"
 	"github.com/dapoadedire/offloadr/backend/internal/env"
 	"github.com/dapoadedire/offloadr/backend/internal/mailer"
@@ -11,7 +12,6 @@ import (
 	"github.com/dapoadedire/offloadr/backend/internal/store"
 	"github.com/dapoadedire/offloadr/backend/migrations"
 	"github.com/joho/godotenv"
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -49,71 +49,90 @@ func main() {
 		cfg.auth.token.issuer,
 	)
 
-	// Initialize Redis client for rate limiter (optional)
+	// Initialize Redis client (used for both rate limiting and caching)
 	var rateLimiter ratelimiter.Limiter
 	rateLimiters := make(map[string]ratelimiter.Limiter)
+	var cacheStorage cache.Storage
 
-	if cfg.rateLimiter.Enabled {
-		redisClient := redis.NewClient(&redis.Options{
-			Addr:     env.GetEnv("REDIS_ADDR", "localhost:6379"),
-			Password: env.GetEnv("REDIS_PASSWORD", ""),
-			DB:       env.GetEnvInt("REDIS_DB", 0),
-		})
+	// Redis is enabled if either caching or rate limiting is enabled
+	redisEnabled := env.GetEnv("REDIS_ENABLED", "true") == "true"
 
-		rateLimiter = ratelimiter.NewRedisRateLimiter(redisClient, cfg.rateLimiter)
+	if redisEnabled {
+		redisClient := cache.NewRedisClient(
+			env.GetEnv("REDIS_ADDR", "localhost:6379"),
+			env.GetEnv("REDIS_USERNAME", ""),
+			env.GetEnv("REDIS_PASSWORD", ""),
+			env.GetEnvInt("REDIS_DB", 0),
+			env.GetEnvInt("REDIS_POOL_SIZE", 10),
+			env.GetEnvInt("REDIS_MIN_IDLE_CONNS", 3),
+		)
+		defer redisClient.Close()
+		logger.Info("connected to Redis successfully")
 
-		// Initialize endpoint-specific rate limiters with industry-standard limits
-		// High Priority - Authentication & Security Endpoints
-		rateLimiters["auth:login"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
-			RequestsPerWindow: 10,
-			Window:            1 * time.Minute, // 10 requests per minute
-			Enabled:           true,
-		})
+		// Initialize cache storage
+		cacheStorage = cache.NewRedisStorage(redisClient)
+		logger.Info("cache storage initialized")
 
-		rateLimiters["auth:register"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
-			RequestsPerWindow: 3,
-			Window:            1 * time.Hour, // 3 requests per hour
-			Enabled:           true,
-		})
+		// Initialize rate limiters if enabled
+		if cfg.rateLimiter.Enabled {
+			rateLimiter = ratelimiter.NewRedisRateLimiter(redisClient, cfg.rateLimiter)
 
-		rateLimiters["auth:forgot-password"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
-			RequestsPerWindow: 5,
-			Window:            15 * time.Minute, // 5 requests per 15 minutes
-			Enabled:           true,
-		})
+			// Initialize endpoint-specific rate limiters with industry-standard limits
+			// High Priority - Authentication & Security Endpoints
+			rateLimiters["auth:login"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+				RequestsPerWindow: 10,
+				Window:            1 * time.Minute, // 10 requests per minute
+				Enabled:           true,
+			})
 
-		rateLimiters["auth:resend-verification"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
-			RequestsPerWindow: 5,
-			Window:            1 * time.Hour, // 5 requests per hour
-			Enabled:           true,
-		})
+			rateLimiters["auth:register"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+				RequestsPerWindow: 3,
+				Window:            1 * time.Hour, // 3 requests per hour
+				Enabled:           true,
+			})
 
-		rateLimiters["reports:create"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
-			RequestsPerWindow: 10,
-			Window:            1 * time.Hour, // 10 requests per hour
-			Enabled:           true,
-		})
+			rateLimiters["auth:forgot-password"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+				RequestsPerWindow: 5,
+				Window:            15 * time.Minute, // 5 requests per 15 minutes
+				Enabled:           true,
+			})
 
-		// Medium Priority - Content Creation Endpoints
-		rateLimiters["items:create"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
-			RequestsPerWindow: 20,
-			Window:            1 * time.Hour, // 20 requests per hour
-			Enabled:           true,
-		})
+			rateLimiters["auth:resend-verification"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+				RequestsPerWindow: 5,
+				Window:            1 * time.Hour, // 5 requests per hour
+				Enabled:           true,
+			})
 
-		rateLimiters["reviews:create"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
-			RequestsPerWindow: 30,
-			Window:            1 * time.Hour, // 30 requests per hour
-			Enabled:           true,
-		})
+			rateLimiters["reports:create"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+				RequestsPerWindow: 10,
+				Window:            1 * time.Hour, // 10 requests per hour
+				Enabled:           true,
+			})
 
-		logger.Info("rate limiter enabled with Redis and endpoint-specific limits configured")
+			// Medium Priority - Content Creation Endpoints
+			rateLimiters["items:create"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+				RequestsPerWindow: 20,
+				Window:            1 * time.Hour, // 20 requests per hour
+				Enabled:           true,
+			})
+
+			rateLimiters["reviews:create"] = ratelimiter.NewRedisRateLimiter(redisClient, ratelimiter.Config{
+				RequestsPerWindow: 30,
+				Window:            1 * time.Hour, // 30 requests per hour
+				Enabled:           true,
+			})
+
+			logger.Info("rate limiter enabled with Redis and endpoint-specific limits configured")
+		}
+	} else {
+		logger.Info("Redis is disabled - caching and Redis rate limiting unavailable")
 	}
 
 	app := &application{
 		config:        cfg,
 		logger:        logger,
 		store:         store,
+		cacheStorage:  cacheStorage,
 		authenticator: jwtAuthenticator,
 		mailer:        mailerClient,
 		rateLimiter:   rateLimiter,

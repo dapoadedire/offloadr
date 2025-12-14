@@ -142,16 +142,37 @@ func (app *application) getUserByIDHandler(w http.ResponseWriter, r *http.Reques
 
 	ctx := r.Context()
 
-	// Get user
-	user, err := app.store.Users.GetByID(ctx, userID)
-	if err != nil {
-		switch err {
-		case store.ErrNotFound:
-			app.notFoundResponse(w, r, fmt.Errorf("user not found"))
-		default:
-			app.internalServerError(w, r, err)
+	var user *store.User
+	var err error
+
+	// Try to get from cache first (if Redis is enabled)
+	if app.cacheStorage.Users != nil {
+		user, err = app.cacheStorage.Users.Get(ctx, userID)
+		if err != nil {
+			// Log cache error but continue to database
+			app.logger.Errorw("failed to get user from cache", "error", err, "user_id", userID)
 		}
-		return
+	}
+
+	// If cache miss or error, fetch from database
+	if user == nil {
+		user, err = app.store.Users.GetByID(ctx, userID)
+		if err != nil {
+			switch err {
+			case store.ErrNotFound:
+				app.notFoundResponse(w, r, fmt.Errorf("user not found"))
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		// Populate cache (don't fail on cache error)
+		if app.cacheStorage.Users != nil {
+			if err := app.cacheStorage.Users.Set(ctx, user); err != nil {
+				app.logger.Errorw("failed to set user in cache", "error", err, "user_id", userID)
+			}
+		}
 	}
 
 	// Check if user is active
@@ -234,6 +255,11 @@ func (app *application) updateUserHandler(w http.ResponseWriter, r *http.Request
 	if err := app.store.Users.Update(ctx, user); err != nil {
 		app.internalServerError(w, r, err)
 		return
+	}
+
+	// Invalidate user cache (profile updated)
+	if app.cacheStorage.Users != nil {
+		app.cacheStorage.Users.Delete(ctx, user.ID)
 	}
 
 	// Get updated user with school info
@@ -668,11 +694,31 @@ func (app *application) getUserRatingHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Get seller rating
-	rating, err := app.store.Reviews.GetSellerRating(ctx, userID)
-	if err != nil {
-		app.internalServerError(w, r, err)
-		return
+	var rating *store.SellerRating
+
+	// Try to get from cache first (if Redis is enabled)
+	if app.cacheStorage.Ratings != nil {
+		rating, err = app.cacheStorage.Ratings.Get(ctx, userID)
+		if err != nil {
+			// Log cache error but continue to database
+			app.logger.Errorw("failed to get rating from cache", "error", err, "user_id", userID)
+		}
+	}
+
+	// If cache miss or error, fetch from database
+	if rating == nil {
+		rating, err = app.store.Reviews.GetSellerRating(ctx, userID)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		// Populate cache (don't fail on cache error)
+		if app.cacheStorage.Ratings != nil {
+			if err := app.cacheStorage.Ratings.Set(ctx, rating); err != nil {
+				app.logger.Errorw("failed to set rating in cache", "error", err, "user_id", userID)
+			}
+		}
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, rating); err != nil {

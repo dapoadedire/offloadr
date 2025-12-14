@@ -11,10 +11,32 @@ import (
 func (app *application) listSchoolsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	schools, err := app.store.Schools.GetAll(ctx)
-	if err != nil {
-		app.internalServerError(w, r, err)
-		return
+	var schools []*store.School
+	var err error
+
+	// Try to get from cache first (if Redis is enabled)
+	if app.cacheStorage.Schools != nil {
+		schools, err = app.cacheStorage.Schools.GetAll(ctx)
+		if err != nil {
+			// Log cache error but continue to database
+			app.logger.Errorw("failed to get schools from cache", "error", err)
+		}
+	}
+
+	// If cache miss or error, fetch from database
+	if schools == nil {
+		schools, err = app.store.Schools.GetAll(ctx)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		// Populate cache (don't fail on cache error)
+		if app.cacheStorage.Schools != nil {
+			if err := app.cacheStorage.Schools.SetAll(ctx, schools); err != nil {
+				app.logger.Errorw("failed to set schools in cache", "error", err)
+			}
+		}
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, schools); err != nil {
@@ -38,15 +60,37 @@ func (app *application) getSchoolByIDHandler(w http.ResponseWriter, r *http.Requ
 
 	ctx := r.Context()
 
-	school, err := app.store.Schools.GetByID(ctx, schoolID)
-	if err != nil {
-		switch err {
-		case store.ErrNotFound:
-			app.notFoundResponse(w, r, fmt.Errorf("school not found"))
-		default:
-			app.internalServerError(w, r, err)
+	var school *store.School
+	var err error
+
+	// Try to get from cache first (if Redis is enabled)
+	if app.cacheStorage.Schools != nil {
+		school, err = app.cacheStorage.Schools.Get(ctx, schoolID)
+		if err != nil {
+			// Log cache error but continue to database
+			app.logger.Errorw("failed to get school from cache", "error", err, "school_id", schoolID)
 		}
-		return
+	}
+
+	// If cache miss or error, fetch from database
+	if school == nil {
+		school, err = app.store.Schools.GetByID(ctx, schoolID)
+		if err != nil {
+			switch err {
+			case store.ErrNotFound:
+				app.notFoundResponse(w, r, fmt.Errorf("school not found"))
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		// Populate cache (don't fail on cache error)
+		if app.cacheStorage.Schools != nil {
+			if err := app.cacheStorage.Schools.Set(ctx, school); err != nil {
+				app.logger.Errorw("failed to set school in cache", "error", err, "school_id", schoolID)
+			}
+		}
 	}
 
 	// Only return active schools

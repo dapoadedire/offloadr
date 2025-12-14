@@ -10,6 +10,7 @@ import (
 
 	_ "github.com/dapoadedire/offloadr/backend/docs"
 	"github.com/dapoadedire/offloadr/backend/internal/auth"
+	"github.com/dapoadedire/offloadr/backend/internal/cache"
 	"github.com/dapoadedire/offloadr/backend/internal/env"
 	"github.com/dapoadedire/offloadr/backend/internal/mailer"
 	"github.com/dapoadedire/offloadr/backend/internal/ratelimiter"
@@ -25,6 +26,7 @@ type application struct {
 	config         config
 	logger         *zap.SugaredLogger
 	store          store.Storage
+	cacheStorage   cache.Storage // Redis cache storage
 	authenticator  auth.Authenticator
 	mailer         *mailer.Client
 	rateLimiter    ratelimiter.Limiter
