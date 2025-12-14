@@ -64,7 +64,7 @@ export const ourFileRouter = {
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload complete for userId:", metadata.userId);
-      console.log("New file url:", file.url);
+      console.log("New file url:", file.ufsUrl);
 
       // Delete old avatar if it exists and is from UploadThing
       if (metadata.oldAvatarUrl && metadata.oldAvatarUrl.includes("utfs.io")) {
@@ -82,7 +82,7 @@ export const ourFileRouter = {
         }
       }
 
-      return { uploadedBy: metadata.userId, url: file.url };
+      return { uploadedBy: metadata.userId, url: file.ufsUrl };
     }),
 
   // Item images upload route (for marketplace items)
@@ -101,9 +101,9 @@ export const ourFileRouter = {
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Item image upload complete for userId:", metadata.userId);
-      console.log("file url:", file.url);
+      console.log("file url:", file.ufsUrl);
 
-      return { uploadedBy: metadata.userId, url: file.url };
+      return { uploadedBy: metadata.userId, url: file.ufsUrl };
     }),
 } satisfies FileRouter;
 
