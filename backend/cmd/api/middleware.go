@@ -84,8 +84,29 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// OptionalAuthTokenMiddleware extracts user from JWT token if present, but doesn't fail if absent
-// This allows endpoints to be accessible to both authenticated and unauthenticated users
+// OptionalAuthTokenMiddleware extracts user information from JWT token if present,
+// but continues without error if the token is absent or invalid.
+//
+// Unlike AuthTokenMiddleware which requires valid authentication and returns 401 for
+// missing/invalid tokens, this middleware allows endpoints to be accessible to both
+// authenticated and unauthenticated users.
+//
+// When a valid token is present:
+//   - Validates the JWT token
+//   - Extracts user information from the token claims
+//   - Loads user from database and verifies account is active
+//   - Stores user in request context for use by handlers
+//
+// When token is absent or invalid:
+//   - Continues to next handler without setting user in context
+//   - Handlers can use getUserFromContext() which will return nil
+//   - Allows handlers to implement conditional logic based on authentication state
+//
+// Use cases:
+//   - Viewing items (draft items only visible to owners, published items visible to all)
+//   - Listing items with different filters for authenticated/unauthenticated users
+//   - Any endpoint that needs to provide enhanced functionality for authenticated users
+//     while remaining accessible to guests
 func (app *application) OptionalAuthTokenMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Extract Authorization header
