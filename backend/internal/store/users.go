@@ -242,6 +242,133 @@ func (s *UserStore) CheckUsernameAvailability(ctx context.Context, username stri
 	return !exists, nil
 }
 
+// UpdateProfile updates user profile fields only (safe fields for user-initiated updates)
+// This method explicitly excludes sensitive fields like is_admin, email_verified, is_active
+// Use this method for user profile updates from API endpoints
+func (s *UserStore) UpdateProfile(ctx context.Context, user *User) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	query := `
+		UPDATE users
+		SET firstname = $1, lastname = $2, avatar_url = $3, phone = $4, 
+		    snapchat = $5, whatsapp = $6, updated_at = NOW()
+		WHERE id = $7
+	`
+
+	result, err := s.db.ExecContext(
+		ctx,
+		query,
+		user.Firstname,
+		user.Lastname,
+		user.AvatarURL,
+		user.Phone,
+		user.Snapchat,
+		user.Whatsapp,
+		user.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+// UpdatePassword updates only the user's password
+// Use this method for password change operations
+func (s *UserStore) UpdatePassword(ctx context.Context, userID int64, hashedPassword []byte) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	query := `
+		UPDATE users
+		SET password = $1, updated_at = NOW()
+		WHERE id = $2
+	`
+
+	result, err := s.db.ExecContext(ctx, query, hashedPassword, userID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+// UpdateLastLogin updates the last login timestamp
+func (s *UserStore) UpdateLastLogin(ctx context.Context, userID int64, lastLogin time.Time) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	query := `UPDATE users SET last_login_at = $1 WHERE id = $2`
+
+	result, err := s.db.ExecContext(ctx, query, lastLogin, userID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+// UpdateAccountStatus updates user account status (is_active)
+// This should only be called from account deactivation/reactivation flows
+func (s *UserStore) UpdateAccountStatus(ctx context.Context, userID int64, isActive bool) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	query := `
+		UPDATE users
+		SET is_active = $1, updated_at = NOW()
+		WHERE id = $2
+	`
+
+	result, err := s.db.ExecContext(ctx, query, isActive, userID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+// Update updates all user fields (internal use only)
+// WARNING: This method should only be used for internal system operations
+// For API endpoints, use the specific Update* methods above to prevent mass assignment
 func (s *UserStore) Update(ctx context.Context, user *User) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()

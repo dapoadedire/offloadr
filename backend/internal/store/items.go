@@ -575,6 +575,9 @@ func (s *ItemStore) GetAll(ctx context.Context, filter ItemsFilterQuery) ([]*Ite
 	return items, total, nil
 }
 
+// Update updates only the editable fields of an item
+// Protected fields (user_id, school_id, status, views_count, buyer_id, created_at) are NOT updated
+// This prevents mass assignment vulnerabilities
 func (s *ItemStore) Update(ctx context.Context, item *Item) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()

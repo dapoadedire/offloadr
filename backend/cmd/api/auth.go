@@ -386,8 +386,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Update last login
 	now := time.Now()
-	user.LastLoginAt = &now
-	if err := app.store.Users.Update(ctx, user); err != nil {
+	if err := app.store.Users.UpdateLastLogin(ctx, user.ID, now); err != nil {
 		app.logger.Errorw("failed to update last login", "error", err)
 	}
 

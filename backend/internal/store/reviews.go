@@ -100,6 +100,9 @@ func (s *ReviewStore) GetByID(ctx context.Context, id int64) (*ReviewWithDetails
 	return reviewWithDetails, nil
 }
 
+// Update updates only the rating and comment of a review
+// Protected fields (reviewer_id, seller_id, item_id, created_at) are NOT updated
+// This prevents mass assignment vulnerabilities where users could change who wrote the review
 func (s *ReviewStore) Update(ctx context.Context, review *Review) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()

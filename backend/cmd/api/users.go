@@ -251,8 +251,8 @@ func (app *application) updateUserHandler(w http.ResponseWriter, r *http.Request
 		user.AvatarURL = payload.AvatarURL
 	}
 
-	// Update user
-	if err := app.store.Users.Update(ctx, user); err != nil {
+	// Update user profile (only safe fields - prevents mass assignment)
+	if err := app.store.Users.UpdateProfile(ctx, user); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -342,7 +342,7 @@ func (app *application) changePasswordHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := app.store.Users.Update(ctx, user); err != nil {
+	if err := app.store.Users.UpdatePassword(ctx, user.ID, user.Password.hash); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -389,8 +389,7 @@ func (app *application) deactivateAccountHandler(w http.ResponseWriter, r *http.
 	ctx := r.Context()
 
 	// Deactivate account
-	user.IsActive = false
-	if err := app.store.Users.Update(ctx, user); err != nil {
+	if err := app.store.Users.UpdateAccountStatus(ctx, user.ID, false); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
