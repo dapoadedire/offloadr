@@ -86,6 +86,10 @@ type Storage struct {
 		GetByUsername(context.Context, string) (*User, error)
 		CheckUsernameAvailability(context.Context, string) (bool, error)
 		Update(context.Context, *User) error
+		UpdateProfile(context.Context, *User) error
+		UpdatePassword(context.Context, *User) error
+		UpdateLastLogin(context.Context, int64, time.Time) error
+		UpdateAccountStatus(context.Context, int64, bool) error
 		Delete(context.Context, int64) error
 		Activate(context.Context, string) error
 	}

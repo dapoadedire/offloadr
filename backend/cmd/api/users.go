@@ -342,7 +342,8 @@ func (app *application) changePasswordHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := app.store.Users.UpdatePassword(ctx, user.ID, user.Password.hash); err != nil {
+	// Use dedicated password update method (only updates password field)
+	if err := app.store.Users.UpdatePassword(ctx, user); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

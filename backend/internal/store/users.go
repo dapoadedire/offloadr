@@ -286,7 +286,8 @@ func (s *UserStore) UpdateProfile(ctx context.Context, user *User) error {
 
 // UpdatePassword updates only the user's password
 // Use this method for password change operations
-func (s *UserStore) UpdatePassword(ctx context.Context, userID int64, hashedPassword []byte) error {
+// Takes the User object to leverage the Password.hash field
+func (s *UserStore) UpdatePassword(ctx context.Context, user *User) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
@@ -296,7 +297,7 @@ func (s *UserStore) UpdatePassword(ctx context.Context, userID int64, hashedPass
 		WHERE id = $2
 	`
 
-	result, err := s.db.ExecContext(ctx, query, hashedPassword, userID)
+	result, err := s.db.ExecContext(ctx, query, user.Password.hash, user.ID)
 	if err != nil {
 		return err
 	}
