@@ -541,10 +541,18 @@ export default function EditItemPage({
                             placeholder="50000.00"
                             step="0.01"
                             {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(parseFloat(e.target.value) || 0)
-                            }
+                            value={field.value ?? ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              // If empty string, set to undefined; otherwise parse as float
+                              field.onChange(
+                                value === "" ? undefined : parseFloat(value)
+                              );
+                            }}
+                            onFocus={(e) => {
+                              // Auto-select all text on focus for better UX
+                              e.target.select();
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
