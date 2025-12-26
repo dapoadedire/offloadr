@@ -25,14 +25,14 @@ import { useSchools } from "@/hooks/useSchools";
 import { useCheckFavorite, useToggleFavorite } from "@/hooks/useFavorites";
 import { ItemWithDetails, ItemCondition } from "@/lib/types";
 
-// Price range constants in Naira
+// Price range constants in Naira (student-friendly)
 const PRICE_RANGES = {
-  LOW_MAX: 50000,
-  MID_MIN: 50000,
-  MID_MAX: 100000,
-  HIGH_MIN: 100000,
-  HIGH_MAX: 500000,
-  PREMIUM_MIN: 500000,
+  LOW_MAX: 10000,
+  MID_MIN: 10000,
+  MID_MAX: 50000,
+  HIGH_MIN: 50000,
+  HIGH_MAX: 100000,
+  PREMIUM_MIN: 100000,
 };
 
 function MarketplaceContent() {
@@ -95,18 +95,18 @@ function MarketplaceContent() {
     // Price range filter
     if (filters.priceRange !== "all") {
       switch (filters.priceRange) {
-        case "under-50":
+        case "under-10":
           query.max_price = PRICE_RANGES.LOW_MAX;
           break;
-        case "50-100":
+        case "10-50":
           query.min_price = PRICE_RANGES.MID_MIN;
           query.max_price = PRICE_RANGES.MID_MAX;
           break;
-        case "100-500":
+        case "50-100":
           query.min_price = PRICE_RANGES.HIGH_MIN;
           query.max_price = PRICE_RANGES.HIGH_MAX;
           break;
-        case "over-500":
+        case "over-100":
           query.min_price = PRICE_RANGES.PREMIUM_MIN;
           break;
       }
@@ -326,10 +326,18 @@ function MarketplaceContent() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Prices</SelectItem>
-                          <SelectItem value="under-50">Under ₦50,000</SelectItem>
-                          <SelectItem value="50-100">₦50,000 - ₦100,000</SelectItem>
-                          <SelectItem value="100-500">₦100,000 - ₦500,000</SelectItem>
-                          <SelectItem value="over-500">Over ₦500,000</SelectItem>
+                          <SelectItem value="under-10">
+                            Under ₦10,000
+                          </SelectItem>
+                          <SelectItem value="10-50">
+                            ₦10,000 - ₦50,000
+                          </SelectItem>
+                          <SelectItem value="50-100">
+                            ₦50,000 - ₦100,000
+                          </SelectItem>
+                          <SelectItem value="over-100">
+                            Over ₦100,000
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -490,7 +498,11 @@ function ItemCard({ item, index }: { item: ItemWithDetails; index: number }) {
               {item.title}
             </h3>
             <p className="text-2xl font-bold text-primary mb-2">
-              ₦{item.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₦
+              {item.price.toLocaleString("en-NG", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </p>
             <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
               {item.description}
