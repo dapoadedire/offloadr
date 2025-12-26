@@ -67,6 +67,7 @@ interface UploadingImage {
 }
 
 export default function NewItemPage() {
+  // All hooks must be called before any conditional returns
   const { isLoading: authLoading } = useRequireAuth();
   const router = useRouter();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
@@ -75,17 +76,9 @@ export default function NewItemPage() {
   const [uploadingImages, setUploadingImages] = useState<UploadingImage[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [clickedButton, setClickedButton] = useState<"draft" | "published" | null>(null);
-
-  if (authLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </div>
-    );
-  }
+  const [clickedButton, setClickedButton] = useState<
+    "draft" | "published" | null
+  >(null);
 
   const { startUpload } = useUploadThing("itemImageUploader", {
     headers: () => {
@@ -111,6 +104,17 @@ export default function NewItemPage() {
       negotiable: true,
     },
   });
+
+  // Conditional returns must come after all hook calls
+  if (authLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
