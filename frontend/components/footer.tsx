@@ -80,7 +80,7 @@ export const Footer = () => {
               </li>
               <li>
                 <a
-                  href="mailto:hello@offloadr.com?subject=Contact%20from%20Offloadr%20Website&body=Hi%20Offloadr%20Team%2C%0A%0A"
+                  href="mailto:adedireadedapo20@gmail.com?subject=Contact%20from%20Offloadr%20Website&body=Hi%20Offloadr%20Team%2C%0A%0A"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Contact
@@ -158,7 +158,7 @@ export const Footer = () => {
             {/* Social Links */}
             <div className="flex items-center gap-4">
               <a
-                href="mailto:hello@offloadr.com"
+                href="mailto:adedireadedapo20@gmail.com"
                 className="text-muted-foreground hover:text-primary transition-colors"
                 aria-label="Email"
               >

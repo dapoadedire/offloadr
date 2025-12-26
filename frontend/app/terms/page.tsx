@@ -191,10 +191,10 @@ export default function TermsPage() {
                 contact us:
               </p>
               <a
-                href="mailto:hello@offloadr.com?subject=Terms%20of%20Service%20Inquiry"
+                href="mailto:adedireadedapo20@gmail.com?subject=Terms%20of%20Service%20Inquiry"
                 className="text-primary hover:underline"
               >
-                hello@offloadr.com
+                adedireadedapo20@gmail.com
               </a>
             </CardContent>
           </Card>

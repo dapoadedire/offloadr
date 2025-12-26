@@ -241,10 +241,10 @@ export default function PrivacyPage() {
                 practices, please contact us:
               </p>
               <a
-                href="mailto:hello@offloadr.com?subject=Privacy%20Policy%20Inquiry"
+                href="mailto:adedireadedapo20@gmail.com?subject=Privacy%20Policy%20Inquiry"
                 className="text-primary hover:underline"
               >
-                hello@offloadr.com
+                adedireadedapo20@gmail.com
               </a>
             </CardContent>
           </Card>

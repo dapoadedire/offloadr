@@ -104,7 +104,7 @@ const safetyTips = [
 const emergencyContacts = [
   { name: "Campus Security", note: "Check your university website" },
   { name: "Local Police", note: "911 (USA) or local emergency number" },
-  { name: "Report to Offloadr", note: "hello@offloadr.com" },
+  { name: "Report to Offloadr", note: "adedireadedapo20@gmail.com" },
 ];
 
 export default function SafetyPage() {

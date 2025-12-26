@@ -329,10 +329,10 @@ export default function GuidelinesPage() {
                 serious issue, contact us:
               </p>
               <a
-                href="mailto:hello@offloadr.com?subject=Community%20Guidelines%20Inquiry"
+                href="mailto:adedireadedapo20@gmail.com?subject=Community%20Guidelines%20Inquiry"
                 className="text-primary hover:underline"
               >
-                hello@offloadr.com
+                adedireadedapo20@gmail.com
               </a>
             </CardContent>
           </Card>
