@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     siteName: "Offloadr",
     images: [
       {
-        url: "/og-image.svg",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Offloadr - Student Marketplace",
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     title: "Offloadr - Campus Marketplace for Students",
     description:
       "The easiest way for students to sell used items on campus. Simple, safe, and sustainable.",
-    images: ["/og-image.svg"],
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
