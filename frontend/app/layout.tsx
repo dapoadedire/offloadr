@@ -40,12 +40,21 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Offloadr",
+    images: [
+      {
+        url: "/og-image.svg",
+        width: 1200,
+        height: 630,
+        alt: "Offloadr - Student Marketplace",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Offloadr - Campus Marketplace for Students",
     description:
       "The easiest way for students to sell used items on campus. Simple, safe, and sustainable.",
+    images: ["/og-image.svg"],
   },
   robots: {
     index: true,
