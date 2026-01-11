@@ -130,15 +130,8 @@ func (app *application) searchItemsHandler(w http.ResponseWriter, r *http.Reques
 
 // GET /v1/items/{id} - View item details (increments views)
 func (app *application) getItemByIDHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("item ID is required"))
-		return
-	}
-
-	var itemID int64
-	if _, err := fmt.Sscanf(idStr, "%d", &itemID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid item ID"))
+	itemID, ok := app.parseItemID(w, r)
+	if !ok {
 		return
 	}
 
@@ -207,15 +200,8 @@ func (app *application) getItemContactHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("item ID is required"))
-		return
-	}
-
-	var itemID int64
-	if _, err := fmt.Sscanf(idStr, "%d", &itemID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid item ID"))
+	itemID, ok := app.parseItemID(w, r)
+	if !ok {
 		return
 	}
 
@@ -266,15 +252,8 @@ func (app *application) getItemContactHandler(w http.ResponseWriter, r *http.Req
 
 // GET /v1/items/{id}/related - Get related items (same category)
 func (app *application) getRelatedItemsHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("item ID is required"))
-		return
-	}
-
-	var itemID int64
-	if _, err := fmt.Sscanf(idStr, "%d", &itemID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid item ID"))
+	itemID, ok := app.parseItemID(w, r)
+	if !ok {
 		return
 	}
 
@@ -419,15 +398,8 @@ func (app *application) updateItemHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("item ID is required"))
-		return
-	}
-
-	var itemID int64
-	if _, err := fmt.Sscanf(idStr, "%d", &itemID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid item ID"))
+	itemID, ok := app.parseItemID(w, r)
+	if !ok {
 		return
 	}
 
@@ -572,15 +544,8 @@ func (app *application) deleteItemHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("item ID is required"))
-		return
-	}
-
-	var itemID int64
-	if _, err := fmt.Sscanf(idStr, "%d", &itemID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid item ID"))
+	itemID, ok := app.parseItemID(w, r)
+	if !ok {
 		return
 	}
 
@@ -634,15 +599,8 @@ func (app *application) updateItemStatusHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("item ID is required"))
-		return
-	}
-
-	var itemID int64
-	if _, err := fmt.Sscanf(idStr, "%d", &itemID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid item ID"))
+	itemID, ok := app.parseItemID(w, r)
+	if !ok {
 		return
 	}
 
@@ -707,15 +665,8 @@ func (app *application) markItemAsSoldHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("item ID is required"))
-		return
-	}
-
-	var itemID int64
-	if _, err := fmt.Sscanf(idStr, "%d", &itemID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid item ID"))
+	itemID, ok := app.parseItemID(w, r)
+	if !ok {
 		return
 	}
 
@@ -775,15 +726,8 @@ func (app *application) repostItemHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("item ID is required"))
-		return
-	}
-
-	var itemID int64
-	if _, err := fmt.Sscanf(idStr, "%d", &itemID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid item ID"))
+	itemID, ok := app.parseItemID(w, r)
+	if !ok {
 		return
 	}
 
@@ -859,15 +803,8 @@ func (app *application) uploadItemPhotoHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("item ID is required"))
-		return
-	}
-
-	var itemID int64
-	if _, err := fmt.Sscanf(idStr, "%d", &itemID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid item ID"))
+	itemID, ok := app.parseItemID(w, r)
+	if !ok {
 		return
 	}
 
@@ -937,25 +874,13 @@ func (app *application) deleteItemPhotoHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("item ID is required"))
+	itemID, ok := app.parseItemID(w, r)
+	if !ok {
 		return
 	}
 
-	photoIDStr := r.PathValue("photo_id")
-	if photoIDStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("photo ID is required"))
-		return
-	}
-
-	var itemID, photoID int64
-	if _, err := fmt.Sscanf(idStr, "%d", &itemID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid item ID"))
-		return
-	}
-	if _, err := fmt.Sscanf(photoIDStr, "%d", &photoID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid photo ID"))
+	photoID, ok := app.parseIDParam(w, r, "photo_id")
+	if !ok {
 		return
 	}
 
@@ -1018,25 +943,13 @@ func (app *application) setItemPhotoPrimaryHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	idStr := r.PathValue("id")
-	if idStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("item ID is required"))
+	itemID, ok := app.parseItemID(w, r)
+	if !ok {
 		return
 	}
 
-	photoIDStr := r.PathValue("photo_id")
-	if photoIDStr == "" {
-		app.badRequestResponse(w, r, fmt.Errorf("photo ID is required"))
-		return
-	}
-
-	var itemID, photoID int64
-	if _, err := fmt.Sscanf(idStr, "%d", &itemID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid item ID"))
-		return
-	}
-	if _, err := fmt.Sscanf(photoIDStr, "%d", &photoID); err != nil {
-		app.badRequestResponse(w, r, fmt.Errorf("invalid photo ID"))
+	photoID, ok := app.parseIDParam(w, r, "photo_id")
+	if !ok {
 		return
 	}
 

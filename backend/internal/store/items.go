@@ -273,54 +273,9 @@ func (s *ItemStore) GetByIDWithDetails(ctx context.Context, id int64) (*ItemWith
 		WHERE i.id = $1
 	`
 
-	itemWithDetails := &ItemWithDetails{
-		Category: &Category{},
-		Seller:   &PublicUser{},
-		School:   &School{},
-	}
+	dest := newItemWithDetailsScanDest()
 
-	var categoryDesc, categoryIcon *string
-	var categoryParentID *int64
-	var categoryCreatedAt time.Time
-
-	err := s.db.QueryRowContext(ctx, query, id).Scan(
-		&itemWithDetails.ID,
-		&itemWithDetails.Title,
-		&itemWithDetails.Description,
-		&itemWithDetails.Price,
-		&itemWithDetails.Condition,
-		&itemWithDetails.CategoryID,
-		&itemWithDetails.UserID,
-		&itemWithDetails.BuyerID,
-		&itemWithDetails.SchoolID,
-		&itemWithDetails.Negotiable,
-		&itemWithDetails.Status,
-		&itemWithDetails.Location,
-		&itemWithDetails.ViewsCount,
-		&itemWithDetails.ExpiresAt,
-		&itemWithDetails.CreatedAt,
-		&itemWithDetails.UpdatedAt,
-		&itemWithDetails.SoldAt,
-		&itemWithDetails.Category.ID,
-		&itemWithDetails.Category.Name,
-		&itemWithDetails.Category.Slug,
-		&categoryDesc,
-		&categoryIcon,
-		&categoryParentID,
-		&categoryCreatedAt,
-		&itemWithDetails.Seller.ID,
-		&itemWithDetails.Seller.Username,
-		&itemWithDetails.Seller.Firstname,
-		&itemWithDetails.Seller.Lastname,
-		&itemWithDetails.Seller.AvatarURL,
-		&itemWithDetails.School.ID,
-		&itemWithDetails.School.Name,
-		&itemWithDetails.School.Domain,
-		&itemWithDetails.School.Location,
-		&itemWithDetails.School.IsActive,
-		&itemWithDetails.School.CreatedAt,
-		&itemWithDetails.School.UpdatedAt,
-	)
+	err := s.db.QueryRowContext(ctx, query, id).Scan(dest.scanArgs()...)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -329,10 +284,7 @@ func (s *ItemStore) GetByIDWithDetails(ctx context.Context, id int64) (*ItemWith
 		return nil, err
 	}
 
-	itemWithDetails.Category.Description = categoryDesc
-	itemWithDetails.Category.Icon = categoryIcon
-	itemWithDetails.Category.ParentID = categoryParentID
-	itemWithDetails.Category.CreatedAt = categoryCreatedAt
+	itemWithDetails := dest.finalize()
 
 	// Fetch photos
 	photos, err := s.GetItemPhotos(ctx, id)
@@ -500,63 +452,14 @@ func (s *ItemStore) GetAll(ctx context.Context, filter ItemsFilterQuery) ([]*Ite
 
 	items := []*ItemWithDetails{}
 	for rows.Next() {
-		itemWithDetails := &ItemWithDetails{
-			Category: &Category{},
-			Seller:   &PublicUser{},
-			School:   &School{},
-		}
+		dest := newItemWithDetailsScanDest()
 
-		var categoryDesc, categoryIcon *string
-		var categoryParentID *int64
-		var categoryCreatedAt time.Time
-
-		err := rows.Scan(
-			&itemWithDetails.ID,
-			&itemWithDetails.Title,
-			&itemWithDetails.Description,
-			&itemWithDetails.Price,
-			&itemWithDetails.Condition,
-			&itemWithDetails.CategoryID,
-			&itemWithDetails.UserID,
-			&itemWithDetails.BuyerID,
-			&itemWithDetails.SchoolID,
-			&itemWithDetails.Negotiable,
-			&itemWithDetails.Status,
-			&itemWithDetails.Location,
-			&itemWithDetails.ViewsCount,
-			&itemWithDetails.ExpiresAt,
-			&itemWithDetails.CreatedAt,
-			&itemWithDetails.UpdatedAt,
-			&itemWithDetails.SoldAt,
-			&itemWithDetails.Category.ID,
-			&itemWithDetails.Category.Name,
-			&itemWithDetails.Category.Slug,
-			&categoryDesc,
-			&categoryIcon,
-			&categoryParentID,
-			&categoryCreatedAt,
-			&itemWithDetails.Seller.ID,
-			&itemWithDetails.Seller.Username,
-			&itemWithDetails.Seller.Firstname,
-			&itemWithDetails.Seller.Lastname,
-			&itemWithDetails.Seller.AvatarURL,
-			&itemWithDetails.School.ID,
-			&itemWithDetails.School.Name,
-			&itemWithDetails.School.Domain,
-			&itemWithDetails.School.Location,
-			&itemWithDetails.School.IsActive,
-			&itemWithDetails.School.CreatedAt,
-			&itemWithDetails.School.UpdatedAt,
-		)
-
+		err := rows.Scan(dest.scanArgs()...)
 		if err != nil {
 			return nil, 0, err
 		}
 
-		itemWithDetails.Category.Description = categoryDesc
-		itemWithDetails.Category.Icon = categoryIcon
-		itemWithDetails.Category.ParentID = categoryParentID
-		itemWithDetails.Category.CreatedAt = categoryCreatedAt
+		itemWithDetails := dest.finalize()
 
 		// Fetch photos for each item
 		photos, err := s.GetItemPhotos(ctx, itemWithDetails.ID)
@@ -734,63 +637,14 @@ func (s *ItemStore) GetRelated(ctx context.Context, itemID int64, categoryID int
 
 	items := []*ItemWithDetails{}
 	for rows.Next() {
-		itemWithDetails := &ItemWithDetails{
-			Category: &Category{},
-			Seller:   &PublicUser{},
-			School:   &School{},
-		}
+		dest := newItemWithDetailsScanDest()
 
-		var categoryDesc, categoryIcon *string
-		var categoryParentID *int64
-		var categoryCreatedAt time.Time
-
-		err := rows.Scan(
-			&itemWithDetails.ID,
-			&itemWithDetails.Title,
-			&itemWithDetails.Description,
-			&itemWithDetails.Price,
-			&itemWithDetails.Condition,
-			&itemWithDetails.CategoryID,
-			&itemWithDetails.UserID,
-			&itemWithDetails.BuyerID,
-			&itemWithDetails.SchoolID,
-			&itemWithDetails.Negotiable,
-			&itemWithDetails.Status,
-			&itemWithDetails.Location,
-			&itemWithDetails.ViewsCount,
-			&itemWithDetails.ExpiresAt,
-			&itemWithDetails.CreatedAt,
-			&itemWithDetails.UpdatedAt,
-			&itemWithDetails.SoldAt,
-			&itemWithDetails.Category.ID,
-			&itemWithDetails.Category.Name,
-			&itemWithDetails.Category.Slug,
-			&categoryDesc,
-			&categoryIcon,
-			&categoryParentID,
-			&categoryCreatedAt,
-			&itemWithDetails.Seller.ID,
-			&itemWithDetails.Seller.Username,
-			&itemWithDetails.Seller.Firstname,
-			&itemWithDetails.Seller.Lastname,
-			&itemWithDetails.Seller.AvatarURL,
-			&itemWithDetails.School.ID,
-			&itemWithDetails.School.Name,
-			&itemWithDetails.School.Domain,
-			&itemWithDetails.School.Location,
-			&itemWithDetails.School.IsActive,
-			&itemWithDetails.School.CreatedAt,
-			&itemWithDetails.School.UpdatedAt,
-		)
-
+		err := rows.Scan(dest.scanArgs()...)
 		if err != nil {
 			return nil, err
 		}
 
-		itemWithDetails.Category.Description = categoryDesc
-		itemWithDetails.Category.Icon = categoryIcon
-		itemWithDetails.Category.ParentID = categoryParentID
-		itemWithDetails.Category.CreatedAt = categoryCreatedAt
+		itemWithDetails := dest.finalize()
 
 		// Fetch photos
 		photos, err := s.GetItemPhotos(ctx, itemWithDetails.ID)
