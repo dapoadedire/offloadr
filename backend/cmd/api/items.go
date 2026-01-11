@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -187,8 +188,10 @@ func (app *application) getItemByIDHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Increment views count asynchronously (don't wait for it)
+	// Use context.Background() since the request context may be cancelled
+	// after the handler returns
 	go func() {
-		_ = app.store.Items.IncrementViews(r.Context(), itemID)
+		_ = app.store.Items.IncrementViews(context.Background(), itemID)
 	}()
 
 	if err := app.jsonResponse(w, http.StatusOK, item); err != nil {
