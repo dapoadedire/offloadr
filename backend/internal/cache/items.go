@@ -115,22 +115,35 @@ func (s *ItemStore) DeleteList(ctx context.Context, listKey string) {
 	s.rdb.Del(ctx, cacheKey)
 }
 
-// DeleteBySchool removes all item lists that might contain items from a school
+// DeleteBySchool removes only item list caches that are filtered by this school
 func (s *ItemStore) DeleteBySchool(ctx context.Context, schoolID int64) {
-	// Delete all list caches since we can't easily identify which ones contain this school
-	s.deleteAllLists(ctx)
+	// Generate cache keys for lists filtered by this school
+	// This is more granular than deleting all lists
+	patterns := []string{
+		// Delete lists specifically filtered by this school_id
+		fmt.Sprintf("cache:items:list:*school_id*%d*", schoolID),
+	}
+	s.deleteListsByPatterns(ctx, patterns)
 }
 
-// DeleteByCategory removes all item lists that might contain items from a category
+// DeleteByCategory removes only item list caches that are filtered by this category
 func (s *ItemStore) DeleteByCategory(ctx context.Context, categoryID int64) {
-	// Delete all list caches since we can't easily identify which ones contain this category
-	s.deleteAllLists(ctx)
+	// Generate cache keys for lists filtered by this category
+	patterns := []string{
+		// Delete lists specifically filtered by this category_id
+		fmt.Sprintf("cache:items:list:*category_id*%d*", categoryID),
+	}
+	s.deleteListsByPatterns(ctx, patterns)
 }
 
-// DeleteByUser removes all item lists that might contain items from a user
+// DeleteByUser removes only item list caches that are filtered by this user
 func (s *ItemStore) DeleteByUser(ctx context.Context, userID int64) {
-	// Delete all list caches since we can't easily identify which ones contain this user
-	s.deleteAllLists(ctx)
+	// Generate cache keys for lists filtered by this user
+	patterns := []string{
+		// Delete lists specifically filtered by this user_id
+		fmt.Sprintf("cache:items:list:*user_id*%d*", userID),
+	}
+	s.deleteListsByPatterns(ctx, patterns)
 }
 
 // deleteAllLists removes all item list caches
@@ -145,6 +158,26 @@ func (s *ItemStore) deleteAllLists(ctx context.Context) {
 	}
 
 	if len(keys) > 0 {
+		s.rdb.Del(ctx, keys...)
+	}
+}
+
+// deleteListsByPatterns removes item list caches matching specific patterns
+func (s *ItemStore) deleteListsByPatterns(ctx context.Context, patterns []string) {
+	keysToDelete := make(map[string]bool)
+
+	for _, pattern := range patterns {
+		iter := s.rdb.Scan(ctx, 0, pattern, 0).Iterator()
+		for iter.Next(ctx) {
+			keysToDelete[iter.Val()] = true
+		}
+	}
+
+	if len(keysToDelete) > 0 {
+		keys := make([]string, 0, len(keysToDelete))
+		for key := range keysToDelete {
+			keys = append(keys, key)
+		}
 		s.rdb.Del(ctx, keys...)
 	}
 }

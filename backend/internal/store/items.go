@@ -451,6 +451,7 @@ func (s *ItemStore) GetAll(ctx context.Context, filter ItemsFilterQuery) ([]*Ite
 	defer rows.Close()
 
 	items := []*ItemWithDetails{}
+	itemIDs := []int64{}
 	for rows.Next() {
 		dest := newItemWithDetailsScanDest()
 
@@ -460,19 +461,25 @@ func (s *ItemStore) GetAll(ctx context.Context, filter ItemsFilterQuery) ([]*Ite
 		}
 
 		itemWithDetails := dest.finalize()
-
-		// Fetch photos for each item
-		photos, err := s.GetItemPhotos(ctx, itemWithDetails.ID)
-		if err != nil {
-			return nil, 0, err
-		}
-		itemWithDetails.Photos = photos
-
 		items = append(items, itemWithDetails)
+		itemIDs = append(itemIDs, itemWithDetails.ID)
 	}
 
 	if err = rows.Err(); err != nil {
 		return nil, 0, err
+	}
+
+	// Batch fetch photos for all items (solves N+1 problem)
+	if len(itemIDs) > 0 {
+		photosByItemID, err := s.GetItemPhotosBatch(ctx, itemIDs)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		// Assign photos to their respective items
+		for _, item := range items {
+			item.Photos = photosByItemID[item.ID]
+		}
 	}
 
 	return items, total, nil
@@ -636,6 +643,7 @@ func (s *ItemStore) GetRelated(ctx context.Context, itemID int64, categoryID int
 	defer rows.Close()
 
 	items := []*ItemWithDetails{}
+	itemIDs := []int64{}
 	for rows.Next() {
 		dest := newItemWithDetailsScanDest()
 
@@ -645,18 +653,28 @@ func (s *ItemStore) GetRelated(ctx context.Context, itemID int64, categoryID int
 		}
 
 		itemWithDetails := dest.finalize()
+		items = append(items, itemWithDetails)
+		itemIDs = append(itemIDs, itemWithDetails.ID)
+	}
 
-		// Fetch photos
-		photos, err := s.GetItemPhotos(ctx, itemWithDetails.ID)
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Batch fetch photos for all items (solves N+1 problem)
+	if len(itemIDs) > 0 {
+		photosByItemID, err := s.GetItemPhotosBatch(ctx, itemIDs)
 		if err != nil {
 			return nil, err
 		}
-		itemWithDetails.Photos = photos
 
-		items = append(items, itemWithDetails)
+		// Assign photos to their respective items
+		for _, item := range items {
+			item.Photos = photosByItemID[item.ID]
+		}
 	}
 
-	return items, rows.Err()
+	return items, nil
 }
 
 // Item Photos methods
@@ -785,4 +803,56 @@ func (s *ItemStore) SetPrimaryPhoto(ctx context.Context, itemID int64, photoID i
 	}
 
 	return tx.Commit()
+}
+
+// GetItemPhotosBatch fetches photos for multiple items in a single query.
+// Returns a map of itemID -> photos, solving the N+1 query problem.
+func (s *ItemStore) GetItemPhotosBatch(ctx context.Context, itemIDs []int64) (map[int64][]*ItemPhoto, error) {
+	if len(itemIDs) == 0 {
+		return make(map[int64][]*ItemPhoto), nil
+	}
+
+	// Build placeholders for IN clause
+	placeholders := make([]string, len(itemIDs))
+	args := make([]interface{}, len(itemIDs))
+	for i, id := range itemIDs {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`
+		SELECT id, item_id, url, is_primary, position, uploaded_at
+		FROM item_photos
+		WHERE item_id IN (%s)
+		ORDER BY item_id, is_primary DESC, position ASC
+	`, strings.Join(placeholders, ", "))
+
+	rows, err := s.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	photosByItemID := make(map[int64][]*ItemPhoto)
+	for rows.Next() {
+		photo := &ItemPhoto{}
+		err := rows.Scan(
+			&photo.ID,
+			&photo.ItemID,
+			&photo.URL,
+			&photo.IsPrimary,
+			&photo.Position,
+			&photo.UploadedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		photosByItemID[photo.ItemID] = append(photosByItemID[photo.ItemID], photo)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return photosByItemID, nil
 }
