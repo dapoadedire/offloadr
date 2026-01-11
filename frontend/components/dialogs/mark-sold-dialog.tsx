@@ -62,9 +62,8 @@ export function MarkSoldDialog({
       });
       form.reset();
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       // Error handling is done in the hook
-      console.error("Mark as sold error:", error);
     }
   }
 

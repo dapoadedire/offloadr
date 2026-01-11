@@ -84,9 +84,8 @@ export function ReportDialog({
       });
       form.reset();
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       // Error handling is done in the hook
-      console.error("Report submission error:", error);
     }
   }
 

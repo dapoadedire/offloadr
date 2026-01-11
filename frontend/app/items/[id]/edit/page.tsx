@@ -127,7 +127,6 @@ export default function EditItemPage({
       toast.success("Images uploaded successfully!");
     },
     onUploadError: (error: Error) => {
-      console.error("Upload error:", error);
       setIsUploading(false);
       toast.dismiss();
       toast.error(`Upload failed: ${error.message}`);
@@ -232,8 +231,7 @@ export default function EditItemPage({
 
     try {
       await startUpload(validFiles);
-    } catch (error) {
-      console.error("Upload error:", error);
+    } catch {
       toast.dismiss();
       toast.error("Upload failed");
       setIsUploading(false);
@@ -303,9 +301,8 @@ export default function EditItemPage({
     try {
       await updateItemMutation.mutateAsync(payload);
       router.push(`/items/${itemId}`);
-    } catch (error) {
+    } catch {
       // Error handling is done in the hook
-      console.error("Update error:", error);
     }
   }
 
@@ -313,9 +310,8 @@ export default function EditItemPage({
     try {
       await deleteItemMutation.mutateAsync(itemId);
       router.push("/my-listings");
-    } catch (error) {
+    } catch {
       // Error handling is done in the hook
-      console.error("Delete error:", error);
     }
   }
 

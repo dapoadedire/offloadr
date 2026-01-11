@@ -136,8 +136,7 @@ export function EditProfileDialog({
 
     try {
       await startUpload([file]);
-    } catch (error) {
-      console.error("Upload error:", error);
+    } catch {
       setIsUploading(false);
     }
   };

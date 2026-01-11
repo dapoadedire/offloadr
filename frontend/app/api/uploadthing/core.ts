@@ -15,7 +15,6 @@ const auth = async (req: Request) => {
   const token = customAuthHeader || authHeader?.replace("Bearer ", "");
 
   if (!token) {
-    console.error("No auth token found in request headers");
     return null;
   }
 
@@ -31,18 +30,12 @@ const auth = async (req: Request) => {
     );
 
     if (!response.ok) {
-      console.error(
-        "Failed to fetch user:",
-        response.status,
-        response.statusText
-      );
       return null;
     }
 
     const user = await response.json();
     return { id: user.id, avatar_url: user.avatar_url };
-  } catch (error) {
-    console.error("Auth error:", error);
+  } catch {
     return null;
   }
 };
@@ -63,8 +56,6 @@ export const ourFileRouter = {
       return { userId: user.id, oldAvatarUrl: user.avatar_url };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Upload complete for userId:", metadata.userId);
-      console.log("New file url:", file.ufsUrl);
 
       // Delete old avatar if it exists and is from UploadThing
       if (metadata.oldAvatarUrl && metadata.oldAvatarUrl.includes("utfs.io")) {
@@ -73,11 +64,8 @@ export const ourFileRouter = {
           const urlParts = metadata.oldAvatarUrl.split("/");
           const fileKey = urlParts[urlParts.length - 1];
 
-          console.log("Deleting old avatar:", fileKey);
           await utapi.deleteFiles(fileKey);
-          console.log("Old avatar deleted successfully");
-        } catch (error) {
-          console.error("Failed to delete old avatar:", error);
+        } catch {
           // Don't throw error, upload was successful
         }
       }
@@ -100,8 +88,6 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Item image upload complete for userId:", metadata.userId);
-      console.log("file url:", file.ufsUrl);
 
       return { uploadedBy: metadata.userId, url: file.ufsUrl };
     }),
