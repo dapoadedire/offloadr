@@ -414,19 +414,7 @@ func (app *application) createItemHandler(w http.ResponseWriter, r *http.Request
 		app.cacheStorage.Items.DeleteByUser(ctx, item.UserID)
 	}
 
-	// Build response with moderation info placeholder
-	response := map[string]any{
-		"item": itemWithDetails,
-	}
-
-	if app.moderationService != nil && item.Status == store.ItemStatusPublished {
-		response["moderation"] = map[string]any{
-			"status":  "scanning",
-			"message": "Your item is being reviewed for content policy compliance",
-		}
-	}
-
-	if err := app.jsonResponse(w, http.StatusCreated, response); err != nil {
+	if err := app.jsonResponse(w, http.StatusCreated, itemWithDetails); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }

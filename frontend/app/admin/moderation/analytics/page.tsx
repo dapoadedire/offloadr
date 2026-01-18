@@ -1,10 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
+import { useState } from "react";
 import { useModerationAnalytics, useModerationTrends } from "@/hooks/useModeration";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -17,25 +14,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  ArrowLeft,
   ArrowUpRight,
   ArrowDownRight,
   Shield,
   CheckCircle,
   XCircle,
   AlertTriangle,
-  TrendingUp,
   TrendingDown,
   Calendar,
   BarChart3,
 } from "lucide-react";
-import Link from "next/link";
 import { format, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
 
 export default function ModerationAnalyticsPage() {
-  const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
   const [dateRange, setDateRange] = useState<"7" | "14" | "30">("30");
 
   const fromDate = format(subDays(new Date(), parseInt(dateRange)), "yyyy-MM-dd");
@@ -46,26 +38,7 @@ export default function ModerationAnalyticsPage() {
     to_date: toDate,
   });
 
-  const { data: trends, isLoading: trendsLoading } = useModerationTrends();
-
-  // Redirect non-admins
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-    } else if (user && !user.is_admin) {
-      router.push("/");
-    }
-  }, [isAuthenticated, user, router]);
-
-  if (!isAuthenticated || !user?.is_admin) {
-    return (
-      <div className="container py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Skeleton className="h-96 w-full max-w-4xl" />
-        </div>
-      </div>
-    );
-  }
+  const { data: trends } = useModerationTrends();
 
   const TrendIndicator = ({
     value,
@@ -97,24 +70,17 @@ export default function ModerationAnalyticsPage() {
   };
 
   return (
-    <div className="container py-8 space-y-8">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/admin/moderation">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <BarChart3 className="h-8 w-8" />
-              Moderation Analytics
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Track moderation performance and trends
-            </p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <BarChart3 className="h-8 w-8" />
+            Moderation Analytics
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Track moderation performance and trends
+          </p>
         </div>
         <Select
           value={dateRange}

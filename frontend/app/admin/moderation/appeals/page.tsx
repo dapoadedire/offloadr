@@ -1,14 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
+import { useState } from "react";
 import { usePendingAppeals, useResolveAppeal } from "@/hooks/useModeration";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -21,21 +18,14 @@ import {
 import { AppealStatusBadge, ModerationStatusBadge } from "@/components/moderation/moderation-status-badge";
 import { ModerationAppealWithDetails } from "@/lib/types/moderation";
 import {
-  ArrowLeft,
   CheckCircle,
   XCircle,
   MessageSquare,
-  ExternalLink,
   Loader2,
-  User,
-  Clock,
 } from "lucide-react";
-import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
 export default function AdminAppealsPage() {
-  const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
   const [page, setPage] = useState(1);
   const [selectedAppeal, setSelectedAppeal] = useState<ModerationAppealWithDetails | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -43,15 +33,6 @@ export default function AdminAppealsPage() {
 
   const { data, isLoading, refetch } = usePendingAppeals({ page, limit: 20 });
   const resolveAppealMutation = useResolveAppeal();
-
-  // Redirect non-admins
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-    } else if (user && !user.is_admin) {
-      router.push("/");
-    }
-  }, [isAuthenticated, user, router]);
 
   const handleResolve = async (status: "approved" | "denied") => {
     if (!selectedAppeal) return;
@@ -70,34 +51,17 @@ export default function AdminAppealsPage() {
     refetch();
   };
 
-  if (!isAuthenticated || !user?.is_admin) {
-    return (
-      <div className="container py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Skeleton className="h-96 w-full max-w-4xl" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="container py-8 space-y-8">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/admin/moderation">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <MessageSquare className="h-8 w-8" />
-            Pending Appeals
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Review user appeals for moderation decisions
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <MessageSquare className="h-8 w-8" />
+          Pending Appeals
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Review user appeals for moderation decisions
+        </p>
       </div>
 
       {/* Appeals List */}

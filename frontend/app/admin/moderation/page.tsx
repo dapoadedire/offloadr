@@ -1,39 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
 import { useModerationQueue } from "@/hooks/useModeration";
 import { ModerationQueueTable } from "@/components/moderation/moderation-queue-table";
-import { ModerationStatusBadge } from "@/components/moderation/moderation-status-badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ModerationStatus, ModerationQueueFilter } from "@/lib/types/moderation";
 import {
   Shield,
-  BarChart3,
   AlertTriangle,
   CheckCircle,
   Clock,
   RefreshCw,
   Filter,
 } from "lucide-react";
-import Link from "next/link";
-import { useEffect } from "react";
 
 export default function ModerationQueuePage() {
-  const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
   const [filters, setFilters] = useState<ModerationQueueFilter>({
     status: "flagged",
     page: 1,
@@ -41,25 +24,6 @@ export default function ModerationQueuePage() {
   });
 
   const { data, isLoading, refetch, isFetching } = useModerationQueue(filters);
-
-  // Redirect non-admins
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-    } else if (user && !user.is_admin) {
-      router.push("/");
-    }
-  }, [isAuthenticated, user, router]);
-
-  if (!isAuthenticated || !user?.is_admin) {
-    return (
-      <div className="container py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Skeleton className="h-96 w-full max-w-4xl" />
-        </div>
-      </div>
-    );
-  }
 
   const handleStatusChange = (status: string) => {
     setFilters((prev) => ({
@@ -74,32 +38,16 @@ export default function ModerationQueuePage() {
   };
 
   return (
-    <div className="container py-8 space-y-8">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Shield className="h-8 w-8" />
-            Moderation Queue
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Review and moderate flagged content
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/admin/moderation/analytics">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Analytics
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/admin/moderation/appeals">
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              Appeals
-            </Link>
-          </Button>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <Shield className="h-8 w-8" />
+          Moderation Queue
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Review and moderate flagged content
+        </p>
       </div>
 
       {/* Stats Cards */}
