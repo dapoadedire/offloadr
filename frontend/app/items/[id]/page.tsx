@@ -34,6 +34,7 @@ import { useItemReviews } from "@/hooks/useReviews";
 import { useAuthStore } from "@/store/authStore";
 import { ReviewDialog } from "@/components/dialogs/review-dialog";
 import { ReportDialog } from "@/components/dialogs/report-dialog";
+import { ItemModerationAlert } from "@/components/moderation/item-moderation-alert";
 
 export default function ItemDetailPage({
   params,
@@ -217,6 +218,13 @@ export default function ItemDetailPage({
         )}
         <span className="text-foreground">{item.title}</span>
       </div>
+
+      {/* Moderation Status Alert - Only shown to item owners */}
+      <ItemModerationAlert
+        itemId={itemId}
+        itemTitle={item.title}
+        isOwner={isOwner}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         {/* Left Column - Images and Details */}

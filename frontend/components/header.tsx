@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { Menu, X, User, LogOut, Heart, Package } from "lucide-react";
+import { Menu, X, User, LogOut, Heart, Package, Shield, MessageSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,6 +118,26 @@ export const Header = () => {
                           Profile
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/my-appeals" className="cursor-pointer">
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          My Appeals
+                        </Link>
+                      </DropdownMenuItem>
+                      {user.is_admin && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel className="text-xs text-muted-foreground">
+                            Admin
+                          </DropdownMenuLabel>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/moderation" className="cursor-pointer">
+                              <Shield className="mr-2 h-4 w-4" />
+                              Moderation
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                         <LogOut className="mr-2 h-4 w-4" />
@@ -233,6 +253,28 @@ export const Header = () => {
                         Profile
                       </Link>
                     </Button>
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className="w-full font-medium text-lg h-12 justify-start"
+                    >
+                      <Link href="/my-appeals" onClick={() => setMobileMenuOpen(false)}>
+                        <MessageSquare className="mr-2 h-5 w-5" />
+                        My Appeals
+                      </Link>
+                    </Button>
+                    {user.is_admin && (
+                      <Button
+                        asChild
+                        variant="ghost"
+                        className="w-full font-medium text-lg h-12 justify-start"
+                      >
+                        <Link href="/admin/moderation" onClick={() => setMobileMenuOpen(false)}>
+                          <Shield className="mr-2 h-5 w-5" />
+                          Moderation (Admin)
+                        </Link>
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       className="w-full font-medium text-lg h-12 justify-start text-destructive hover:text-destructive"

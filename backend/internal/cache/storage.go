@@ -46,6 +46,14 @@ type Storage struct {
 		Set(context.Context, *store.SellerRating) error
 		Delete(context.Context, int64)
 	}
+	Moderation interface {
+		GetByItemID(context.Context, int64) (*store.ModerationResult, error)
+		Set(context.Context, *store.ModerationResult) error
+		Delete(context.Context, int64)
+		GetQueueCount(context.Context, string) (int, error)
+		SetQueueCount(context.Context, string, int) error
+		InvalidateQueueCount(context.Context)
+	}
 }
 
 // NewRedisStorage creates a new cache storage backed by Redis
@@ -56,5 +64,6 @@ func NewRedisStorage(rdb *redis.Client) Storage {
 		Items:      &ItemStore{rdb: rdb},
 		Users:      &UserStore{rdb: rdb},
 		Ratings:    &RatingStore{rdb: rdb},
+		Moderation: &ModerationStore{rdb: rdb},
 	}
 }

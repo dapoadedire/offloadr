@@ -378,6 +378,35 @@ func (app *application) createItemHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Run moderation scan asynchronously if service is available
+	// and item is being published (not draft)
+	if app.moderationService != nil && item.Status == store.ItemStatusPublished {
+		// Run moderation in a goroutine to not block response
+		go func() {
+			scanCtx := context.Background()
+			scanResult, err := app.moderationService.ScanItem(scanCtx, itemWithDetails)
+			if err != nil {
+				app.logger.Errorw("moderation scan failed", "error", err, "item_id", item.ID)
+				return
+			}
+
+			// Save the moderation result
+			_, err = app.moderationService.SaveModerationResult(scanCtx, item.ID, item.SchoolID, scanResult)
+			if err != nil {
+				app.logger.Errorw("failed to save moderation result", "error", err, "item_id", item.ID)
+				return
+			}
+
+			// If flagged or rejected, update item status
+			if scanResult.Status == store.ModerationStatusFlagged || scanResult.Status == store.ModerationStatusRejected {
+				if err := app.store.Items.UpdateStatus(scanCtx, item.ID, store.ItemStatusFlagged); err != nil {
+					app.logger.Errorw("failed to flag item after moderation", "error", err, "item_id", item.ID)
+				}
+				app.logger.Infow("item flagged by moderation", "item_id", item.ID, "status", scanResult.Status)
+			}
+		}()
+	}
+
 	// Invalidate item list caches (new item affects listings)
 	if app.cacheStorage.Items != nil {
 		app.cacheStorage.Items.DeleteBySchool(ctx, item.SchoolID)
@@ -385,7 +414,19 @@ func (app *application) createItemHandler(w http.ResponseWriter, r *http.Request
 		app.cacheStorage.Items.DeleteByUser(ctx, item.UserID)
 	}
 
-	if err := app.jsonResponse(w, http.StatusCreated, itemWithDetails); err != nil {
+	// Build response with moderation info placeholder
+	response := map[string]any{
+		"item": itemWithDetails,
+	}
+
+	if app.moderationService != nil && item.Status == store.ItemStatusPublished {
+		response["moderation"] = map[string]any{
+			"status":  "scanning",
+			"message": "Your item is being reviewed for content policy compliance",
+		}
+	}
+
+	if err := app.jsonResponse(w, http.StatusCreated, response); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }

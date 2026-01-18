@@ -101,6 +101,24 @@ type Storage struct {
 		MarkAsUsed(context.Context, string) error
 		DeleteForUser(context.Context, int64) error
 	}
+	Moderation interface {
+		CreateModerationResult(context.Context, *ModerationResult) error
+		GetModerationResultByID(context.Context, int64) (*ModerationResult, error)
+		GetModerationResultByItemID(context.Context, int64) (*ModerationResult, error)
+		UpdateModerationResult(context.Context, *ModerationResult) error
+		SubmitReview(context.Context, int64, int64, ReviewDecision, *string) error
+		GetModerationQueue(context.Context, ModerationQueueFilter) ([]*ModerationResultWithDetails, int, error)
+		CreateImageModeration(context.Context, *ImageModeration) error
+		GetImageModerationByResultID(context.Context, int64) ([]*ImageModeration, error)
+		CreateAppeal(context.Context, *ModerationAppeal) error
+		GetAppealByID(context.Context, int64) (*ModerationAppeal, error)
+		GetUserAppeals(context.Context, int64, int, int) ([]*ModerationAppealWithDetails, int, error)
+		ResolveAppeal(context.Context, int64, int64, AppealStatus, *string) error
+		GetPendingAppeals(context.Context, int, int) ([]*ModerationAppealWithDetails, int, error)
+		UpdateAnalytics(context.Context, *ModerationAnalytics) error
+		GetAnalytics(context.Context, time.Time, time.Time, *int64) ([]*ModerationAnalytics, error)
+		GetAnalyticsSummary(context.Context, time.Time, time.Time, *int64) (*ModerationAnalytics, error)
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
@@ -115,5 +133,6 @@ func NewStorage(db *sql.DB) Storage {
 		Users:           &UserStore{db: db},
 		PasswordResets:  &PasswordResetStore{db: db},
 		UserInvitations: &UserInvitationStore{db: db},
+		Moderation:      &ModerationStore{db: db},
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/dapoadedire/offloadr/backend/internal/db"
 	"github.com/dapoadedire/offloadr/backend/internal/env"
 	"github.com/dapoadedire/offloadr/backend/internal/mailer"
+	"github.com/dapoadedire/offloadr/backend/internal/moderation"
 	"github.com/dapoadedire/offloadr/backend/internal/ratelimiter"
 	"github.com/dapoadedire/offloadr/backend/internal/store"
 	"github.com/dapoadedire/offloadr/backend/migrations"
@@ -128,15 +129,51 @@ func main() {
 		logger.Info("Redis is disabled - caching and Redis rate limiting unavailable")
 	}
 
+	// Initialize moderation service
+	var moderationService *moderation.Service
+	geminiAPIKey := env.GetEnv("GEMINI_API_KEY", "")
+	geminiModel := env.GetEnv("GEMINI_MODEL", "gemini-2.0-flash")
+	moderationEnabled := env.GetEnv("MODERATION_ENABLED", "true") == "true"
+
+	if geminiAPIKey != "" && moderationEnabled {
+		geminiClient, err := moderation.NewGeminiClient(geminiAPIKey, geminiModel)
+		if err != nil {
+			logger.Warnw("failed to create Gemini client, moderation will use pattern matching only", "error", err)
+		}
+
+		moderationConfig := moderation.Config{
+			AutoApproveThreshold: env.GetEnvFloat("MODERATION_AUTO_APPROVE_THRESHOLD", 0.95),
+			FlagThreshold:        env.GetEnvFloat("MODERATION_FLAG_THRESHOLD", 0.70),
+			RejectThreshold:      env.GetEnvFloat("MODERATION_REJECT_THRESHOLD", 0.30),
+			Enabled:              moderationEnabled,
+		}
+
+		moderationService = moderation.NewService(geminiClient, store, moderationConfig, logger)
+		logger.Info("moderation service initialized with Gemini AI")
+	} else if moderationEnabled {
+		// Pattern matching only (no AI)
+		moderationConfig := moderation.Config{
+			AutoApproveThreshold: 0.95,
+			FlagThreshold:        0.70,
+			RejectThreshold:      0.30,
+			Enabled:              true,
+		}
+		moderationService = moderation.NewService(nil, store, moderationConfig, logger)
+		logger.Warn("moderation service initialized without Gemini AI (pattern matching only)")
+	} else {
+		logger.Info("moderation service disabled")
+	}
+
 	app := &application{
-		config:        cfg,
-		logger:        logger,
-		store:         store,
-		cacheStorage:  cacheStorage,
-		authenticator: jwtAuthenticator,
-		mailer:        mailerClient,
-		rateLimiter:   rateLimiter,
-		rateLimiters:  rateLimiters,
+		config:            cfg,
+		logger:            logger,
+		store:             store,
+		cacheStorage:      cacheStorage,
+		authenticator:     jwtAuthenticator,
+		mailer:            mailerClient,
+		rateLimiter:       rateLimiter,
+		rateLimiters:      rateLimiters,
+		moderationService: moderationService,
 	}
 
 	chi := app.mount()

@@ -47,6 +47,7 @@ export interface User {
   is_active: boolean;
   avatar_url: string | null;
   created_at: string;
+  is_admin?:boolean;
 }
 
 export interface AuthResponse {

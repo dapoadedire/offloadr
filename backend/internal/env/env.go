@@ -46,3 +46,12 @@ func GetEnvBool(key string, fallback bool) bool {
 	}
 	return fallback
 }
+
+func GetEnvFloat(key string, fallback float64) float64 {
+	if value := os.Getenv(key); value != "" {
+		if f, err := strconv.ParseFloat(value, 64); err == nil {
+			return f
+		}
+	}
+	return fallback
+}

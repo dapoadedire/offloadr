@@ -13,6 +13,7 @@ import (
 	"github.com/dapoadedire/offloadr/backend/internal/cache"
 	"github.com/dapoadedire/offloadr/backend/internal/env"
 	"github.com/dapoadedire/offloadr/backend/internal/mailer"
+	"github.com/dapoadedire/offloadr/backend/internal/moderation"
 	"github.com/dapoadedire/offloadr/backend/internal/ratelimiter"
 	"github.com/dapoadedire/offloadr/backend/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -23,14 +24,15 @@ import (
 )
 
 type application struct {
-	config         config
-	logger         *zap.SugaredLogger
-	store          store.Storage
-	cacheStorage   cache.Storage // Redis cache storage
-	authenticator  auth.Authenticator
-	mailer         *mailer.Client
-	rateLimiter    ratelimiter.Limiter
-	rateLimiters   map[string]ratelimiter.Limiter // Endpoint-specific rate limiters
+	config            config
+	logger            *zap.SugaredLogger
+	store             store.Storage
+	cacheStorage      cache.Storage // Redis cache storage
+	authenticator     auth.Authenticator
+	mailer            *mailer.Client
+	rateLimiter       ratelimiter.Limiter
+	rateLimiters      map[string]ratelimiter.Limiter // Endpoint-specific rate limiters
+	moderationService *moderation.Service            // AI-powered content moderation
 }
 
 type config struct {
@@ -209,6 +211,26 @@ func (app *application) mount() *chi.Mux {
 			r.Use(app.AuthTokenMiddleware)
 
 			r.With(app.EndpointRateLimiterMiddleware("reports:create")).Post("/", app.createReportHandler)
+		})
+
+		// Moderation routes
+		r.Route("/moderation", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+
+			// Admin endpoints
+			r.Post("/scan", app.scanItemHandler)
+			r.Get("/queue", app.getModerationQueueHandler)
+			r.Get("/item/{id}", app.getModerationResultHandler)
+			r.Patch("/item/{id}/review", app.submitModerationReviewHandler)
+			r.Get("/analytics", app.getModerationAnalyticsHandler)
+			r.Get("/analytics/trends", app.getModerationTrendsHandler)
+			r.Get("/appeals/pending", app.getPendingAppealsHandler)
+			r.Patch("/appeals/{id}/resolve", app.resolveAppealHandler)
+
+			// User endpoints
+			r.Post("/appeals", app.submitAppealHandler)
+			r.Get("/appeals", app.getUserAppealsHandler)
+			r.Get("/appeals/{id}", app.getAppealHandler)
 		})
 	})
 
