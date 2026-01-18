@@ -48,6 +48,7 @@ type UserProfileResponse struct {
 	Phone         *string        `json:"phone,omitempty"`
 	Snapchat      *string        `json:"snapchat,omitempty"`
 	Whatsapp      *string        `json:"whatsapp,omitempty"`
+	IsAdmin       bool           `json:"is_admin"`
 	IsActive      bool           `json:"is_active"`
 	CreatedAt     string         `json:"created_at"`
 	UpdatedAt     string         `json:"updated_at"`
@@ -115,6 +116,7 @@ func (app *application) getCurrentUserHandler(w http.ResponseWriter, r *http.Req
 		Phone:       user.Phone,
 		Snapchat:    user.Snapchat,
 		Whatsapp:    user.Whatsapp,
+		IsAdmin:     user.IsAdmin,
 		IsActive:    user.IsActive,
 		CreatedAt:   user.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt:   user.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
@@ -292,6 +294,7 @@ func (app *application) updateUserHandler(w http.ResponseWriter, r *http.Request
 		Phone:       user.Phone,
 		Snapchat:    user.Snapchat,
 		Whatsapp:    user.Whatsapp,
+		IsAdmin:     user.IsAdmin,
 		IsActive:    user.IsActive,
 		CreatedAt:   user.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt:   user.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),

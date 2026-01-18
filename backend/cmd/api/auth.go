@@ -57,6 +57,7 @@ type UserResponse struct {
 	Email         string  `json:"email"`
 	EmailVerified bool    `json:"email_verified"`
 	SchoolID      int64   `json:"school_id"`
+	IsAdmin       bool    `json:"is_admin"`
 	IsActive      bool    `json:"is_active"`
 	AvatarURL     *string `json:"avatar_url,omitempty"`
 	CreatedAt     string  `json:"created_at"`
@@ -185,6 +186,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 			Email:         user.Email,
 			EmailVerified: user.EmailVerified,
 			SchoolID:      user.SchoolID,
+			IsAdmin:       user.IsAdmin,
 			IsActive:      user.IsActive,
 			CreatedAt:     user.CreatedAt.Format(time.RFC3339),
 		},
@@ -417,6 +419,7 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 			Email:         user.Email,
 			EmailVerified: user.EmailVerified,
 			SchoolID:      user.SchoolID,
+			IsAdmin:       user.IsAdmin,
 			IsActive:      user.IsActive,
 			AvatarURL:     user.AvatarURL,
 			CreatedAt:     user.CreatedAt.Format(time.RFC3339),
