@@ -85,7 +85,7 @@ func (app *application) mount() *chi.Mux {
 
 	// CORS middleware
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{app.config.frontendURL},
+		AllowedOrigins:   []string{"https://offloadr.vercel.app", app.config.frontendURL},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
