@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"html/template"
+	"time"
 
 	"github.com/resend/resend-go/v2"
 )
@@ -38,6 +39,7 @@ func (c *Client) SendVerificationEmail(to, username, verificationURL string) err
 		Username: username,
 		Email:    to,
 		URL:      verificationURL,
+		Year:     time.Now().Year(),
 	}
 
 	htmlBody, err := renderTemplate(verificationTemplate, data)
@@ -65,6 +67,7 @@ func (c *Client) SendWelcomeEmail(to, username, loginURL string) error {
 		Username: username,
 		Email:    to,
 		URL:      loginURL,
+		Year:     time.Now().Year(),
 	}
 
 	htmlBody, err := renderTemplate(welcomeTemplate, data)
@@ -92,6 +95,7 @@ func (c *Client) SendPasswordResetEmail(to, username, resetURL string) error {
 		Username: username,
 		Email:    to,
 		URL:      resetURL,
+		Year:     time.Now().Year(),
 	}
 
 	htmlBody, err := renderTemplate(passwordResetTemplate, data)
@@ -118,6 +122,7 @@ func (c *Client) SendPasswordChangedEmail(to, username string) error {
 	data := EmailData{
 		Username: username,
 		Email:    to,
+		Year:     time.Now().Year(),
 	}
 
 	htmlBody, err := renderTemplate(passwordChangedTemplate, data)
